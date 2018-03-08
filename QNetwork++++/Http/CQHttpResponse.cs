@@ -17,7 +17,7 @@ namespace QNetwork.Http.Server
             Content
         }
         ReadStates m_ReadState;
-        public bool IsEmpty { get { return this.m_Resp == null; } }
+        //public bool IsEmpty { get { return this.m_Resp == null; } }
         public bool Set(CQHttpResponse resp)
         {
             bool result = true;

@@ -15,13 +15,15 @@ namespace QNetwork.Http.Server
     public class CQTCPHandler
     {
         protected ReaderWriterLockSlim m_SocketLock;
-        public enum TransformTypes
-        {
-            Sync,
-            Async
-        }
+        //public enum TransformTypes
+        //{
+        //    Sync,
+        //    Async
+        //}
         byte[] m_RecvBuf;
         SocketAsyncEventArgs m_RecvArgs;
+        SocketAsyncEventArgs m_SendArgs;
+        byte[] m_SendBuf;
         public bool IsEnd { get { return this.m_IsEnd; } }
         protected Socket m_Socket;
         protected bool m_IsEnd;
@@ -73,6 +75,10 @@ namespace QNetwork.Http.Server
             this.m_RecvArgs.Completed += new EventHandler<SocketAsyncEventArgs>(m_RecvArgs_Completed);
             this.m_RecvBuf = new byte[this.m_Socket.ReceiveBufferSize];
             this.m_RecvArgs.SetBuffer(this.m_RecvBuf, 0, this.m_RecvBuf.Length);
+
+            this.m_SendArgs = new SocketAsyncEventArgs();
+            this.m_SendArgs.Completed += M_SendArgs_Completed;
+            this.m_SendBuf = new byte[this.m_Socket.SendBufferSize];
             ThreadPool.QueueUserWorkItem(o =>
             {
                 if (len > 0)
@@ -93,6 +99,13 @@ namespace QNetwork.Http.Server
                 }
             });
             return result;
+        }
+
+
+
+        private void M_SendArgs_Completed(object sender, SocketAsyncEventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         public virtual bool Close()
@@ -269,7 +282,7 @@ namespace QNetwork.Http.Server
             if (this.m_CurrentResp.IsEnd == false)
             {
                 int send_len = this.m_CurrentResp.Read(this.m_SendBuf, 0, this.m_SendBuf.Length);
-                System.Diagnostics.Trace.Write(Encoding.UTF8.GetString(m_SendBuf, 0, send_len));
+                //System.Diagnostics.Trace.Write(Encoding.UTF8.GetString(m_SendBuf, 0, send_len));
                 try
                 {
                     this.m_SocketLock.EnterReadLock();
