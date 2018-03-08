@@ -1,0 +1,62 @@
+<html>
+    <head>
+        <title>WebSocket Test</title>
+        <style>
+        </style>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    </head>
+    <body>
+        <div id="websocket_state">None</div>
+        <div class="columns">
+            <div class="column">
+                    <button class="button is-primary" onclick="connect()">Open</button>
+            </div>
+            <div class="column">
+                    <button class="button is-primary" onclick="close()">Close</button>
+            </div>
+            <div class="column">
+                    <button class="button is-primary" onclick="ping()">Ping</button>
+            </div>
+            
+            
+            
+            
+        </div>
+        <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
+        <script>
+            var ws;
+            function connect(){
+                document.getElementById("websocket_state").innerText="connect......"
+                ws = new WebSocket('ws://192.168.10.246:3333/websocket_test');
+                ws.onopen=function(){
+                    document.getElementById("websocket_state").innerText="connect ok"
+                }
+                ws.onerror=function(){
+                    document.getElementById("websocket_state").innerText="fail"
+                }
+                ws.onclose=function(){
+                    document.getElementById("websocket_state").innerText="close"
+                }
+            }
+            function ping(){
+                ws.ping('', false, true);
+            }
+            function close(){
+                ws.close();
+                document.getElementById("websocket_state").innerText="close"
+            }
+            // (function(){
+            //     var ws = new WebSocket('ws://192.168.10.246:3333/websocket_test');
+            //     ws.onopen = function () {
+            //         console.log('ws onopen');
+            //         ws.send('from client: hello');
+            //     };
+            //     ws.onmessage = function (e) {
+            //         console.log('ws onmessage');
+            //         console.log('from server: ' + e.data);
+            //     };
+            // })();
+        </script>
+    </body>
+</html>

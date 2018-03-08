@@ -1,0 +1,27 @@
+﻿<Window x:Class="WPF_Server_Http.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MainWindow" Height="350" Width="525" Loaded="Window_Loaded">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <ListView ItemsSource="{Binding AddressList}">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="IP" DisplayMemberBinding="{Binding IP}"/>
+                    <GridViewColumn Header="Port" DisplayMemberBinding="{Binding Port}"/>
+                    <GridViewColumn>
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button x:Name="button_open" Click="button_open_Click" Grid.Column="4">Open</Button>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                </GridView>
+            </ListView.View>
+        </ListView>
+        
+    </Grid>
+</Window>
