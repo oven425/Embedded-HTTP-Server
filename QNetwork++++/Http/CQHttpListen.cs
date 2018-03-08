@@ -1,4 +1,4 @@
-﻿#define Accept_Sync
+﻿//#define Accept_Sync
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
