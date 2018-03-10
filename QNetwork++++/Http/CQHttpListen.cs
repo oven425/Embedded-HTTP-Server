@@ -11,6 +11,11 @@ namespace QNetwork.Http.Server
 {
     public class CQNetAddress
     {
+        public enum States
+        {
+            Fail,
+            Work,
+        }
         public string IP { set; get; }
         public int Port { set; get; }
     }
@@ -20,8 +25,13 @@ namespace QNetwork.Http.Server
         SocketAsyncEventArgs m_AcceptArgs;
         byte[] m_AcceptBuf;
         public EndPoint Address { set; get; }
+        CQNetAddress m_Address;
         public delegate bool NewClientDelegate(Socket socket, byte[] data, int len);
         public event NewClientDelegate OnNewClient;
+        public CQSocketListen(CQNetAddress address)
+        {
+            this.m_Address = address;
+        }
 #if Accept_Sync
         BackgroundWorker m_Thread_Accept;
 #endif
@@ -29,7 +39,8 @@ namespace QNetwork.Http.Server
         {
             bool result = true;
             this.m_Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            this.m_Socket.Bind(this.Address);
+            EndPoint address = new IPEndPoint(IPAddress.Parse(this.m_Address.IP), this.m_Address.Port);
+            this.m_Socket.Bind(address);
             this.m_Socket.Listen(10);
             this.m_AcceptBuf = new byte[8192];
 #if Accept_Sync

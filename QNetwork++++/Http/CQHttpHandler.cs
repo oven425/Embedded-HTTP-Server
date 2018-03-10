@@ -14,6 +14,7 @@ namespace QNetwork.Http.Server
 {
     public class CQTCPHandler
     {
+        protected List<Stream> m_Responses = new List<Stream>();
         protected ReaderWriterLockSlim m_SocketLock;
         //public enum TransformTypes
         //{
@@ -105,7 +106,14 @@ namespace QNetwork.Http.Server
 
         private void M_SendArgs_Completed(object sender, SocketAsyncEventArgs e)
         {
-            throw new NotImplementedException();
+            if((e.SocketError != SocketError.Success) || (e.BytesTransferred>0))
+            {
+                this.m_IsEnd = true;
+            }
+            else
+            {
+
+            }
         }
 
         public virtual bool Close()

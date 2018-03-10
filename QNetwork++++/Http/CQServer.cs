@@ -337,6 +337,13 @@ namespace QNetwork.Http.Server
             return result;
         }
 
+        public bool Open(List<CQNetAddress> addresslist)
+        {
+            bool result = true;
+
+            return result;
+        }
+
         public bool Open(List<CQNetAddress> address, List<CQHttpService> services, bool adddefault=true)
         {
             bool result = true;
@@ -354,11 +361,11 @@ namespace QNetwork.Http.Server
             }
             for(int i=0; i<address.Count; i++)
             {
-                CQSocketListen listen = new CQSocketListen();
+                CQSocketListen listen = new CQSocketListen(address[i]);
                 listen.OnNewClient += Listen_OnNewClient;
-                listen.Address = new IPEndPoint(IPAddress.Parse(address[i].IP), address[i].Port);
+               // listen.Address = new IPEndPoint(IPAddress.Parse(address[i].IP), address[i].Port);
                 listen.Open();
-                this.m_AcceptSockets.Add(listen.Address, listen);
+                //this.m_AcceptSockets.Add(address[i].ToEndPoint(), listen);
             }
             if (this.m_Thread.IsBusy == false)
             {
