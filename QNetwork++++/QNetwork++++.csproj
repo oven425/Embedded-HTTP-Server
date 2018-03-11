@@ -43,7 +43,9 @@
     <Compile Include="Http\CQHttpListen.cs" />
     <Compile Include="Http\CQHttpRequest.cs" />
     <Compile Include="Http\CQHttpResponse.cs" />
+    <Compile Include="Http\CQHttpResponseReader.cs" />
     <Compile Include="Http\CQServer.cs" />
+    <Compile Include="Http\CQTCPHandler.cs" />
     <Compile Include="Http\CQWebSocket.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

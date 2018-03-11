@@ -59,10 +59,11 @@ namespace WPF_Server_Http
                     // 只取得IP V4的Address
                     if (ipaddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                     {
-                        this.m_MainUI.AddressList.Add(new CQNetAddress() { IP = ipaddress.ToString(), Port = 3333 });
+                        CQSocketListen_Address net_address = new CQSocketListen_Address() { IP = ipaddress.ToString(), Port = 3333 };
+                        this.m_MainUI.AddressList.Add(new CQListenAddress() { Address = net_address });
                     }
                 }
-                this.m_TestServer.Open(this.m_MainUI.AddressList.ToList(), new List<CQHttpService>() { new CQHttpService_Test() } , true);
+                this.m_TestServer.Open(this.m_MainUI.AddressList.Select(x=>x.Address).ToList(), new List<CQHttpService>() { new CQHttpService_Test() } , true);
             }
         }
     }
@@ -355,4 +356,6 @@ namespace WPF_Server_Http
             return true;
         }
     }
+
+    
 }

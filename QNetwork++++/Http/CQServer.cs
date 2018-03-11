@@ -337,14 +337,31 @@ namespace QNetwork.Http.Server
             return result;
         }
 
-        public bool Open(List<CQNetAddress> addresslist)
+        public bool CloseListen(CQSocketListen_Address listen)
         {
             bool result = true;
 
             return result;
         }
 
-        public bool Open(List<CQNetAddress> address, List<CQHttpService> services, bool adddefault=true)
+        public bool OpenListen(CQSocketListen_Address data)
+        {
+            bool result = true;
+            CQSocketListen listen = new CQSocketListen(data);
+            listen.OnListenState += Listen_OnListenState; ;
+            listen.OnNewClient += Listen_OnNewClient;
+            // listen.Address = new IPEndPoint(IPAddress.Parse(address[i].IP), address[i].Port);
+            listen.Open();
+            //this.m_AcceptSockets.Add(address[i].ToEndPoint(), listen);
+            return result;
+        }
+
+        private bool Listen_OnListenState(CQSocketListen_Address listen_address, ListenStates state)
+        {
+            return true;
+        }
+
+        public bool Open(List<CQSocketListen_Address> address, List<CQHttpService> services, bool adddefault=true)
         {
             bool result = true;
             for (int i = 0; i < services.Count; i++)
@@ -361,11 +378,7 @@ namespace QNetwork.Http.Server
             }
             for(int i=0; i<address.Count; i++)
             {
-                CQSocketListen listen = new CQSocketListen(address[i]);
-                listen.OnNewClient += Listen_OnNewClient;
-               // listen.Address = new IPEndPoint(IPAddress.Parse(address[i].IP), address[i].Port);
-                listen.Open();
-                //this.m_AcceptSockets.Add(address[i].ToEndPoint(), listen);
+                this.OpenListen(address[i]);
             }
             if (this.m_Thread.IsBusy == false)
             {
@@ -373,6 +386,7 @@ namespace QNetwork.Http.Server
             }
             return result;
         }
+
 
         private bool Listen_OnNewClient(Socket socket, byte[] data, int len)
         {

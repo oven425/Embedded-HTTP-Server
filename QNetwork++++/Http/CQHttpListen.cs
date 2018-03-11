@@ -9,26 +9,37 @@ using System.Text;
 
 namespace QNetwork.Http.Server
 {
-    public class CQNetAddress
+    public enum ListenStates
     {
-        public enum States
-        {
-            Fail,
-            Work,
-        }
+        None,
+        Init,
+        Fail,
+        Normal,
+    }
+    public class CQSocketListen_Address
+    {
         public string IP { set; get; }
         public int Port { set; get; }
+
+        EndPoint m_EndPoint;
+        public EndPoint ToEndPint()
+        {
+            return new IPEndPoint(IPAddress.Parse(this.IP), this.Port);
+        }
     }
     public class CQSocketListen
     {
+        ListenStates m_ListenStates;
         Socket m_Socket;
         SocketAsyncEventArgs m_AcceptArgs;
         byte[] m_AcceptBuf;
         public EndPoint Address { set; get; }
-        CQNetAddress m_Address;
+        CQSocketListen_Address m_Address;
         public delegate bool NewClientDelegate(Socket socket, byte[] data, int len);
         public event NewClientDelegate OnNewClient;
-        public CQSocketListen(CQNetAddress address)
+        public delegate bool ListenStateDelegate(CQSocketListen_Address listen_address, ListenStates state);
+        public event ListenStateDelegate OnListenState;
+        public CQSocketListen(CQSocketListen_Address address)
         {
             this.m_Address = address;
         }
@@ -39,8 +50,7 @@ namespace QNetwork.Http.Server
         {
             bool result = true;
             this.m_Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            EndPoint address = new IPEndPoint(IPAddress.Parse(this.m_Address.IP), this.m_Address.Port);
-            this.m_Socket.Bind(address);
+            this.m_Socket.Bind(this.m_Address.ToEndPint());
             this.m_Socket.Listen(10);
             this.m_AcceptBuf = new byte[8192];
 #if Accept_Sync
@@ -117,6 +127,7 @@ namespace QNetwork.Http.Server
                 this.m_AcceptArgs = null;
             }
             this.m_AcceptBuf = null;
+            
             return result;
         }
     }
