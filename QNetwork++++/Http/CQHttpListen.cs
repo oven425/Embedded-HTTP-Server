@@ -29,15 +29,29 @@ namespace QNetwork.Http.Server
     }
     public class CQSocketListen
     {
-        ListenStates m_ListenStates;
+        ListenStates m_ListenState;
+        public ListenStates ListenState
+        {
+            get
+            {
+                return this.m_ListenState;
+            }
+        }
         Socket m_Socket;
         SocketAsyncEventArgs m_AcceptArgs;
         byte[] m_AcceptBuf;
-        public EndPoint Address { set; get; }
+        public EndPoint BindEndPoint { set; get; }
         CQSocketListen_Address m_Address;
+        public CQSocketListen_Address Addrss
+        {
+            get
+            {
+                return this.m_Address;
+            }
+        }
         public delegate bool NewClientDelegate(Socket socket, byte[] data, int len);
         public event NewClientDelegate OnNewClient;
-        public delegate bool ListenStateDelegate(CQSocketListen_Address listen_address, ListenStates state);
+        public delegate bool ListenStateDelegate(CQSocketListen listen);
         public event ListenStateDelegate OnListenState;
         public CQSocketListen(CQSocketListen_Address address)
         {

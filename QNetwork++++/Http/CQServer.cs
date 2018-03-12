@@ -348,7 +348,7 @@ namespace QNetwork.Http.Server
         {
             bool result = true;
             CQSocketListen listen = new CQSocketListen(data);
-            listen.OnListenState += Listen_OnListenState; ;
+            listen.OnListenState += Listen_OnListenState;
             listen.OnNewClient += Listen_OnNewClient;
             // listen.Address = new IPEndPoint(IPAddress.Parse(address[i].IP), address[i].Port);
             listen.Open();
@@ -356,8 +356,14 @@ namespace QNetwork.Http.Server
             return result;
         }
 
-        private bool Listen_OnListenState(CQSocketListen_Address listen_address, ListenStates state)
+        public delegate bool ListentStateChangeDelegate(CQSocketListen_Address listen_addres, ListenStates state);
+        public event ListentStateChangeDelegate OnListentStateChange;
+        private bool Listen_OnListenState(CQSocketListen listen)
         {
+            if(this.OnListentStateChange != null)
+            {
+                this.OnListentStateChange(listen.Addrss, listen.ListenState);
+            }
             return true;
         }
 
