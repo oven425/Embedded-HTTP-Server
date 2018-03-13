@@ -11,8 +11,8 @@ namespace QNetwork.Http.Server
 {
     public enum ListenStates
     {
-        None,
-        Init,
+        Closed,
+        Opening,
         Fail,
         Normal,
     }
@@ -63,9 +63,37 @@ namespace QNetwork.Http.Server
         public bool Open()
         {
             bool result = true;
+
             this.m_Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            this.m_Socket.Bind(this.m_Address.ToEndPint());
-            this.m_Socket.Listen(10);
+            try
+            {
+                this.m_Socket.Bind(this.m_Address.ToEndPint());
+                this.m_Socket.Listen(10);
+            }
+            catch(Exception ee)
+            {
+                System.Diagnostics.Trace.WriteLine(ee.Message);
+                System.Diagnostics.Trace.WriteLine(ee.StackTrace);
+                result = false;
+            }
+            if(result == false)
+            {
+                this.m_ListenState = ListenStates.Fail;
+                if(this.OnListenState != null)
+                {
+                    this.OnListenState(this);
+                }
+                return result;
+            }
+            else
+            {
+                this.m_ListenState = ListenStates.Normal;
+                if (this.OnListenState != null)
+                {
+                    this.OnListenState(this);
+                }
+            }
+            
             this.m_AcceptBuf = new byte[8192];
 #if Accept_Sync
             this.m_Thread_Accept = new BackgroundWorker();

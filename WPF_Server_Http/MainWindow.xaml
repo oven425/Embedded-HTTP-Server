@@ -10,12 +10,7 @@
         <ListView ItemsSource="{Binding AddressList}">
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="State">
-                        <GridViewColumn.CellTemplate>
-                            <DataTemplate>
-                                <Rectangle Width="20" Height="20" Fill="Orange"/>
-                            </DataTemplate>
-                        </GridViewColumn.CellTemplate>
+                    <GridViewColumn Header="State" DisplayMemberBinding="{Binding ListenState}">
                     </GridViewColumn>
                     <GridViewColumn Header="IP" DisplayMemberBinding="{Binding Address.IP}"/>
                     <GridViewColumn Header="Port" DisplayMemberBinding="{Binding Address.Port}"/>

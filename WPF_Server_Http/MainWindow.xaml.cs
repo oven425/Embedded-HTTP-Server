@@ -63,8 +63,19 @@ namespace WPF_Server_Http
                         this.m_MainUI.AddressList.Add(new CQListenAddress() { Address = net_address });
                     }
                 }
+                this.m_TestServer.OnListentStateChange += M_TestServer_OnListentStateChange;
                 this.m_TestServer.Open(this.m_MainUI.AddressList.Select(x=>x.Address).ToList(), new List<CQHttpService>() { new CQHttpService_Test() } , true);
             }
+        }
+
+        private bool M_TestServer_OnListentStateChange(CQSocketListen_Address listen_addres, ListenStates state)
+        {
+            var vv = this.m_MainUI.AddressList.Where(x => x.Address == listen_addres);
+            foreach(var oo in vv)
+            {
+                oo.ListenState = state;
+            }
+            return true;
         }
     }
 
