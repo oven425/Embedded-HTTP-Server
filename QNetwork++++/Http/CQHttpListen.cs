@@ -21,6 +21,13 @@ namespace QNetwork.Http.Server
         public string IP { set; get; }
         public int Port { set; get; }
 
+        public override string ToString()
+        {
+            return string.Format("IP:{0} Port:{1}"
+                , this.IP
+                , this.Port);
+        }
+
         EndPoint m_EndPoint;
         public EndPoint ToEndPint()
         {
@@ -145,19 +152,30 @@ namespace QNetwork.Http.Server
         }
         private void m_AcceptArgs_Completed(object sender, SocketAsyncEventArgs e)
         {
-            string str = Encoding.ASCII.GetString(e.Buffer, 0, e.BytesTransferred);
-            //System.Diagnostics.Trace.WriteLine(str);
-            this.NewClient(e.AcceptSocket, this.m_AcceptBuf, e.BytesTransferred);
-            this.m_AcceptArgs.AcceptSocket = null;
+            if ((e.SocketError == SocketError.Success) && (e.BytesTransferred > 0))
+            {
+                string str = Encoding.ASCII.GetString(e.Buffer, 0, e.BytesTransferred);
+                //System.Diagnostics.Trace.WriteLine(str);
+                this.NewClient(e.AcceptSocket, this.m_AcceptBuf, e.BytesTransferred);
+                this.m_AcceptArgs.AcceptSocket = null;
                 if (this.m_Socket.AcceptAsync(this.m_AcceptArgs) == false)
                 {
                     this.m_AcceptArgs_Completed(this.m_Socket, this.m_AcceptArgs);
                 }
             }
+            else
+            {
+                if(this.m_ListenState != ListenStates.Closed)
+                {
+
+                }
+            }
+        }
 
         public bool Close()
         {
             bool result = true;
+            this.m_ListenState = ListenStates.Closed;
             if (this.m_Socket != null)
             {
                 this.m_Socket.Close();

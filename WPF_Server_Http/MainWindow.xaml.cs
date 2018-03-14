@@ -35,11 +35,6 @@ namespace WPF_Server_Http
             InitializeComponent();
         }
 
-        private void button_open_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
-
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             if (this.m_MainUI == null)
@@ -76,6 +71,31 @@ namespace WPF_Server_Http
                 oo.ListenState = state;
             }
             return true;
+        }
+
+        private void button_add_listen_Click(object sender, RoutedEventArgs e)
+        {
+            CQSocketListen_Address ssd = new CQSocketListen_Address() { IP = this.m_MainUI.Listen_IP, Port = this.m_MainUI.Listen_Port };
+            CQListenAddress address = new CQListenAddress() { Address = ssd };
+            this.m_TestServer.OpenListen(ssd);
+        }
+
+        private void checkbox_listen_control_Click(object sender, RoutedEventArgs e)
+        {
+            CheckBox checkbox = sender as CheckBox;
+            CQListenAddress address = checkbox.DataContext as CQListenAddress;
+            if (checkbox != null)
+            {
+                if(address.IsOpen == true)
+                {
+                    this.m_TestServer.OpenListen(address.Address);
+                }
+                else
+                {
+                    this.m_TestServer.CloseListen(address.Address);
+                    
+                }
+            }
         }
     }
 

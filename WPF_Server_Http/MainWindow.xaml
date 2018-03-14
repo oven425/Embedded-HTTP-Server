@@ -1,23 +1,46 @@
 ﻿<Window x:Class="WPF_Server_Http.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:src="clr-namespace:WPF_Server_Http"
         Title="MainWindow" Height="350" Width="525" Loaded="Window_Loaded">
+    <Window.Resources>
+        <src:CQListenStates2Brush x:Key="listenstates2brush"/>
+    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        <ListView ItemsSource="{Binding AddressList}">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="IP:" VerticalAlignment="Center"/>
+            <TextBox Text="{Binding Listen_IP}" Grid.Column="1"/>
+            <TextBlock Text="Port:" Grid.Column="2" VerticalAlignment="Center"/>
+            <TextBox Text="{Binding Listen_Port}" Grid.Column="3"/>
+            <Button x:Name="button_add_listen" Click="button_add_listen_Click" Grid.Column="4">Add listen</Button>
+        </Grid>
+        <ListView Grid.Row="1" ItemsSource="{Binding AddressList}">
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="State" DisplayMemberBinding="{Binding ListenState}">
+                    <GridViewColumn Header="State">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <Rectangle Width="20" Height="20" Fill="{Binding ListenState,Converter={StaticResource listenstates2brush}}"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
                     </GridViewColumn>
                     <GridViewColumn Header="IP" DisplayMemberBinding="{Binding Address.IP}"/>
                     <GridViewColumn Header="Port" DisplayMemberBinding="{Binding Address.Port}"/>
                     <GridViewColumn>
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
-                                <Button x:Name="button_open" Click="button_open_Click" Grid.Column="4">Open</Button>
+                                <CheckBox x:Name="checkbox_listen_control" IsChecked="{Binding IsOpen}" Click="checkbox_listen_control_Click"/>
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>

@@ -337,10 +337,25 @@ namespace QNetwork.Http.Server
             return result;
         }
 
-        public bool CloseListen(CQSocketListen_Address listen)
+        public bool CloseListen(CQSocketListen_Address data)
         {
             bool result = true;
-
+            EndPoint end = data.ToEndPint();
+            if(this.m_AcceptSockets.ContainsKey(end) == true)
+            {
+                this.m_AcceptSockets[end].Close();
+                this.m_AcceptSockets.Remove(end);
+            }
+            else
+            {
+                System.Diagnostics.Trace.WriteLine("");
+            }
+            //CQSocketListen listen = new CQSocketListen(data);
+            //listen.OnListenState += Listen_OnListenState;
+            //listen.OnNewClient += Listen_OnNewClient;
+            // listen.Address = new IPEndPoint(IPAddress.Parse(address[i].IP), address[i].Port);
+           // listen.Open();
+            //this.m_AcceptSockets.Add(address[i].ToEndPoint(), listen);
             return result;
         }
 
