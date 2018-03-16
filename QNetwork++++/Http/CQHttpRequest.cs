@@ -46,12 +46,12 @@ namespace QNetwork.Http.Server
             this.m_ContentLength = 0;
             System.Diagnostics.Trace.WriteLine(data);
             bool result = true;
-            string[] sl = data.Split(new string[] { "\r\n" }, StringSplitOptions.None);
+            string[] sl = data.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
             for (int i = 0; i < sl.Length; i++)
             {
                 if (i == 0)
                 {
-                    string[] sl_1 = sl[i].Split(new string[] { " " }, StringSplitOptions.None);
+                    string[] sl_1 = sl[i].Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
                     if (sl_1.Length == 3)
                     {
                         this.Method = sl_1[0];
