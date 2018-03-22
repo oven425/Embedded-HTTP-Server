@@ -7,24 +7,30 @@ using System.Text;
 
 namespace QNetwork.Http.Server
 {
-    public class CQHttpResponseReader
+    enum IQResponseReader_ReadStates
+    {
+        None,
+        Header,
+        Content
+    }
+    public interface IQResponseReader
+    {
+        int Read(byte[] buffer, int offset, int count);
+        bool IsEnd { get; }
+    }
+    public class CQHttpResponseReader: IQResponseReader
     {
         CQHttpResponse m_Resp;
         MemoryStream m_HeaderBuf = new MemoryStream();
-        enum ReadStates
-        {
-            None,
-            Header,
-            Content
-        }
-        ReadStates m_ReadState;
+
+        IQResponseReader_ReadStates m_ReadState;
         //public bool IsEmpty { get { return this.m_Resp == null; } }
         public bool Set(CQHttpResponse resp)
         {
             bool result = true;
             this.m_Resp = resp;
             this.m_IsEnd = false;
-            this.m_ReadState = ReadStates.None;
+            this.m_ReadState = IQResponseReader_ReadStates.None;
             return result;
         }
         bool m_IsEnd = true;
@@ -35,14 +41,14 @@ namespace QNetwork.Http.Server
         {
             switch (this.m_ReadState)
             {
-                case ReadStates.None:
+                case IQResponseReader_ReadStates.None:
                     {
                         string str_header = this.m_Resp.ToString();
                         byte[] buf = Encoding.UTF8.GetBytes(str_header);
                         this.m_HeaderBuf.SetLength(0);
                         this.m_HeaderBuf.Write(buf, 0, buf.Length);
                         this.m_HeaderBuf.Position = 0;
-                        this.m_ReadState = ReadStates.Header;
+                        this.m_ReadState = IQResponseReader_ReadStates.Header;
                     }
                     break;
             }
@@ -54,15 +60,15 @@ namespace QNetwork.Http.Server
             }
             if (maxread_len > 0)
             {
-                if (this.m_ReadState == ReadStates.Header)
+                if (this.m_ReadState == IQResponseReader_ReadStates.Header)
                 {
                     read_len = this.m_HeaderBuf.Read(buffer, offset, count);
                     if (this.m_HeaderBuf.Position == this.m_HeaderBuf.Length)
                     {
-                        this.m_ReadState = ReadStates.Content;
+                        this.m_ReadState = IQResponseReader_ReadStates.Content;
                     }
                 }
-                if (this.m_ReadState == ReadStates.Content)
+                if (this.m_ReadState == IQResponseReader_ReadStates.Content)
                 {
                     int read_size = maxread_len - read_len;
                     int read_offset = offset + read_len;

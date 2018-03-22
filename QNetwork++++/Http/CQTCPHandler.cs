@@ -10,7 +10,6 @@ namespace QNetwork.Http.Server
 {
     public class CQTCPHandler
     {
-        protected List<Stream> m_Responses = new List<Stream>();
         protected ReaderWriterLockSlim m_SocketLock;
         byte[] m_RecvBuf;
         SocketAsyncEventArgs m_RecvArgs;

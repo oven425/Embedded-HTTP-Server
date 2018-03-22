@@ -74,6 +74,7 @@ namespace QNetwork.Http.Server
             this.m_Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             try
             {
+                this.m_Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 this.m_Socket.Bind(this.m_Address.ToEndPint());
                 this.m_Socket.Listen(10);
             }
