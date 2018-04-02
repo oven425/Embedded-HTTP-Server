@@ -8,13 +8,46 @@ using System.Threading;
 
 namespace QNetwork.Http.Server
 {
+    public interface IQSocketHandler
+    {
+        bool Recv(byte[] data, int len);
+        bool Send(Stream data);
+    }
+
+    public interface IQProtocolHandler
+    {
+        bool Parse(byte[] data, int len);
+    }
+
+    public class CQSocketHandler : IQSocketHandler
+    {
+        public IQProtocolHandler Handler { set; get; }
+        public bool Recv(byte[] data, int len)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Send(Stream data)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class CQProtocolHandler : IQProtocolHandler
+    {
+        public bool Parse(byte[] data, int len)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public class CQTCPHandler
     {
         protected ReaderWriterLockSlim m_SocketLock;
         byte[] m_RecvBuf;
         SocketAsyncEventArgs m_RecvArgs;
-        SocketAsyncEventArgs m_SendArgs;
-        byte[] m_SendBuf;
+        protected SocketAsyncEventArgs m_SendArgs;
+        protected byte[] m_SendBuf;
         public bool IsEnd { get { return this.m_IsEnd; } }
         protected Socket m_Socket;
         protected bool m_IsEnd;

@@ -14,7 +14,7 @@ namespace QNetwork.Http.Server
     public class CQHttpServer: IQHttpServer_Extension
     {
         List<BackgroundWorker> m_Threads = new List<BackgroundWorker>();
-        Dictionary<EndPoint, CQSocketListen> m_AcceptSockets = new Dictionary<EndPoint, CQSocketListen>();
+        Dictionary<CQSocketListen_Address, CQSocketListen> m_AcceptSockets = new Dictionary<CQSocketListen_Address, CQSocketListen>();
         BackgroundWorker m_Thread;
         Dictionary<string, CQHttpHandler> m_Sessions = new Dictionary<string, CQHttpHandler>();
         List<CQHttpRequest> m_Requests = new List<CQHttpRequest>();
@@ -341,21 +341,16 @@ namespace QNetwork.Http.Server
         {
             bool result = true;
             EndPoint end = data.ToEndPint();
-            if(this.m_AcceptSockets.ContainsKey(end) == true)
+            if(this.m_AcceptSockets.ContainsKey(data) == true)
             {
-                this.m_AcceptSockets[end].Close();
-                this.m_AcceptSockets.Remove(end);
+                this.m_AcceptSockets[data].Close();
+                this.m_AcceptSockets.Remove(data);
             }
             else
             {
                 System.Diagnostics.Trace.WriteLine("");
             }
-            //CQSocketListen listen = new CQSocketListen(data);
-            //listen.OnListenState += Listen_OnListenState;
-            //listen.OnNewClient += Listen_OnNewClient;
-            // listen.Address = new IPEndPoint(IPAddress.Parse(address[i].IP), address[i].Port);
-           // listen.Open();
-            //this.m_AcceptSockets.Add(address[i].ToEndPoint(), listen);
+
             return result;
         }
 
@@ -367,7 +362,7 @@ namespace QNetwork.Http.Server
             listen.OnNewClient += Listen_OnNewClient;
             // listen.Address = new IPEndPoint(IPAddress.Parse(address[i].IP), address[i].Port);
             listen.Open();
-            //this.m_AcceptSockets.Add(address[i].ToEndPoint(), listen);
+            this.m_AcceptSockets.Add(data, listen);
             return result;
         }
 

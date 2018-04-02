@@ -28,7 +28,6 @@ namespace QNetwork.Http.Server
                 , this.Port);
         }
 
-        EndPoint m_EndPoint;
         public EndPoint ToEndPint()
         {
             return new IPEndPoint(IPAddress.Parse(this.IP), this.Port);
@@ -47,15 +46,8 @@ namespace QNetwork.Http.Server
         Socket m_Socket;
         SocketAsyncEventArgs m_AcceptArgs;
         byte[] m_AcceptBuf;
-        public EndPoint BindEndPoint { set; get; }
         CQSocketListen_Address m_Address;
-        public CQSocketListen_Address Addrss
-        {
-            get
-            {
-                return this.m_Address;
-            }
-        }
+        public CQSocketListen_Address Addrss { get { return this.m_Address; } }
         public delegate bool NewClientDelegate(Socket socket, byte[] data, int len);
         public event NewClientDelegate OnNewClient;
         public delegate bool ListenStateDelegate(CQSocketListen listen);
