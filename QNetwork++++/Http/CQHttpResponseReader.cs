@@ -18,26 +18,58 @@ namespace QNetwork.Http.Server
         int Read(byte[] buffer, int offset, int count);
         bool IsEnd { get; }
     }
-    public class CQHttpResponseReader: IQResponseReader
+    public class CQHttpResponseReader : Stream
     {
         CQHttpResponse m_Resp;
         MemoryStream m_HeaderBuf = new MemoryStream();
 
         IQResponseReader_ReadStates m_ReadState;
-        //public bool IsEmpty { get { return this.m_Resp == null; } }
+        long m_Length;
         public bool Set(CQHttpResponse resp)
         {
             bool result = true;
             this.m_Resp = resp;
             this.m_IsEnd = false;
             this.m_ReadState = IQResponseReader_ReadStates.None;
+
             return result;
         }
         bool m_IsEnd = true;
 
         public bool IsEnd { get { return this.m_IsEnd; } }
 
-        public int Read(byte[] buffer, int offset, int count)
+        public override bool CanRead => true;
+
+        public override bool CanSeek => false;
+
+        public override bool CanWrite => false;
+
+        public override long Length => this.m_Length;
+
+        public override long Position { set; get; }
+
+        public override void Flush()
+        {
+            if(this.m_HeaderBuf != null)
+            {
+                this.m_HeaderBuf.Flush();
+            }
+            if((this.m_Resp != null) && (this.m_Resp.Content != null))
+            {
+                this.m_Resp.Content.Flush();
+            }
+        }
+
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            return 0;
+        }
+
+        public override void SetLength(long value)
+        {
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
         {
             switch (this.m_ReadState)
             {
@@ -105,6 +137,11 @@ namespace QNetwork.Http.Server
                 }
             }
             return read_len;
+        }
+
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            throw new NotImplementedException();
         }
     }
 }

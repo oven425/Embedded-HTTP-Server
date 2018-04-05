@@ -8,6 +8,7 @@ using System.Threading;
 
 namespace QNetwork.Http.Server
 {
+
     public interface IQSocketHandler
     {
         bool Recv(byte[] data, int len);
@@ -21,7 +22,7 @@ namespace QNetwork.Http.Server
 
     public class CQSocketHandler : IQSocketHandler
     {
-        public IQProtocolHandler Handler { set; get; }
+
         public bool Recv(byte[] data, int len)
         {
             throw new NotImplementedException();
@@ -35,6 +36,7 @@ namespace QNetwork.Http.Server
 
     public class CQProtocolHandler : IQProtocolHandler
     {
+
         public bool Parse(byte[] data, int len)
         {
             throw new NotImplementedException();
@@ -43,6 +45,7 @@ namespace QNetwork.Http.Server
 
     public class CQTCPHandler
     {
+        public IQSocketHandler SocketHandler { set; get; }
         protected ReaderWriterLockSlim m_SocketLock;
         byte[] m_RecvBuf;
         SocketAsyncEventArgs m_RecvArgs;

@@ -16,86 +16,13 @@ namespace QNetwork.Http.Server
     {
         public delegate bool NewRequestDelegate(CQHttpHandler hadler, List<CQHttpRequest> requests);
         public event NewRequestDelegate OnNewRequest;
-        //SocketAsyncEventArgs m_SendArgs;
-        //byte[] m_SendBuf;
-        //BackgroundWorker m_Thread_Send;
         public CQHttpHandler(Socket socket)
             : base (socket)
         {
             this.m_Socket = socket;
-            //this.m_Thread_Send = new BackgroundWorker();
-            //this.m_Thread_Send.DoWork += new DoWorkEventHandler(m_Thread_Send_DoWork);
             this.MaxHeaderSize = 8192;
         }
 
-        //void m_Thread_Send_DoWork(object sender, DoWorkEventArgs e)
-        //{
-        //    byte[] send_buf = new byte[this.m_Socket.SendBufferSize];
-        //    while (this.IsEnd==false)
-        //    {
-        //        CQHttpResponse resp = null;
-        //        if (Monitor.TryEnter(this.m_SendRespsLock) == true)
-        //        {
-        //            if (this.m_SendResps.Count > 0)
-        //            {
-        //                //resp = this.m_SendResps[0];
-        //                //this.m_SendResps.RemoveAt(0);
-        //                resp = this.m_SendResps.Dequeue();
-        //            }
-        //            Monitor.Exit(this.m_SendRespsLock);
-        //        }
-        //        if (resp != null)
-        //        {
-        //            string resp_str = resp.ToString();
-        //            //System.Diagnostics.Trace.WriteLine(resp_str);
-        //            byte[] bb = Encoding.UTF8.GetBytes(resp_str);
-        //            this.m_Socket.Send(bb);
-        //            if(resp.Content != null)
-        //            {
-        //                while(true)
-        //                {
-        //                    int read_len = resp.Content.Read(send_buf, 0, send_buf.Length);
-        //                    //System.Diagnostics.Trace.WriteLine(Encoding.UTF8.GetString(send_buf, 0, read_len));
-        //                    this.m_Socket.Send(send_buf, read_len, SocketFlags.None);
-        //                    if(read_len != send_buf.Length)
-        //                    {
-        //                        break;
-        //                    }
-        //                }
-                        
-        //            }
-        //            resp.Dispose();
-        //            resp = null;
-        //            //this.m_CurrentResp.Set(resp);
-
-        //            //while (true)
-        //            //{
-        //            //    int send_len = this.m_CurrentResp.Read(send_buf, 0, send_buf.Length);
-
-        //            //    try
-        //            //    {
-        //            //        this.m_Socket.Send(send_buf);
-        //            //    }
-        //            //    catch (Exception ee)
-        //            //    {
-        //            //        System.Diagnostics.Trace.WriteLine(ee.Message);
-        //            //        System.Diagnostics.Trace.WriteLine(ee.StackTrace);
-        //            //        this.m_IsEnd = true;
-        //            //    }
-        //            //    if ((this.m_IsEnd==true)||(send_len != send_buf.Length))
-        //            //    {
-        //            //        break;
-        //            //    }
-        //            //}
-
-        //            //resp.Dispose();
-        //        }
-        //        else
-        //        {
-        //            System.Threading.Thread.Sleep(100);
-        //        }
-        //    }
-        //}
 
         object m_SendRespsLock = new object();
         Queue<CQHttpResponse> m_SendResps = new Queue<CQHttpResponse>();
