@@ -12,14 +12,14 @@ using System.Diagnostics;
 
 namespace QNetwork.Http.Server
 {
-    public class CQHttpHandler: CQTCPHandler
+    public class CQHttpHandler
     {
+        CQTCPHandler m_SocketHandler;
         public delegate bool NewRequestDelegate(CQHttpHandler hadler, List<CQHttpRequest> requests);
         public event NewRequestDelegate OnNewRequest;
-        public CQHttpHandler(Socket socket)
-            : base (socket)
+        public CQHttpHandler(CQTCPHandler data)
         {
-            this.m_Socket = socket;
+            this.m_SocketHandler = data;
             this.MaxHeaderSize = 8192;
         }
 
@@ -146,7 +146,7 @@ namespace QNetwork.Http.Server
         CQHttpRequest m_RecvRequest;
         long m_ContentLength = 0;
         byte[] m_ContentBuf = new byte[8192];
-        protected override bool ParseRequest(byte[] data, int size)
+        protected bool ParseRequest(byte[] data, int size)
         {
             bool result = true;
             List<CQHttpRequest> requests = new List<CQHttpRequest>();
@@ -270,7 +270,7 @@ namespace QNetwork.Http.Server
 
         public int MaxHeaderSize { set; get; }
 
-        public override bool Open(byte[] data, int len)
+        public bool Open(byte[] data, int len)
         {
             bool result = true;
 
@@ -278,15 +278,27 @@ namespace QNetwork.Http.Server
             //this.m_SendArgs.Completed += new EventHandler<SocketAsyncEventArgs>(m_SendArgs_Completed);
             //this.m_SendBuf = new byte[this.m_Socket.SendBufferSize];
             //this.m_SendArgs.SetBuffer(this.m_SendBuf, 0, this.m_SendBuf.Length);
-            base.Open(data, len);
+            //base.Open(data, len);
+            this.ParseRequest(data, len);
             return result;
         }
         
-
+        public bool IsEnd
+        {
+            get
+            {
+                bool isend = true;
+                if(this.m_SocketHandler != null)
+                {
+                    isend = this.m_SocketHandler.IsEnd;
+                }
+                return isend;
+            }
+        }
         public bool ControlTransfer(out Socket socket)
         {
             bool result = true;
-            this.m_IsEnd = true;
+            //this.m_IsEnd = true;
             //if (this.m_RecvArgs != null)
             //{
             //    this.m_RecvArgs.Dispose();
@@ -298,7 +310,7 @@ namespace QNetwork.Http.Server
             return result;
         }
 
-        public override bool Close()
+        public bool Close()
         {
             bool result = true;
             //if(this.m_SendArgs != null)
@@ -307,10 +319,14 @@ namespace QNetwork.Http.Server
             //    this.m_SendArgs = null;
             //}
             //this.m_SendBuf = null;
-            base.Close();
-            this.m_SocketLock.Dispose();
-            this.m_SocketLock = null;
-
+            //base.Close();
+            //this.m_SocketLock.Dispose();
+            //this.m_SocketLock = null;
+            if(this.m_SocketHandler != null)
+            {
+                this.m_SocketHandler.Close();
+                this.m_SocketHandler = null;
+            }
             return result;
         }
     }

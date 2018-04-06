@@ -8,44 +8,9 @@ using System.Threading;
 
 namespace QNetwork.Http.Server
 {
-
-    public interface IQSocketHandler
-    {
-        bool Recv(byte[] data, int len);
-        bool Send(Stream data);
-    }
-
-    public interface IQProtocolHandler
-    {
-        bool Parse(byte[] data, int len);
-    }
-
-    public class CQSocketHandler : IQSocketHandler
-    {
-
-        public bool Recv(byte[] data, int len)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool Send(Stream data)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    public class CQProtocolHandler : IQProtocolHandler
-    {
-
-        public bool Parse(byte[] data, int len)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
     public class CQTCPHandler
     {
-        public IQSocketHandler SocketHandler { set; get; }
+        public MemoryStream RecvData { set; get; }
         protected ReaderWriterLockSlim m_SocketLock;
         byte[] m_RecvBuf;
         SocketAsyncEventArgs m_RecvArgs;
@@ -56,9 +21,13 @@ namespace QNetwork.Http.Server
         protected bool m_IsEnd;
         public string ID { get { return this.m_ID; } }
         protected string m_ID;
-
+        public delegate bool ParseDeleagte(Stream data);
+        public event ParseDeleagte OnParse;
+        Queue<Stream> m_SendDatas = new Queue<Stream>();
+        
         public CQTCPHandler(Socket socket)
         {
+            this.RecvData = new MemoryStream();
             this.m_SocketLock = new ReaderWriterLockSlim();
             this.m_ID = Guid.NewGuid().ToString("N");
             this.m_Socket = socket;
@@ -90,8 +59,20 @@ namespace QNetwork.Http.Server
             this.m_SocketLock.ExitReadLock();
         }
 
+        public bool AddSend(Stream data)
+        {
+            bool result = true;
+            
+
+            return result;
+        }
+
         protected virtual bool ParseRequest(byte[] data, int size)
         {
+            if(this.OnParse!= null)
+            {
+                this.OnParse(this.RecvData);
+            }
             return true;
         }
 
