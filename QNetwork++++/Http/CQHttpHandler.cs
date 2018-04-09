@@ -1,5 +1,4 @@
-﻿#define Async_Args
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,21 +16,33 @@ namespace QNetwork.Http.Server
         CQTCPHandler m_SocketHandler;
         public delegate bool NewRequestDelegate(CQHttpHandler hadler, List<CQHttpRequest> requests);
         public event NewRequestDelegate OnNewRequest;
+        public string ID { get { return this.m_ID; } }
         public CQHttpHandler(CQTCPHandler data)
         {
             this.m_SocketHandler = data;
+            this.m_SocketHandler.OnParse += M_SocketHandler_OnParse;
             this.MaxHeaderSize = 8192;
+            this.m_ID = this.m_SocketHandler.ID;
+        }
+
+        private bool M_SocketHandler_OnParse(Stream data)
+        {
+            this.ParseRequest(data);
+            return true;
         }
 
 
-        object m_SendRespsLock = new object();
-        Queue<CQHttpResponse> m_SendResps = new Queue<CQHttpResponse>();
+
+        //Queue<CQHttpResponse> m_SendResps = new Queue<CQHttpResponse>();
         public bool SendResp(CQHttpResponse resp)
         {
             bool result = true;
-            Monitor.Enter(this.m_SendRespsLock);
-            this.m_SendResps.Enqueue(resp);
-            Monitor.Exit(this.m_SendRespsLock);
+            CQHttpResponseReader resp_reader = new CQHttpResponseReader();
+            resp_reader.Set(resp);
+            this.m_SocketHandler.AddSend(resp_reader);
+            //Monitor.Enter(this.m_SendRespsLock);
+            //this.m_SendResps.Enqueue(resp);
+            //Monitor.Exit(this.m_SendRespsLock);
 #if Async_Args
             if (this.m_SendArgs.LastOperation == SocketAsyncOperation.None)
             {
@@ -48,95 +59,19 @@ namespace QNetwork.Http.Server
             this.Send();
             Monitor.Exit(this.m_SendLock);
 #else
-            if (this.m_Thread_Send.IsBusy == false)
-            {
-                this.m_Thread_Send.RunWorkerAsync();
-            }
+            //if (this.m_Thread_Send.IsBusy == false)
+            //{
+            //    this.m_Thread_Send.RunWorkerAsync();
+            //}
 #endif
 
             return result;
         }
-        bool m_IsSending = false;
-        bool Send()
-        {
-            bool result = true;
-            if (this.m_IsSending == true)
-            {
-                return result;
-            }
-            if (this.m_CurrentResp.IsEnd == true)
-            {
-                CQHttpResponse resp = null;
-                Monitor.Enter(this.m_SendRespsLock);
-                if(this.m_SendResps.Count > 0)
-                {
-                    resp = this.m_SendResps.Dequeue();
-                }
-                Monitor.Exit(this.m_SendRespsLock);
-                if (resp != null)
-                {
-                    this.m_CurrentResp.Set(resp);
-                }
-            }
-            if (this.m_CurrentResp.IsEnd == false)
-            {
-                int send_len = this.m_CurrentResp.Read(this.m_SendBuf, 0, this.m_SendBuf.Length);
-                //System.Diagnostics.Trace.Write(Encoding.UTF8.GetString(m_SendBuf, 0, send_len));
-                try
-                {
-                    this.m_SocketLock.EnterReadLock();
-                    this.m_SendArgs.SetBuffer(this.m_SendBuf, 0, send_len);
-                    while (true)
-                    {
-                        bool is_pending = this.m_Socket.SendAsync(this.m_SendArgs);
-                        if (is_pending == true)
-                        {
-                            this.m_IsSending = true;
-                            break;
-                        }
-                        else
-                        {
-                            if (this.m_SendArgs.SocketError != SocketError.Success)
-                            {
-                                this.m_IsSending = false;
-                                this.m_IsEnd = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-                catch(Exception ee)
-                {
-                    System.Diagnostics.Trace.WriteLine(ee.Message);
-                    System.Diagnostics.Trace.WriteLine(ee.StackTrace);
-                }
-                finally
-                {
-                    this.m_SocketLock.ExitReadLock();
-                }
-            }
-            
-            return result;
-        }
 
-        object m_SendLock = new object();
-        CQHttpResponseReader m_CurrentResp = new CQHttpResponseReader();
-        void m_SendArgs_Completed(object sender, SocketAsyncEventArgs e)
-        {
-            Monitor.Enter(this.m_SendLock);
-            this.m_IsSending = false;
-            if (e.SocketError == SocketError.Success)
-            {
-                this.Send();
-            }
-            else
-            {
-                this.m_IsEnd = true;
-            }
-            Monitor.Exit(this.m_SendLock);
-        }
 
-        MemoryStream m_Temp = new MemoryStream();
+
+        string m_ID;
+        //MemoryStream m_Temp = new MemoryStream();
         enum ParseStates
         {
             Header,
@@ -146,16 +81,18 @@ namespace QNetwork.Http.Server
         CQHttpRequest m_RecvRequest;
         long m_ContentLength = 0;
         byte[] m_ContentBuf = new byte[8192];
-        protected bool ParseRequest(byte[] data, int size)
+        byte[] m_HeaderBuf = new byte[8192];
+        protected bool ParseRequest(Stream data)
         {
             bool result = true;
             List<CQHttpRequest> requests = new List<CQHttpRequest>();
             int findindex = 0;
             //if (this.m_Temp.Length != 0)
             {
-                this.m_Temp.Seek(0, SeekOrigin.End);
-                this.m_Temp.Write(data, 0, size);
+                //this.m_Temp.Seek(0, SeekOrigin.End);
+                //this.m_Temp.Write(data, 0, size);
             }
+            data.Position = 0;
             bool isparse_end = false;
             while (isparse_end == false)
             {
@@ -163,38 +100,39 @@ namespace QNetwork.Http.Server
                 {
                     byte[] req_ = null;
                     int lastindex = 0;
-                    byte[] ddata = this.m_Temp.ToArray();
-                    for (int i = 0; i < ddata.Length - 3; i++)
+                    int read_len = data.Read(this.m_HeaderBuf, 0, this.m_HeaderBuf.Length);
+                    for (int i = 0; i < read_len - 3; i++)
                     {
-                        if ((ddata[i] == '\r') && (ddata[i + 1] == '\n') && (ddata[i + 2] == '\r') && (ddata[i + 3] == '\n'))
+                        if ((this.m_HeaderBuf[i] == '\r') && (this.m_HeaderBuf[i + 1] == '\n') && (this.m_HeaderBuf[i + 2] == '\r') && (this.m_HeaderBuf[i + 3] == '\n'))
                         {
                             findindex = i + 4;
                             req_ = new byte[findindex];
-                            this.m_Temp.Position = 0;
-                            this.m_Temp.Read(req_, 0, req_.Length);
-                            this.m_Temp.SetLength(0);
-                            if (findindex < ddata.Length)
-                            {
-                                this.m_Temp.Write(ddata, findindex, ddata.Length - findindex);
-                                this.m_Temp.Position = 0;
-                            }
+                            Array.Copy(this.m_HeaderBuf, req_, findindex);
+                            //this.m_Temp.Position = 0;
+                            //this.m_Temp.Read(req_, 0, req_.Length);
+                            //this.m_Temp.SetLength(0);
+                            //if (findindex < ddata.Length)
+                            //{
+                            //    this.m_Temp.Write(ddata, findindex, ddata.Length - findindex);
+                            //    this.m_Temp.Position = 0;
+                            //}
                             break;
                         }
                     }
                     if (req_ != null)
                     {
                         string address = "127.0.0.1";
-                        if (this.m_Socket == null)
+                        if (this.m_SocketHandler == null)
                         {
                             return true;
                         }
-                        if (this.m_Socket.RemoteEndPoint is IPEndPoint)
+                        if (this.m_SocketHandler.RemoteEndPoint is IPEndPoint)
                         {
-                            IPEndPoint ppoint = (IPEndPoint)this.m_Socket.RemoteEndPoint;
+                            IPEndPoint ppoint = (IPEndPoint)this.m_SocketHandler.RemoteEndPoint;
                             address = string.Format("{0}:{1}", ppoint.Address.ToString(), ppoint.Port);
                         }
 
-                        CQHttpRequest req = new CQHttpRequest(this.m_ID, address);
+                        CQHttpRequest req = new CQHttpRequest(this.m_SocketHandler.ID, address);
                         
                         req.ParseHeader(req_, lastindex, findindex);
 
@@ -219,43 +157,44 @@ namespace QNetwork.Http.Server
                 }
                 else if(this.m_ParseState == ParseStates.RecvContent)
                 {
-                    this.m_Temp.Position = 0;
-                    int recv_len = this.m_ContentBuf.Length;
-                    if (recv_len > this.m_ContentLength)
-                    {
-                        recv_len = (int)this.m_ContentLength;
-                    }
-                    int read_len = this.m_Temp.Read(this.m_ContentBuf, 0, recv_len);
-                    this.m_ContentLength = this.m_ContentLength - read_len;
-                    this.m_RecvRequest.Content.Write(this.m_ContentBuf, 0, read_len);
-                    if (this.m_ContentLength > 0)
-                    {
+                    //this.m_Temp.Position = 0;
+                    //int recv_len = this.m_ContentBuf.Length;
+                    //if (recv_len > this.m_ContentLength)
+                    //{
+                    //    recv_len = (int)this.m_ContentLength;
+                    //}
+                    //int read_len = this.m_Temp.Read(this.m_ContentBuf, 0, recv_len);
+                    //this.m_ContentLength = this.m_ContentLength - read_len;
+                    //this.m_RecvRequest.Content.Write(this.m_ContentBuf, 0, read_len);
+                    //if (this.m_ContentLength > 0)
+                    //{
 
-                    }
-                    else
-                    {
-                        this.m_ParseState = ParseStates.Header;
-                        this.m_RecvRequest.Content.Position = 0;
-                        requests.Add(this.m_RecvRequest);
-                        if ((this.m_Temp.Length - this.m_Temp.Position) > 0)
-                        {
-                            byte[] ddata = this.m_Temp.ToArray();
-                            this.m_Temp.Write(ddata, (int)this.m_Temp.Position, (int)(this.m_Temp.Length - this.m_Temp.Position));
-                        }
+                    //}
+                    //else
+                    //{
+                    //    this.m_ParseState = ParseStates.Header;
+                    //    this.m_RecvRequest.Content.Position = 0;
+                    //    requests.Add(this.m_RecvRequest);
+                    //    if ((this.m_Temp.Length - this.m_Temp.Position) > 0)
+                    //    {
+                    //        byte[] ddata = this.m_Temp.ToArray();
+                    //        this.m_Temp.Write(ddata, (int)this.m_Temp.Position, (int)(this.m_Temp.Length - this.m_Temp.Position));
+                    //    }
                             
-                    }
+                    //}
                 }
-                if((this.m_Temp.Length - this.m_Temp.Position) <=0)
+                if((data.Length - data.Position) <=0)
                 {
-                    this.m_Temp.SetLength(0);
+                    data.SetLength(0);
                     isparse_end = true;
                 }
                 
             
             }
-            if(this.m_Temp.Length>this.MaxHeaderSize)
+            if(data.Length>this.MaxHeaderSize)
             {
-                this.m_IsEnd = true;
+                this.m_SocketHandler.Close();
+                //this.m_IsEnd = true;
             }
             else
             {
@@ -279,7 +218,7 @@ namespace QNetwork.Http.Server
             //this.m_SendBuf = new byte[this.m_Socket.SendBufferSize];
             //this.m_SendArgs.SetBuffer(this.m_SendBuf, 0, this.m_SendBuf.Length);
             //base.Open(data, len);
-            this.ParseRequest(data, len);
+            this.m_SocketHandler.Open(data, len);
             return result;
         }
         
@@ -306,7 +245,8 @@ namespace QNetwork.Http.Server
             //}
             //SocketInformation inform =  this.m_Socket.DuplicateAndClose(Process.GetCurrentProcess().Id);
             //socket = new Socket(inform);
-            socket = this.m_Socket;
+            //socket = this.m_Socket;
+            socket = null;
             return result;
         }
 

@@ -13,12 +13,13 @@ namespace QNetwork.Http.Server
         Header,
         Content
     }
-    public interface IQResponseReader
+
+
+    public abstract class CQResponseReader: Stream
     {
-        int Read(byte[] buffer, int offset, int count);
-        bool IsEnd { get; }
+        public abstract bool IsEnd { get; }
     }
-    public class CQHttpResponseReader : Stream
+    public class CQHttpResponseReader : CQResponseReader
     {
         CQHttpResponse m_Resp;
         MemoryStream m_HeaderBuf = new MemoryStream();
@@ -36,7 +37,7 @@ namespace QNetwork.Http.Server
         }
         bool m_IsEnd = true;
 
-        public bool IsEnd { get { return this.m_IsEnd; } }
+        public override bool IsEnd => this.m_IsEnd;
 
         public override bool CanRead => true;
 

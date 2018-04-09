@@ -1,10 +1,13 @@
-﻿using System;
+﻿#define Async_Args
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.ComponentModel;
 
 namespace QNetwork.Http.Server
 {
@@ -20,11 +23,11 @@ namespace QNetwork.Http.Server
         protected Socket m_Socket;
         protected bool m_IsEnd;
         public string ID { get { return this.m_ID; } }
-        protected string m_ID;
+        string m_ID;
         public delegate bool ParseDeleagte(Stream data);
         public event ParseDeleagte OnParse;
-        Queue<Stream> m_SendDatas = new Queue<Stream>();
-        
+        Queue<CQResponseReader> m_SendDatas = new Queue<CQResponseReader>();
+        BackgroundWorker m_Thread;
         public CQTCPHandler(Socket socket)
         {
             this.RecvData = new MemoryStream();
@@ -59,17 +62,46 @@ namespace QNetwork.Http.Server
             this.m_SocketLock.ExitReadLock();
         }
 
-        public bool AddSend(Stream data)
+        public bool AddSend(CQResponseReader data)
         {
             bool result = true;
-            
+#if Async_Args
+            if (this.m_SendArgs.LastOperation == SocketAsyncOperation.None)
+            {
+                Stream resp1 = null;
+                Monitor.Enter(this.m_SendRespsLock);
+                if(this.m_SendDatas.Count > 0)
+                {
+                    this.m_SendDatas.Enqueue(data);
+                    this.m_CurrentResp = this.m_SendDatas.Dequeue();
+                }
+                else
+                {
+                    this.m_CurrentResp = data;
+                }
+                
+                Monitor.Exit(this.m_SendRespsLock);
+
+            }
+            Monitor.Enter(this.m_SendLock);
+            this.Send();
+            Monitor.Exit(this.m_SendLock);
+#else
+            if (this.m_Thread_Send.IsBusy == false)
+            {
+                this.m_Thread_Send.RunWorkerAsync();
+            }
+#endif
 
             return result;
         }
 
+
         protected virtual bool ParseRequest(byte[] data, int size)
         {
-            if(this.OnParse!= null)
+            this.RecvData.Position = this.RecvData.Length;
+            this.RecvData.Write(data, 0, size);
+            if (this.OnParse != null)
             {
                 this.OnParse(this.RecvData);
             }
@@ -85,7 +117,7 @@ namespace QNetwork.Http.Server
             this.m_RecvArgs.SetBuffer(this.m_RecvBuf, 0, this.m_RecvBuf.Length);
 
             this.m_SendArgs = new SocketAsyncEventArgs();
-            this.m_SendArgs.Completed += M_SendArgs_Completed;
+            this.m_SendArgs.Completed += m_SendArgs_Completed;
             this.m_SendBuf = new byte[this.m_Socket.SendBufferSize];
             ThreadPool.QueueUserWorkItem(o =>
             {
@@ -108,19 +140,92 @@ namespace QNetwork.Http.Server
             });
             return result;
         }
-
-
-
-        private void M_SendArgs_Completed(object sender, SocketAsyncEventArgs e)
+        object m_SendRespsLock = new object();
+        bool m_IsSending = false;
+        bool Send()
         {
-            if ((e.SocketError != SocketError.Success) || (e.BytesTransferred > 0))
+            bool result = true;
+            if (this.m_IsSending == true)
             {
-                this.m_IsEnd = true;
+                return result;
+            }
+            if (this.m_CurrentResp.IsEnd == true)
+            {
+                Stream resp = null;
+                Monitor.Enter(this.m_SendRespsLock);
+                if (this.m_SendDatas.Count > 0)
+                {
+                    resp = this.m_SendDatas.Dequeue();
+                }
+                Monitor.Exit(this.m_SendRespsLock);
+                if (resp != null)
+                {
+                    //this.m_CurrentResp.Set(resp);
+                }
+            }
+            if (this.m_CurrentResp.IsEnd == false)
+            {
+                int send_len = this.m_CurrentResp.Read(this.m_SendBuf, 0, this.m_SendBuf.Length);
+                //System.Diagnostics.Trace.Write(Encoding.UTF8.GetString(m_SendBuf, 0, send_len));
+                try
+                {
+                    this.m_SocketLock.EnterReadLock();
+                    this.m_SendArgs.SetBuffer(this.m_SendBuf, 0, send_len);
+                    while (true)
+                    {
+                        bool is_pending = this.m_Socket.SendAsync(this.m_SendArgs);
+                        if (is_pending == true)
+                        {
+                            this.m_IsSending = true;
+                            break;
+                        }
+                        else
+                        {
+                            if (this.m_SendArgs.SocketError != SocketError.Success)
+                            {
+                                this.m_IsSending = false;
+                                this.m_IsEnd = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                catch (Exception ee)
+                {
+                    System.Diagnostics.Trace.WriteLine(ee.Message);
+                    System.Diagnostics.Trace.WriteLine(ee.StackTrace);
+                }
+                finally
+                {
+                    this.m_SocketLock.ExitReadLock();
+                }
+            }
+
+            return result;
+        }
+
+        public EndPoint RemoteEndPoint
+        {
+            get
+            {
+                return this.m_Socket.RemoteEndPoint;
+            }
+        }
+        object m_SendLock = new object();
+        CQResponseReader m_CurrentResp;
+        void m_SendArgs_Completed(object sender, SocketAsyncEventArgs e)
+        {
+            Monitor.Enter(this.m_SendLock);
+            this.m_IsSending = false;
+            if (e.SocketError == SocketError.Success)
+            {
+                this.Send();
             }
             else
             {
-
+                this.m_IsEnd = true;
             }
+            Monitor.Exit(this.m_SendLock);
         }
 
         public virtual bool Close()

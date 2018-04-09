@@ -150,7 +150,8 @@ namespace QNetwork.Http.Server
         bool ProcessAccept(Socket client, byte[] acceptbuf, int accept_len)
         {
             bool result = true;
-            CQHttpHandler session = new CQHttpHandler(client);
+            CQTCPHandler tcphandler = new CQTCPHandler(client);
+            CQHttpHandler session = new CQHttpHandler(tcphandler);
             session.OnNewRequest += new CQHttpHandler.NewRequestDelegate(session_OnNewRequest);
             Monitor.Enter(this.m_SessionsLock);
             if (this.m_Sessions.ContainsKey(session.ID) == true)
