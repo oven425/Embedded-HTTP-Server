@@ -361,7 +361,6 @@ namespace QNetwork.Http.Server
             CQSocketListen listen = new CQSocketListen(data);
             listen.OnListenState += Listen_OnListenState;
             listen.OnNewClient += Listen_OnNewClient;
-            // listen.Address = new IPEndPoint(IPAddress.Parse(address[i].IP), address[i].Port);
             listen.Open();
             this.m_AcceptSockets.Add(data, listen);
             return result;
@@ -384,11 +383,8 @@ namespace QNetwork.Http.Server
             for (int i = 0; i < services.Count; i++)
             {
                 services[i].Extension = this;
-                //services[i].OnMultiPart += new CQHttpService.MultiPartDelegate(CQHttpServer_OnMultiPart);
-                services[i].OnControlTransfer += new CQHttpService.ControlTransferDelegate(CQHttpServer_OnControlTransfer);
                 this.m_Services.Add(services[i]);
             }
-            //this.m_Services.AddRange(services);
             if(adddefault == true)
             {
                 this.m_Services.Add(new CQHttpDefaultService());
@@ -411,41 +407,6 @@ namespace QNetwork.Http.Server
             return true;
         }
 
-        bool CQHttpServer_OnControlTransfer(string handlerid, out Socket socket)
-        {
-            socket = null;
-            Monitor.Enter(this.m_RequestsLock);
-            this.m_Requests.RemoveAll(x => x.HandlerID == handlerid);
-            Monitor.Exit(this.m_RequestsLock);
-
-            Monitor.Enter(this.m_SessionsLock);
-            if (this.m_Sessions.ContainsKey(handlerid) == true)
-            {
-                this.m_Sessions[handlerid].ControlTransfer(out socket);
-                this.m_Sessions.Remove(handlerid);
-            }
-            Monitor.Exit(this.m_SessionsLock);
-
-            Monitor.Enter(this.m_RequestsLock);
-            this.m_Requests.RemoveAll(x => x.HandlerID == handlerid);
-            Monitor.Exit(this.m_RequestsLock);
-            return true;
-        }
-
-        bool CQHttpServer_OnMultiPart(List<CQHttpResponse> datas)
-        {
-            for (int i = 0; i < datas.Count; i++)
-            {
-                Monitor.Enter(this.m_SessionsLock);
-                if (this.m_Sessions.ContainsKey(datas[i].HandlerID) == true)
-                {
-                    this.m_Sessions[datas[i].HandlerID].SendResp(datas[i]);
-                }
-                Monitor.Exit(this.m_SessionsLock);
-            }
-            return true;
-        }
-
         public bool SendMultiPart(List<CQHttpResponse> datas)
         {
             for (int i = 0; i < datas.Count; i++)
@@ -460,9 +421,25 @@ namespace QNetwork.Http.Server
             return true;
         }
 
-        public bool SendControlTransfer(string handlerid, out Socket socket)
+        public bool ControlTransfer(string handlerid, out CQTCPHandler tcphandler)
         {
-            throw new NotImplementedException();
+            tcphandler = null;
+            Monitor.Enter(this.m_RequestsLock);
+            this.m_Requests.RemoveAll(x => x.HandlerID == handlerid);
+            Monitor.Exit(this.m_RequestsLock);
+
+            Monitor.Enter(this.m_SessionsLock);
+            if (this.m_Sessions.ContainsKey(handlerid) == true)
+            {
+                this.m_Sessions[handlerid].ControlTransfer(out tcphandler);
+                this.m_Sessions.Remove(handlerid);
+            }
+            Monitor.Exit(this.m_SessionsLock);
+
+            Monitor.Enter(this.m_RequestsLock);
+            this.m_Requests.RemoveAll(x => x.HandlerID == handlerid);
+            Monitor.Exit(this.m_RequestsLock);
+            return true;
         }
     }
 
@@ -516,7 +493,7 @@ namespace QNetwork.Http.Server
     public interface IQHttpServer_Extension
     {
         bool SendMultiPart(List<CQHttpResponse> datas);
-        bool SendControlTransfer(string handlerid, out Socket socket);
+        bool ControlTransfer(string handlerid, out CQTCPHandler tcphandler);
     }
 
     public interface IQHttpService
@@ -526,8 +503,6 @@ namespace QNetwork.Http.Server
         bool CloseHandler(List<string> handlers);
         IQHttpServer_Extension Extension { set; get; }
     }
-
-
 
     public abstract class CQHttpService: IQHttpService
     {
@@ -557,30 +532,6 @@ namespace QNetwork.Http.Server
                 this.m_Caches.Remove(key);
             }
             Monitor.Exit(this.m_CachesLock);
-            return result;
-        }
-        //public delegate bool MultiPartDelegate(List<CQHttpResponse> datas);
-        //public event MultiPartDelegate OnMultiPart;
-        //protected bool SendMultiPart(List<CQHttpResponse> datas)
-        //{
-        //    bool result = true;
-        //    if (this.OnMultiPart != null)
-        //    {
-        //        this.OnMultiPart(datas);
-        //    }
-        //    return result;
-        //}
-
-        public delegate bool ControlTransferDelegate(string handlerid, out Socket socket);
-        public event ControlTransferDelegate OnControlTransfer;
-        protected bool SendControlTransfer(string handlerid, out Socket socket)
-        {
-            bool result = true;
-            socket = null;
-            if (this.OnControlTransfer != null)
-            {
-                this.OnControlTransfer(handlerid, out socket);
-            }
             return result;
         }
     }

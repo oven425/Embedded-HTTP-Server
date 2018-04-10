@@ -26,7 +26,7 @@ namespace QNetwork.Http.Server
         string m_ID;
         public delegate bool ParseDeleagte(Stream data);
         public event ParseDeleagte OnParse;
-        Queue<CQResponseReader> m_SendDatas = new Queue<CQResponseReader>();
+        Queue<IQResponseReader> m_SendDatas = new Queue<IQResponseReader>();
         BackgroundWorker m_Thread;
         public CQTCPHandler(Socket socket)
         {
@@ -62,7 +62,7 @@ namespace QNetwork.Http.Server
             this.m_SocketLock.ExitReadLock();
         }
 
-        public bool AddSend(CQResponseReader data)
+        public bool AddSend(IQResponseReader data)
         {
             bool result = true;
 #if Async_Args
@@ -151,7 +151,7 @@ namespace QNetwork.Http.Server
             }
             if (this.m_CurrentResp.IsEnd == true)
             {
-                Stream resp = null;
+                IQResponseReader resp = null;
                 Monitor.Enter(this.m_SendRespsLock);
                 if (this.m_SendDatas.Count > 0)
                 {
@@ -212,7 +212,7 @@ namespace QNetwork.Http.Server
             }
         }
         object m_SendLock = new object();
-        CQResponseReader m_CurrentResp;
+        IQResponseReader m_CurrentResp;
         void m_SendArgs_Completed(object sender, SocketAsyncEventArgs e)
         {
             Monitor.Enter(this.m_SendLock);
@@ -228,19 +228,67 @@ namespace QNetwork.Http.Server
             Monitor.Exit(this.m_SendLock);
         }
 
-        public virtual bool Close()
+        public virtual bool CloseRecv()
         {
             bool result = true;
-            this.m_SocketLock.EnterWriteLock();
             try
             {
-                this.m_IsEnd = true;
+                this.m_SocketLock.ExitReadLock();
                 if (this.m_RecvArgs != null)
                 {
                     this.m_RecvArgs.Dispose();
                     this.m_RecvArgs = null;
                 }
                 this.m_RecvBuf = null;
+                if(this.RecvData != null)
+                {
+                    this.RecvData.Close();
+                    this.RecvData.Dispose();
+                    this.RecvData = null;
+                }
+            }
+            catch(Exception ee)
+            {
+                System.Diagnostics.Trace.WriteLine(ee.Message);
+                System.Diagnostics.Trace.WriteLine(ee.StackTrace);
+            }
+            finally
+            {
+                this.m_SocketLock.ExitReadLock();
+            }
+            
+            return result;
+        }
+
+        public virtual bool Close()
+        {
+            bool result = true;
+            Monitor.Enter(this.m_SendRespsLock);
+            for(int i=0; i <this.m_SendDatas.Count; i++)
+            {
+                this.m_SendDatas.ElementAt(i).Dispose();
+            }
+            this.m_SendDatas.Clear();
+            Monitor.Exit(this.m_SendRespsLock);
+            
+            this.m_SocketLock.EnterWriteLock();
+            try
+            {
+                this.m_IsEnd = true;
+
+                if (this.m_RecvArgs != null)
+                {
+                    this.m_RecvArgs.Dispose();
+                    this.m_RecvArgs = null;
+                }
+                this.m_RecvBuf = null;
+                if(this.m_SendArgs != null)
+                {
+                    this.m_SendArgs.Dispose();
+                    this.m_SendArgs = null;
+                }
+                this.m_SendBuf = null;
+                
                 if (this.m_Socket != null)
                 {
                     this.m_Socket.Close();

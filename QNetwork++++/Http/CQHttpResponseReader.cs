@@ -15,11 +15,14 @@ namespace QNetwork.Http.Server
     }
 
 
-    public abstract class CQResponseReader: Stream
+    public interface IQResponseReader:IDisposable
     {
-        public abstract bool IsEnd { get; }
+        int Read(byte[] buffer, int offset, int count);
+        bool IsEnd { get; }
+
     }
-    public class CQHttpResponseReader : CQResponseReader
+
+    public class CQHttpResponseReader : IQResponseReader
     {
         CQHttpResponse m_Resp;
         MemoryStream m_HeaderBuf = new MemoryStream();
@@ -37,40 +40,9 @@ namespace QNetwork.Http.Server
         }
         bool m_IsEnd = true;
 
-        public override bool IsEnd => this.m_IsEnd;
+        public bool IsEnd => this.m_IsEnd;
 
-        public override bool CanRead => true;
-
-        public override bool CanSeek => false;
-
-        public override bool CanWrite => false;
-
-        public override long Length => this.m_Length;
-
-        public override long Position { set; get; }
-
-        public override void Flush()
-        {
-            if(this.m_HeaderBuf != null)
-            {
-                this.m_HeaderBuf.Flush();
-            }
-            if((this.m_Resp != null) && (this.m_Resp.Content != null))
-            {
-                this.m_Resp.Content.Flush();
-            }
-        }
-
-        public override long Seek(long offset, SeekOrigin origin)
-        {
-            return 0;
-        }
-
-        public override void SetLength(long value)
-        {
-        }
-
-        public override int Read(byte[] buffer, int offset, int count)
+        public int Read(byte[] buffer, int offset, int count)
         {
             switch (this.m_ReadState)
             {
@@ -140,9 +112,22 @@ namespace QNetwork.Http.Server
             return read_len;
         }
 
-        public override void Write(byte[] buffer, int offset, int count)
+        public void Dispose()
         {
-            throw new NotImplementedException();
+            this.m_IsEnd = true;
+            if (this.m_Resp.Content != null)
+            {
+                this.m_Resp.Content.Close();
+                this.m_Resp.Content.Dispose();
+                this.m_Resp.Content = null;
+            }
+            if(this.m_HeaderBuf != null)
+            {
+                this.m_HeaderBuf.Close();
+                this.m_HeaderBuf.Dispose();
+                this.m_HeaderBuf = null;
+            }
+            this.m_Resp = null;
         }
     }
 }

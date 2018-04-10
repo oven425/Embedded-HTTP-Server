@@ -234,34 +234,17 @@ namespace QNetwork.Http.Server
                 return isend;
             }
         }
-        public bool ControlTransfer(out Socket socket)
+        public bool ControlTransfer(out CQTCPHandler handler)
         {
             bool result = true;
-            //this.m_IsEnd = true;
-            //if (this.m_RecvArgs != null)
-            //{
-            //    this.m_RecvArgs.Dispose();
-            //    this.m_RecvArgs = null;
-            //}
-            //SocketInformation inform =  this.m_Socket.DuplicateAndClose(Process.GetCurrentProcess().Id);
-            //socket = new Socket(inform);
-            //socket = this.m_Socket;
-            socket = null;
+
+            handler = this.m_SocketHandler;
             return result;
         }
 
         public bool Close()
         {
             bool result = true;
-            //if(this.m_SendArgs != null)
-            //{
-            //    this.m_SendArgs.Dispose();
-            //    this.m_SendArgs = null;
-            //}
-            //this.m_SendBuf = null;
-            //base.Close();
-            //this.m_SocketLock.Dispose();
-            //this.m_SocketLock = null;
             if(this.m_SocketHandler != null)
             {
                 this.m_SocketHandler.Close();
