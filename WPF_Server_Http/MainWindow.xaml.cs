@@ -59,7 +59,7 @@ namespace WPF_Server_Http
                     }
                 }
                 this.m_TestServer.OnListentStateChange += M_TestServer_OnListentStateChange;
-                this.m_TestServer.Open(this.m_MainUI.AddressList.Select(x=>x.Address).ToList(), new List<CQHttpService>() { new CQHttpService_Test() } , true);
+                this.m_TestServer.Open(this.m_MainUI.AddressList.Select(x=>x.Address).ToList(), new List<CQHttpService>() { new CQHttpService_Test(), new CQHttpService_Playback() } , true);
             }
         }
 
@@ -103,11 +103,19 @@ namespace WPF_Server_Http
     {
         bool m_IsEnd = false;
         string m_ID;
-        Socket m_Socket;
-        public CQRecordPlaybackT(Socket socket, string id)
+        CQTCPHandler m_TCPHandler;
+        public CQRecordPlaybackT(CQTCPHandler tcp_handler, string id)
         {
             this.m_ID = id;
-            this.m_Socket = socket;
+            this.m_TCPHandler = tcp_handler;
+            this.m_TCPHandler.OnParse += M_TCPHandler_OnParse;
+        }
+
+        private bool M_TCPHandler_OnParse(Stream data)
+        {
+
+            return true;
+            //throw new NotImplementedException();
         }
 
         public string ID { get { return this.m_ID; } }
@@ -117,10 +125,17 @@ namespace WPF_Server_Http
             return this.m_IsEnd;
         }
 
+        public bool Control(string cmd)
+        {
+            bool result = true;
+
+            return result;
+        }
+
         public bool Open()
         {
             bool result = true;
-            string str = string.Format("CQRecordPlaybackT {0}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss.fff", System.Globalization.DateTimeFormatInfo.InvariantInfo));
+            string str = string.Format("CQRecordPlaybackT {0} {1}", this.ID, DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss.fff", System.Globalization.DateTimeFormatInfo.InvariantInfo));
             byte[] buf = Encoding.ASCII.GetBytes(str);
             CQHttpResponse resp = new CQHttpResponse("");
             resp.Content = new MemoryStream();
@@ -128,43 +143,58 @@ namespace WPF_Server_Http
             resp.Content.Position = 0;
             resp.ContentLength = buf.Length;
             resp.ContentType = "text/plain";
-            string str_header = resp.ToString();
-            this.m_Socket.Send(Encoding.UTF8.GetBytes(str_header));
-            this.m_Socket.Send(buf);
-            this.m_Socket.Close();
-            this.m_IsEnd = true;
+            //string str_header = resp.ToString();
+            //this.m_Socket.Send(Encoding.UTF8.GetBytes(str_header));
+            //this.m_Socket.Send(buf);
+            //this.m_Socket.Close();
+            CQHttpResponseReader resp_reader = new CQHttpResponseReader();
+            resp_reader.Set(resp);
+            this.m_TCPHandler.AddSend(resp_reader);
+            //this.m_IsEnd = true;
             return result;
         }
 
         public object Data { set; get; }
     }
 
-    //public class CQHttpService_Playback : CQHttpService
-    //{
-    //    public override IQHttpServer_ HttpServer_ { set; get; }
-    //    int m_SessionID = 0;
-    //    public override bool Process(CQHttpRequest req, out CQHttpResponse resp, out int process_result_code)
-    //    {
-    //        bool result = true;
-    //        process_result_code = 0;
-    //        resp = null;
-    //        switch (req.URL.LocalPath.ToUpperInvariant())
-    //        {
-    //            case "/PLAYBACK":
-    //                {
-    //                    process_result_code = (int)ServiceProcessResults.ControlTransfer;
-    //                    Socket socket = null;
-    //                    this.SendControlTransfer(req.HandlerID, out socket);
-    //                    CQRecordPlaybackT tt = new CQRecordPlaybackT(socket,(++this.m_SessionID).ToString());
-    //                    this.m_Caches.Add(tt.ID, tt);
-    //                    tt.Open();
-    //                }
-    //                break;
-    //        }
+    public class CQHttpService_Playback : CQHttpService
+    {
+        int m_SessionID = 0;
+        public override bool Process(CQHttpRequest req, out CQHttpResponse resp, out int process_result_code)
+        {
+            bool result = true;
+            process_result_code = 0;
+            resp = null;
+            switch (req.URL.LocalPath.ToUpperInvariant())
+            {
+                case "/PLAYBACK":
+                    {
+                        string query_str = req.URL.Query;
+                        if(string.IsNullOrEmpty(query_str) == true)
+                        {
+                            process_result_code = (int)ServiceProcessResults.ControlTransfer;
+                            CQTCPHandler tcp;
+                            this.Extension.ControlTransfer(req.HandlerID, out tcp);
+                            CQRecordPlaybackT tt = new CQRecordPlaybackT(tcp, (++this.m_SessionID).ToString());
+                            this.m_Caches.Add(tt.ID, tt);
+                            tt.Open();
+                        }
+                        else
+                        {
+                            query_str = query_str.Remove(0, 1);
+                            if (this.m_Caches.ContainsKey(query_str) == true)
+                            {
+                                CQRecordPlaybackT ppt = this.m_Caches[query_str] as CQRecordPlaybackT;
+                                ppt.Control(query_str);
+                            }
+                        }
+                    }
+                    break;
+            }
 
-    //        return result;
-    //    }
-    //}
+            return result;
+        }
+    }
 
     //public class CQHttpService_WebSocket : CQHttpService
     //{
