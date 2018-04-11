@@ -9,8 +9,7 @@ namespace QNetwork.Http.Server
 {
     public class CQWebSocket: IQCacheData
     {
-        SocketAsyncEventArgs m_RecvArgs;
-        byte[] m_RecvBuf;
+        CQTCPHandler m_TcpHandler;
         public CQWebSocket()
         {
             m_IsEnd = false;
@@ -20,23 +19,17 @@ namespace QNetwork.Http.Server
         public object Data { set; get; }
         bool m_IsEnd;
 
-
-        Socket m_Socket;
         public bool IsTimeOut(TimeSpan timeout)
         {
             return this.m_IsEnd;
         }
 
-        public bool Open(Socket socket, byte[] data, int len)
+        public bool Open(CQTCPHandler handler, byte[] data, int len)
         {
             
             bool result = true;
-            this.m_Socket = socket;
-            this.m_RecvArgs = new SocketAsyncEventArgs();
-            this.m_RecvArgs.Completed += new EventHandler<SocketAsyncEventArgs>(M_RecvArgs_Completed);
-            this.m_RecvBuf = new byte[this.m_Socket.ReceiveBufferSize];
-            this.m_RecvArgs.SetBuffer(this.m_RecvBuf, 0, this.m_RecvBuf.Length);
-            
+            this.m_TcpHandler = handler;
+            this.m_TcpHandler.OnParse += M_TcpHandler_OnParse;
             CQHttpRequest req = new CQHttpRequest("", "");
             req.ParseHeader(data, 0, len);
             string key = req.Headers["Sec-WebSocket-Key"];
@@ -53,24 +46,17 @@ namespace QNetwork.Http.Server
             resp.Connection = Connections.Upgrade;
             resp.Headers.Add("Upgrade", "websocket");
             resp.Headers.Add("Sec-WebSocket-Accept", base64_str);
-            string resp_str = resp.ToString();
-            this.m_Socket.Send(Encoding.ASCII.GetBytes(resp_str));
-
-            bool hr = this.m_Socket.ReceiveAsync(this.m_RecvArgs);
+            CQHttpResponseReader resp_reader = new CQHttpResponseReader();
+            resp_reader.Set(resp);
+            this.m_TcpHandler.AddSend(resp_reader);
+            //string resp_str = resp.ToString();
 
             return result;
         }
 
-        private void M_RecvArgs_Completed(object sender, SocketAsyncEventArgs e)
+        private bool M_TcpHandler_OnParse(System.IO.Stream data)
         {
-            if (e.SocketError != SocketError.Success)
-            {
-                this.m_IsEnd = true;
-            }
-            else
-            {
-
-            }
+            throw new NotImplementedException();
         }
     }
 }
