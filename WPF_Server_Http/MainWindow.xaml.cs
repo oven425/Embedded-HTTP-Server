@@ -59,7 +59,7 @@ namespace WPF_Server_Http
                     }
                 }
                 this.m_TestServer.OnListentStateChange += M_TestServer_OnListentStateChange;
-                this.m_TestServer.Open(this.m_MainUI.AddressList.Select(x=>x.Address).ToList(), new List<CQHttpService>() { new CQHttpService_Test(), new CQHttpService_Playback() } , true);
+                this.m_TestServer.Open(this.m_MainUI.AddressList.Select(x=>x.Address).ToList(), new List<CQHttpService>() { new CQHttpService_Test(), new CQHttpService_Playback(),new CQHttpService_WebSocket() } , true);
             }
         }
 
@@ -196,47 +196,42 @@ namespace WPF_Server_Http
         }
     }
 
-    //public class CQHttpService_WebSocket : CQHttpService
-    //{
-    //    public override IQHttpServer_ HttpServer_ { set; get; }
-    //    public override bool Process(CQHttpRequest req, out CQHttpResponse resp, out int process_result_code)
-    //    {
-    //        resp = null;
-    //        process_result_code = 0;
-    //        bool result = true;
-    //        switch(req.URL.LocalPath.ToUpperInvariant())
-    //        {
-    //            //case "/WEBSOCKET":
-    //            //    {
-    //            //        resp = new CQHttpResponse(req.HandlerID);
-    //            //        resp.Content = new FileStream("Websocket.html", FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
-    //            //        resp.ContentLength = resp.Content.Length;
-    //            //        resp.ContentType = "text/html; charset=utf-8";
-    //            //        process_result_code = 1;
-    //            //        resp.Set200();
-    //            //    }
-    //            //    break;
-    //            case "/WEBSOCKET_TEST":
-    //                {
-    //                    //[4] = {[Upgrade, websocket]}
-    //                    if ((req.Headers.ContainsKey("Upgrade") == true) && (req.Headers["Upgrade"] == "websocket"))
-    //                    {
-    //                        CQWebSocket websocket = new CQWebSocket();
-    //                        Socket socket;
-    //                        this.SendControlTransfer(req.HandlerID, out socket);
-    //                        websocket.Open(socket, req.HeaderRaw, req.HeaderRaw.Length);
-    //                        //SHA1 sha1 = new SHA1CryptoServiceProvider();//建立一個SHA1
-    //                        //byte[] source = Encoding.Default.GetBytes("w4v7O6xFTi36lq3RNcgctw=="+ "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");//將字串轉為Byte[]
-    //                        //byte[] crypto = sha1.ComputeHash(source);//進行SHA1加密
-    //                        //string result = Convert.ToBase64String(crypto);//把加密後的字串從Byte[]轉為字串
-    //                    }
-    //                }
-    //                break;
-    //        }
+    public class CQHttpService_WebSocket : CQHttpService
+    {
+        public override bool Process(CQHttpRequest req, out CQHttpResponse resp, out int process_result_code)
+        {
+            resp = null;
+            process_result_code = 0;
+            bool result = true;
+            switch (req.URL.LocalPath.ToUpperInvariant())
+            {
+                case "/WEBSOCKET":
+                    {
+                        resp = new CQHttpResponse(req.HandlerID);
+                        resp.Content = new FileStream("../WebTest/Websocket.html", FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+                        resp.ContentLength = resp.Content.Length;
+                        resp.ContentType = "text/html; charset=utf-8";
+                        process_result_code = 1;
+                        resp.Set200();
+                    }
+                    break;
+                case "/WEBSOCKET_TEST":
+                    {
+                        //[4] = {[Upgrade, websocket]}
+                        if ((req.Headers.ContainsKey("Upgrade") == true) && (req.Headers["Upgrade"] == "websocket"))
+                        {
+                            CQWebSocket websocket = new CQWebSocket();
+                            CQTCPHandler handler;
+                            this.Extension.ControlTransfer(req.HandlerID, out handler);
+                            websocket.Open(handler, req.HeaderRaw, req.HeaderRaw.Length);
+                        }
+                    }
+                    break;
+            }
 
-    //        return result;
-    //    }
-    //}
+            return result;
+        }
+    }
 
     public class CQHttpService_Test : CQHttpService
     {
