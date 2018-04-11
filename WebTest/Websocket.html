@@ -3,60 +3,108 @@
         <title>WebSocket Test</title>
         <style>
         </style>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     </head>
     <body>
-        <div id="websocket_state">None</div>
-        <div class="columns">
-            <div class="column">
-                    <button class="button is-primary" onclick="connect()">Open</button>
-            </div>
-            <div class="column">
-                    <button class="button is-primary" onclick="close()">Close</button>
-            </div>
-            <div class="column">
-                    <button class="button is-primary" onclick="ping()">Ping</button>
-            </div>
-            
-            
-            
+        <div>
+            <strong>Location:</strong>
+            <br></br>
+            <!-- <input id="input_url" value="ws://echo.websocket.org"></input> -->
+            <input id="input_url" value="/WEBSOCKET_TEST"></input>
+            <br></br>
+            <button id="button_connect" onclick="onconnect()">Connect</button>
+            <button id="button_disconnect" onclick="ondisconnect()">Disconnect</button>
+            <button id="button_ping" onclick="onping()">Ping</button>
+            <br></br>
+            <strong>Message:</strong>
+            <br></br>
+            <input id="input_senddata" value="send~~"></input>
+            <br></br>
+            <button id="button_send" onclick="onsend()">Send</button>
             
         </div>
-        <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
+        <div>
+            <strong>Log:</strong>
+            <br/>
+            <div id="consolelog"></div>
+            <button >Clear Log</button>
+        </div>
         <script>
-            var ws;
-            function connect(){
-                document.getElementById("websocket_state").innerText="connect......"
-                ws = new WebSocket('ws://192.168.10.246:3333/websocket_test');
-                ws.onopen=function(){
-                    document.getElementById("websocket_state").innerText="connect ok"
-                }
-                ws.onerror=function(){
-                    document.getElementById("websocket_state").innerText="fail"
-                }
-                ws.onclose=function(){
-                    document.getElementById("websocket_state").innerText="close"
-                }
+            var websocket;
+            function onconnect()
+            {
+                websocket = new WebSocket("ws://echo.websocket.org");
+                websocket.onopen=function(evt) { onwebsocketopen(evt) };
+                websocket.onclose=function(evt) { onwebsocketclose(evt) };
+                websocket.onmessage=function(evt) { onwebsocketrecv(evt) };
             }
-            function ping(){
-                ws.ping('', false, true);
+
+            function ondisconnect()
+            {
+                websocket.close();
             }
-            function close(){
-                ws.close();
-                document.getElementById("websocket_state").innerText="close"
+
+            function onping()
+            {
+                //websocket.ping();
             }
-            // (function(){
-            //     var ws = new WebSocket('ws://192.168.10.246:3333/websocket_test');
-            //     ws.onopen = function () {
-            //         console.log('ws onopen');
-            //         ws.send('from client: hello');
-            //     };
-            //     ws.onmessage = function (e) {
-            //         console.log('ws onmessage');
-            //         console.log('from server: ' + e.data);
-            //     };
-            // })();
+
+            function onsend()
+            {
+                var input = document.getElementById("input_senddata");
+                
+                websocket.send(input.value);
+            }
+
+            function onwebsocketrecv(evt)
+            {
+                var consoleLog = document.getElementById("consolelog");
+                var p = document.createElement('p');
+    p.style.wordWrap = 'break-word';
+    p.innerText=evt.data;
+
+    consoleLog.appendChild(p);
+
+    while (consoleLog.childNodes.length > 50)
+    {
+      consoleLog.removeChild(consoleLog.firstChild);
+    }
+
+    consoleLog.scrollTop = consoleLog.scrollHeight;
+            }
+
+            function onwebsocketclose(evt)
+            {
+                var consoleLog = document.getElementById("consolelog");
+                var p = document.createElement('p');
+    p.style.wordWrap = 'break-word';
+    p.innerText="DisConnect";
+
+    consoleLog.appendChild(p);
+
+    while (consoleLog.childNodes.length > 50)
+    {
+      consoleLog.removeChild(consoleLog.firstChild);
+    }
+
+    consoleLog.scrollTop = consoleLog.scrollHeight;
+            }
+
+            function onwebsocketopen(evt)
+            {
+                var consoleLog = document.getElementById("consolelog");
+                var p = document.createElement('p');
+    p.style.wordWrap = 'break-word';
+    p.innerText="Connect";
+
+    consoleLog.appendChild(p);
+
+    while (consoleLog.childNodes.length > 50)
+    {
+      consoleLog.removeChild(consoleLog.firstChild);
+    }
+
+    consoleLog.scrollTop = consoleLog.scrollHeight;
+            }
         </script>
     </body>
 </html>
