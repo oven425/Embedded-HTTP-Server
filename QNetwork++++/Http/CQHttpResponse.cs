@@ -26,6 +26,7 @@ namespace QNetwork.Http.Server
         public string Message { set; get; }
         public Stream Content { set; get; }
         public Dictionary<string, string> Headers { set; get; }
+        public List<string> AccessControlAllowHeaders { set; get; }
         string m_HandlerID;
         public string HandlerID { get { return this.m_HandlerID; } }
         public Connections Connection { set; get; }
@@ -34,6 +35,7 @@ namespace QNetwork.Http.Server
         public BuildTypes BuildType { get { return this.m_BuildType; } }
         public CQHttpResponse(string handlerid, BuildTypes builetype= BuildTypes.Basic)
         {
+            this.AccessControlAllowHeaders = new List<string>();
             this.m_BuildType = builetype;
             this.m_HandlerID = handlerid;
             this.Headers = new Dictionary<string, string>();
@@ -57,22 +59,26 @@ namespace QNetwork.Http.Server
                         }
                         if (this.ContentLength >= 0)
                         {
-                            strb.AppendLine(string.Format("{0}:{1}", "Content-Length", this.ContentLength));
+                            strb.AppendLine(string.Format("{0}: {1}", "Content-Length", this.ContentLength));
                         }
                         if (string.IsNullOrEmpty(this.ContentType) == false)
                         {
                             strb.AppendLine(string.Format("{0}:{1}", "Content-Type", this.ContentType));
                         }
+                        foreach(string header in this.AccessControlAllowHeaders)
+                        {
+                            strb.AppendLine(string.Format("{0}: {1}", "Access-Control-Allow-Headers", header));
+                        }
                         switch(this.Connection)
                         {
                             case Connections.KeepAlive:
                                 {
-                                    strb.AppendLine(string.Format("{0}:{1}", "Connection", "KeepAlive"));
+                                    strb.AppendLine(string.Format("{0}: {1}", "Connection", "KeepAlive"));
                                 }
                                 break;
                             case Connections.Upgrade:
                                 {
-                                    strb.AppendLine(string.Format("{0}:{1}", "Connection", "Upgrade"));
+                                    strb.AppendLine(string.Format("{0}: {1}", "Connection", "Upgrade"));
                                 }
                                 break;
                             case Connections.None:
@@ -82,7 +88,7 @@ namespace QNetwork.Http.Server
                             case Connections.Close:
                             default:
                                 {
-                                    strb.AppendLine(string.Format("{0}:{1}", "Connection", "Close"));
+                                    strb.AppendLine(string.Format("{0}: {1}", "Connection", "Close"));
                                 }
                                 break;
                         }
@@ -94,11 +100,11 @@ namespace QNetwork.Http.Server
                         strb.AppendLine("--QQQ");
                         if (string.IsNullOrEmpty(this.ContentType) == false)
                         {
-                            strb.AppendLine(string.Format("{0}:{1}", "Content-Type", this.ContentType));
+                            strb.AppendLine(string.Format("{0}: {1}", "Content-Type", this.ContentType));
                         }
                         if(this.ContentLength >= 0)
                         {
-                            strb.AppendLine(string.Format("{0}:{1}", "Content-Length", this.ContentLength));
+                            strb.AppendLine(string.Format("{0}: {1}", "Content-Length", this.ContentLength));
                         }
                         
                         strb.AppendLine();
