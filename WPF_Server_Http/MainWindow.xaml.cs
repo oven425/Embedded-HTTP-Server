@@ -58,6 +58,11 @@ namespace WPF_Server_Http
                         this.m_MainUI.AddressList.Add(new CQListenAddress() { Address = net_address });
                     }
                 }
+                if(this.m_MainUI.AddressList.Any(x=>x.Address.ToEndPint().ToString() == "127.0.0.1") == false)
+                {
+                    CQSocketListen_Address net_address = new CQSocketListen_Address() { IP = "127.0.0.1", Port = 3333 };
+                    this.m_MainUI.AddressList.Add(new CQListenAddress() { Address = net_address });
+                }
                 this.m_TestServer.OnListentStateChange += M_TestServer_OnListentStateChange;
                 this.m_TestServer.Open(this.m_MainUI.AddressList.Select(x=>x.Address).ToList(), new List<CQHttpService>() { new CQHttpService_Test(), new CQHttpService_Playback(),new CQHttpService_WebSocket() } , true);
             }
@@ -218,7 +223,7 @@ namespace WPF_Server_Http
                 case "/WEBSOCKET_TEST":
                     {
                         //[4] = {[Upgrade, websocket]}
-                        if ((req.Headers.ContainsKey("Upgrade") == true) && (req.Headers["Upgrade"] == "websocket"))
+                        if ((req.Headers.ContainsKey("UPGRADE") == true) && (req.Headers["UPGRADE"] == "websocket"))
                         {
                             CQWebSocket websocket = new CQWebSocket();
                             CQTCPHandler handler;
