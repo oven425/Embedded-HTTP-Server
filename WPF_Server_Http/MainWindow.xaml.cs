@@ -20,6 +20,7 @@ using System.Net.Sockets;
 using System.Net;
 using System.Security.Cryptography;
 using WPF_Server_Http.UIData;
+using System.Web.Script.Serialization;
 
 namespace WPF_Server_Http
 {
@@ -35,8 +36,15 @@ namespace WPF_Server_Http
             InitializeComponent();
         }
 
+        class CQAA
+        {
+            public int A { set; get; }
+        }
+
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            JavaScriptSerializer js = new JavaScriptSerializer();
+            string str = js.Serialize(new CQAA());
             if (this.m_MainUI == null)
             {
                 this.DataContext = this.m_MainUI = new CQMainUI();
