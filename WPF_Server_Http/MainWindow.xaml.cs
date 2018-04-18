@@ -43,8 +43,8 @@ namespace WPF_Server_Http
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            JavaScriptSerializer js = new JavaScriptSerializer();
-            string str = js.Serialize(new CQAA());
+            //JavaScriptSerializer js = new JavaScriptSerializer();
+            //string str = js.Serialize(new CQAA());
             if (this.m_MainUI == null)
             {
                 this.DataContext = this.m_MainUI = new CQMainUI();
@@ -228,6 +228,7 @@ namespace WPF_Server_Http
                         resp.Set200();
                     }
                     break;
+                case "/":
                 case "/WEBSOCKET_TEST":
                     {
                         //[4] = {[Upgrade, websocket]}
