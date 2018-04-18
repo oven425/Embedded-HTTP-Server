@@ -237,7 +237,7 @@ namespace QNetwork.Http.Server
         public bool ControlTransfer(out CQTCPHandler handler)
         {
             bool result = true;
-
+            this.m_SocketHandler.OnParse -= M_SocketHandler_OnParse;
             handler = this.m_SocketHandler;
             return result;
         }

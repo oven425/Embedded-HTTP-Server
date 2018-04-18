@@ -92,10 +92,8 @@ namespace QNetwork.Http.Server
                 this.m_Thread_Send.RunWorkerAsync();
             }
 #endif
-
             return result;
         }
-
 
         protected virtual bool ParseRequest(byte[] data, int size)
         {
