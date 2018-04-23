@@ -66,23 +66,19 @@ namespace QNetwork.Http.Server
         {
             bool result = true;
 #if Async_Args
-            if (this.m_SendArgs.LastOperation == SocketAsyncOperation.None)
+            Monitor.Enter(this.m_SendRespsLock);
+            if (this.m_SendDatas.Count > 0)
             {
-                Stream resp1 = null;
-                Monitor.Enter(this.m_SendRespsLock);
-                if(this.m_SendDatas.Count > 0)
-                {
-                    this.m_SendDatas.Enqueue(data);
-                    this.m_CurrentResp = this.m_SendDatas.Dequeue();
-                }
-                else
-                {
-                    this.m_CurrentResp = data;
-                }
-                
-                Monitor.Exit(this.m_SendRespsLock);
-
+                this.m_SendDatas.Enqueue(data);
+                this.m_CurrentResp = this.m_SendDatas.Dequeue();
             }
+            else
+            {
+                this.m_CurrentResp = data;
+            }
+
+            Monitor.Exit(this.m_SendRespsLock);
+
             Monitor.Enter(this.m_SendLock);
             this.Send();
             Monitor.Exit(this.m_SendLock);

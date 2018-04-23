@@ -44,7 +44,7 @@ namespace QNetwork.Http.Server
         public bool ParseHeader(string data)
         {
             this.m_ContentLength = 0;
-            System.Diagnostics.Trace.WriteLine(data);
+            //System.Diagnostics.Trace.WriteLine(data);
             bool result = true;
             string[] sl = data.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
             for (int i = 0; i < sl.Length; i++)
