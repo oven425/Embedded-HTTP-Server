@@ -228,7 +228,6 @@ namespace WPF_Server_Http
                         resp.Set200();
                     }
                     break;
-                case "/":
                 case "/WEBSOCKET_TEST":
                     {
                         //[4] = {[Upgrade, websocket]}
