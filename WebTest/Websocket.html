@@ -19,7 +19,7 @@
             <br></br>
             <strong>Message:</strong>
             <br></br>
-            <input id="input_senddata" value="send~~"></input>
+            <input id="input_senddata" type="text" value="send~~"></input>
             <br></br>
             <button id="button_send" onclick="onsend()">Send</button>
             
@@ -53,9 +53,9 @@
 
             function onsend()
             {
-                var input = document.getElementById("input_senddata");
-                
-                websocket.send(input.value);
+                var aa = document.getElementById("input_senddata");
+                console.log(aa.value);
+                websocket.send(aa.value);
             }
 
             function onwebsocketrecv(evt)
