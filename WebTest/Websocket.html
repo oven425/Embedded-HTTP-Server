@@ -19,6 +19,7 @@
             <br></br>
             <strong>Message:</strong>
             <br></br>
+            <input id="input_selectfile" type="file" onchange="onchange_selectfile"></input>
             <input id="input_senddata" type="text" value="send~~"></input>
             <br></br>
             <button id="button_send" onclick="onsend()">Send</button>
@@ -31,6 +32,12 @@
             <button id="button_clearlog" onclick="onclearlog()">Clear Log</button>
         </div>
         <script>
+            function onchange_selectfile()
+            {
+                var file = this.files[0];
+                var intput_selectfile = document.getElementById("input_selectfile");
+                console.log(file);
+            }
             var websocket;
             function onconnect()
             {
@@ -62,51 +69,51 @@
             {
                 var consoleLog = document.getElementById("consolelog");
                 var p = document.createElement('p');
-    p.style.wordWrap = 'break-word';
-    p.innerText=evt.data;
+                p.style.wordWrap = 'break-word';
+                p.innerText=evt.data;
 
-    consoleLog.appendChild(p);
+                consoleLog.appendChild(p);
 
-    while (consoleLog.childNodes.length > 50)
-    {
-      consoleLog.removeChild(consoleLog.firstChild);
-    }
+                while (consoleLog.childNodes.length > 50)
+                {
+                    consoleLog.removeChild(consoleLog.firstChild);
+                }
 
-    consoleLog.scrollTop = consoleLog.scrollHeight;
+                consoleLog.scrollTop = consoleLog.scrollHeight;
             }
 
             function onwebsocketclose(evt)
             {
                 var consoleLog = document.getElementById("consolelog");
                 var p = document.createElement('p');
-    p.style.wordWrap = 'break-word';
-    p.innerText="DisConnect";
+                p.style.wordWrap = 'break-word';
+                p.innerText="DisConnect";
 
-    consoleLog.appendChild(p);
+                consoleLog.appendChild(p);
 
-    while (consoleLog.childNodes.length > 50)
-    {
-      consoleLog.removeChild(consoleLog.firstChild);
-    }
+                while (consoleLog.childNodes.length > 50)
+                {
+                consoleLog.removeChild(consoleLog.firstChild);
+                }
 
-    consoleLog.scrollTop = consoleLog.scrollHeight;
+                consoleLog.scrollTop = consoleLog.scrollHeight;
             }
 
             function onwebsocketopen(evt)
             {
                 var consoleLog = document.getElementById("consolelog");
                 var p = document.createElement('p');
-    p.style.wordWrap = 'break-word';
-    p.innerText="Connect";
+                p.style.wordWrap = 'break-word';
+                p.innerText="Connect";
 
-    consoleLog.appendChild(p);
+                consoleLog.appendChild(p);
 
-    while (consoleLog.childNodes.length > 50)
-    {
-      consoleLog.removeChild(consoleLog.firstChild);
-    }
+                while (consoleLog.childNodes.length > 50)
+                {
+                consoleLog.removeChild(consoleLog.firstChild);
+                }
 
-    consoleLog.scrollTop = consoleLog.scrollHeight;
+                consoleLog.scrollTop = consoleLog.scrollHeight;
             }
 
             function onclearlog()
