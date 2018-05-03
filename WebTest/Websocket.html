@@ -8,6 +8,11 @@
     </head>
     <body>
         <div>
+            <button onclick="ontablechange()">Sumbit</button>
+            <button>AJAX</button>
+            <button>WebSocket</button>
+        </div>
+        <div>
             <strong>Location:</strong>
             <br></br>
             <!-- <input id="input_url" value="ws://echo.websocket.org"></input> -->
@@ -32,6 +37,10 @@
             <button id="button_clearlog" onclick="onclearlog()">Clear Log</button>
         </div>
         <script>
+            function ontablechange(evt, name)
+            {
+
+            }
             function onchange_selectfile()
             {
                 var file = this.files[0];
