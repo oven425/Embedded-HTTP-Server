@@ -8,6 +8,7 @@ using System.IO;
 using System.ComponentModel;
 using System.Threading;
 using System.Security.Cryptography;
+using QNetwork.Http.Server.Accept;
 
 namespace QNetwork.Http.Server
 {
@@ -20,6 +21,7 @@ namespace QNetwork.Http.Server
         List<CQHttpRequest> m_Requests = new List<CQHttpRequest>();
         object m_RequestsLock = new object();
         List<IQHttpService> m_Services = new List<IQHttpService>();
+        List<IQHttpService> m_Caches = new List<IQHttpService>();
         public CQHttpServer()
         {
             for (int i = 0; i < 8; i++)
@@ -58,7 +60,8 @@ namespace QNetwork.Http.Server
                         this.m_Services[i].CloseHandler(closehandlers);
                     }
                 }
-                foreach (CQHttpService service in this.m_Services)
+
+                foreach (IQHttpService service in this.m_Caches)
                 {
                     service.TimeOut_Cache();
                 }
@@ -104,13 +107,14 @@ namespace QNetwork.Http.Server
             CQHttpRequest req = e.Argument as CQHttpRequest;
             while (req != null)
             {
-                int process_result;
+                ServiceProcessResults process_result;
+                bool to_cache;
                 CQHttpResponse resp;
                 //this.ProcessWebSocket(req, out resp, out process_result);
                 //if(process_result == 0)
                 {
-                    this.ProcessRequest(req, out resp, out process_result);
-                    if ((resp != null) && (process_result == 1))
+                    this.ProcessRequest(req, out resp, out process_result, out to_cache);
+                    if ((resp != null) && (process_result == ServiceProcessResults.OK))
                     {
                         Monitor.Enter(this.m_SessionsLock);
                         if (this.m_Sessions.ContainsKey(req.HandlerID) == true)
@@ -120,7 +124,7 @@ namespace QNetwork.Http.Server
                         }
                         Monitor.Exit(this.m_SessionsLock);
                     }
-                    else if (process_result == 2)
+                    else if (process_result == ServiceProcessResults.PassToPushService)
                     {
 
                     }
@@ -307,20 +311,48 @@ namespace QNetwork.Http.Server
             return result;
         }
 
-        protected virtual bool ProcessRequest(CQHttpRequest request, out CQHttpResponse resp, out int process_result_code)
+        protected virtual bool ProcessRequest(CQHttpRequest request, out CQHttpResponse resp, out ServiceProcessResults process_result_code, out bool to_cache)
         {
             bool result = true;
-            process_result_code = 0;
+            process_result_code = ServiceProcessResults.None;
+            to_cache = false;
             //System.Diagnostics.Trace.WriteLine(request.ResourcePath);
             resp = null;
-            for (int i = 0; i < this.m_Services.Count; i++)
+            //for (int i = 0; i < this.m_Services.Count; i++)
+            //{
+            //    this.m_Services[i].Process(request, out resp, out process_result_code);
+
+            //    if (process_result_code != (int)ServiceProcessResults.None)
+            //    {
+            //        break;
+            //    }
+
+            //}
+            for (int i = 0; i < this.m_Caches.Count; i++)
             {
-                this.m_Services[i].Process(request, out resp, out process_result_code);
+                this.m_Caches[i].Process_Cache(request, out resp, out process_result_code);
 
                 if (process_result_code != (int)ServiceProcessResults.None)
                 {
                     break;
                 }
+
+            }
+            if ((this.m_Services1.ContainsKey(request.URL.LocalPath.ToUpperInvariant()) == true) && ((process_result_code == (int)ServiceProcessResults.None)))
+            {
+                IQHttpService instance = Activator.CreateInstance(this.m_Services1[request.URL.LocalPath.ToUpperInvariant()]) as IQHttpService;
+                instance.Extension = this;
+                if (instance != null)
+                {
+                    instance.Process(request, out resp, out process_result_code, out to_cache);
+                    if(to_cache == true)
+                    {
+                        this.m_Caches.Add(instance);
+                    }
+                }
+            }
+            else
+            {
 
             }
             
@@ -377,7 +409,8 @@ namespace QNetwork.Http.Server
             return true;
         }
 
-        public bool Open(List<CQSocketListen_Address> address, List<CQHttpService> services, bool adddefault=true)
+        Dictionary<string, Type> m_Services1 = new Dictionary<string, Type>();
+        public bool Open(List<CQSocketListen_Address> address, List<IQHttpService> services, bool adddefault=true)
         {
             bool result = true;
             for (int i = 0; i < services.Count; i++)
@@ -392,6 +425,14 @@ namespace QNetwork.Http.Server
             for(int i=0; i<address.Count; i++)
             {
                 this.OpenListen(address[i]);
+            }
+            for(int i=0; i < this.m_Services.Count; i++)
+            {
+                Type type = this.m_Services[i].GetType();
+                for(int j=0; j < this.m_Services[i].Methods.Count; j++)
+                {
+                    this.m_Services1.Add(this.m_Services[i].Methods[j], type);
+                }
             }
             if (this.m_Thread.IsBusy == false)
             {
@@ -445,96 +486,9 @@ namespace QNetwork.Http.Server
 
    
 
-    public interface IQCacheData
-    {
-        string ID { get; }
-        bool IsTimeOut(TimeSpan timeout);
-        object Data { set; get; }
-    }
+    
 
-    public class CQCacheData : IQCacheData
-    {
-        public CQCacheData(string id)
-        {
-            this.m_CreateTime = DateTime.Now;
-            this.m_ID = id;
-        }
-        string m_ID;
-        public string ID { get { return this.m_ID; } }
-        DateTime m_CreateTime;
-        public bool IsTimeOut(TimeSpan timeout)
-        {
-            bool result = true;
-            if (DateTime.Now - this.m_CreateTime > timeout)
-            {
-                result = true;
-            }
-            else
-            {
-                result = false;
-            }
-            return result;
-        }
-
-        public object Data { set; get; }
-
-    }
-
-    public enum ServiceProcessResults
-    {
-        None=0,
-        OK=1,
-        PassToPushService=2,
-        PassToOther=3,
-        ControlTransfer=4,
-        WebSocket=5
-    }
-
-    public interface IQHttpServer_Extension
-    {
-        bool SendMultiPart(List<CQHttpResponse> datas);
-        bool ControlTransfer(string handlerid, out CQTCPHandler tcphandler);
-    }
-
-    public interface IQHttpService
-    {
-        bool Process(CQHttpRequest req, out CQHttpResponse resp, out int process_result_code);
-        bool TimeOut_Cache();
-        bool CloseHandler(List<string> handlers);
-        IQHttpServer_Extension Extension { set; get; }
-    }
-
-    public abstract class CQHttpService: IQHttpService
-    {
-        List<string> m_PushHandler = new List<string>();
-        virtual public bool CloseHandler(List<string> handlers) { return true; }
-        protected object m_CachesLock = new object();
-        protected Dictionary<string, IQCacheData> m_Caches = new Dictionary<string, IQCacheData>();
-
-        public IQHttpServer_Extension Extension { get; set; }
-
-        abstract public bool Process(CQHttpRequest req, out CQHttpResponse resp, out int process_result_code);
-        virtual public bool TimeOut_Cache()
-        {
-            bool result = true;
-            List<string> keys = new List<string>();
-
-            Monitor.Enter(this.m_CachesLock);
-            for (int i = 0; i < this.m_Caches.Count; i++)
-            {
-                if (this.m_Caches.ElementAt(i).Value.IsTimeOut(TimeSpan.FromMinutes(1)) == true)
-                {
-                    keys.Add(this.m_Caches.ElementAt(i).Key);
-                }
-            }
-            foreach (string key in keys)
-            {
-                this.m_Caches.Remove(key);
-            }
-            Monitor.Exit(this.m_CachesLock);
-            return result;
-        }
-    }
+    
     
 
     

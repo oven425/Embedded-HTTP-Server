@@ -126,45 +126,45 @@ namespace QNetwork.Http.Server
             CQWebSokcetData wsd = new CQWebSokcetData();
             MemoryStream mm = new MemoryStream();
             wsd.Build(mm, Encoding.UTF8.GetBytes(str));
-            this.m_TcpHandler.AddSend(new CQWebSocketResponseReader(mm.ToArray()));
+            this.m_TcpHandler.AddSend(mm);
         }
     }
 
-    public class CQWebSocketResponseReader : IQResponseReader
-    {
-        bool m_IsEnd;
-        public bool IsEnd => this.m_IsEnd;
-        MemoryStream m_Data;
-        public CQWebSocketResponseReader()
-        {
-            this.m_IsEnd = false;
-        }
+    //public class CQWebSocketResponseReader : Stream
+    //{
+    //    bool m_IsEnd;
+    //    public bool IsEnd => this.m_IsEnd;
+    //    MemoryStream m_Data;
+    //    public CQWebSocketResponseReader()
+    //    {
+    //        this.m_IsEnd = false;
+    //    }
 
-        public CQWebSocketResponseReader(byte[] data)
-        {
-            this.m_IsEnd = false;
-            this.m_Data = new MemoryStream(data);
-        }
-        public void Dispose()
-        {
+    //    public CQWebSocketResponseReader(byte[] data)
+    //    {
+    //        this.m_IsEnd = false;
+    //        this.m_Data = new MemoryStream(data);
+    //    }
+    //    public void Dispose()
+    //    {
             
-        }
+    //    }
 
-        public int Read(byte[] buffer, int offset, int count)
-        {
-            int read_len = 0;
-            if(this.m_IsEnd == false)
-            {
-                read_len = this.m_Data.Read(buffer, offset, count);
-                if (this.m_Data.Position == this.m_Data.Length)
-                {
-                    this.m_IsEnd = true;
-                }
-            }
+    //    public int Read(byte[] buffer, int offset, int count)
+    //    {
+    //        int read_len = 0;
+    //        if(this.m_IsEnd == false)
+    //        {
+    //            read_len = this.m_Data.Read(buffer, offset, count);
+    //            if (this.m_Data.Position == this.m_Data.Length)
+    //            {
+    //                this.m_IsEnd = true;
+    //            }
+    //        }
             
-            return read_len;
-            }
-    }
+    //        return read_len;
+    //        }
+    //}
 
     public class CQWebSokcetData
     {
@@ -191,7 +191,7 @@ namespace QNetwork.Http.Server
             this.Opcode = 0x01;
             this.EnableMask = false;
         }
-        public bool Parse(Stream data)
+        public bool Parse(System.IO.Stream data)
         {
             bool result = true;
             data.Position = 0;
@@ -222,7 +222,7 @@ namespace QNetwork.Http.Server
             return result;
         }
         
-        public bool Build(Stream data, byte[] payload)
+        public bool Build(System.IO.Stream data, byte[] payload)
         {
             bool result = true;
             BinaryWriter bw = new BinaryWriter(data);

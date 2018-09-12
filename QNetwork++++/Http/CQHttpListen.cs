@@ -7,7 +7,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
-namespace QNetwork.Http.Server
+namespace QNetwork.Http.Server.Accept
 {
     public enum ListenStates
     {
@@ -145,7 +145,7 @@ namespace QNetwork.Http.Server
         }
         private void m_AcceptArgs_Completed(object sender, SocketAsyncEventArgs e)
         {
-            if ((e.SocketError == SocketError.Success) && (e.BytesTransferred > 0))
+            if ((e.SocketError == SocketError.Success))
             {
                 string str = Encoding.ASCII.GetString(e.Buffer, 0, e.BytesTransferred);
                 //System.Diagnostics.Trace.WriteLine(str);

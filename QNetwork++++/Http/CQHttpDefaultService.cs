@@ -8,18 +8,21 @@ using System.Threading;
 
 namespace QNetwork.Http.Server
 {
-    public class CQHttpDefaultService : CQHttpService
+    public class CQHttpDefaultService : IQHttpService
     {
         int m_IconIndex = 0;
         List<string> m_Icons = new List<string>();
+        List<string> m_Methods = new List<string>();
         public CQHttpDefaultService()
         {
             string str = System.AppDomain.CurrentDomain.SetupInformation.ApplicationBase;
             string[] files = Directory.GetFiles(str, "*.ico");
             this.m_Icons.AddRange(files);
+            this.m_Methods.Add("/");
+            this.m_Methods.Add("/favicon.ico".ToUpperInvariant());
         }
 
-        void CoppyStream(Stream src, Stream dst)
+        void CoppyStream(System.IO.Stream src, System.IO.Stream dst)
         {
             byte[] buf = new byte[8192];
             while(src.Position < src.Length)
@@ -29,10 +32,14 @@ namespace QNetwork.Http.Server
             }
         }
         object m_IconIndexLock = new object();
-        override public bool Process(CQHttpRequest req, out CQHttpResponse resp, out int process_result_code)
-        {
 
-            process_result_code = 1;
+        public IQHttpServer_Extension Extension { set; get; }
+        public List<string> Methods => this.m_Methods;
+
+        public bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code, out bool to_cache)
+        {
+            to_cache = false;
+            process_result_code = ServiceProcessResults.OK;
             resp = new CQHttpResponse(req.HandlerID);
             switch (req.ResourcePath)
             {
@@ -99,9 +106,10 @@ namespace QNetwork.Http.Server
             return true;
         }
 
-        public override bool TimeOut_Cache()
+        public bool TimeOut_Cache()
         {
-            return base.TimeOut_Cache();
+            return true;
+            //return base.TimeOut_Cache();
             //bool result = true;
             //Monitor.Enter(this.m_CachesLock);
             //try
@@ -123,9 +131,19 @@ namespace QNetwork.Http.Server
             //return result;
         }
 
-        public override bool CloseHandler(List<string> handlers)
+        public bool CloseHandler(List<string> handlers)
         {
             return true;
+        }
+
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Process_Cache(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
+        {
+            throw new NotImplementedException();
         }
     }
 }

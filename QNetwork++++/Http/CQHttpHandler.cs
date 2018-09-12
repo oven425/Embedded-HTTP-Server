@@ -25,7 +25,7 @@ namespace QNetwork.Http.Server
             this.m_ID = this.m_SocketHandler.ID;
         }
 
-        private bool M_SocketHandler_OnParse(Stream data)
+        private bool M_SocketHandler_OnParse(System.IO.Stream data)
         {
             this.ParseRequest(data);
             return true;
@@ -82,7 +82,7 @@ namespace QNetwork.Http.Server
         long m_ContentLength = 0;
         byte[] m_ContentBuf = new byte[8192];
         byte[] m_HeaderBuf = new byte[8192];
-        protected bool ParseRequest(Stream data)
+        protected bool ParseRequest(System.IO.Stream data)
         {
             bool result = true;
             List<CQHttpRequest> requests = new List<CQHttpRequest>();

@@ -24,9 +24,9 @@ namespace QNetwork.Http.Server
         protected bool m_IsEnd;
         public string ID { get { return this.m_ID; } }
         string m_ID;
-        public delegate bool ParseDeleagte(Stream data);
+        public delegate bool ParseDeleagte(System.IO.Stream data);
         public event ParseDeleagte OnParse;
-        Queue<IQResponseReader> m_SendDatas = new Queue<IQResponseReader>();
+        Queue<System.IO.Stream> m_SendDatas = new Queue<System.IO.Stream>();
         BackgroundWorker m_Thread;
         public CQTCPHandler(Socket socket)
         {
@@ -62,7 +62,15 @@ namespace QNetwork.Http.Server
             this.m_SocketLock.ExitReadLock();
         }
 
-        public bool AddSend(IQResponseReader data)
+        public bool Send(byte[] data, int len)
+        {
+            bool result = true;
+            this.m_Socket.Send(data, len, SocketFlags.None);
+
+            return result;
+        }
+
+        public bool AddSend(System.IO.Stream data)
         {
             bool result = true;
 #if Async_Args
@@ -143,9 +151,9 @@ namespace QNetwork.Http.Server
             {
                 return result;
             }
-            if (this.m_CurrentResp.IsEnd == true)
+            if (this.m_CurrentResp.Length > this.m_CurrentResp.Position)
             {
-                IQResponseReader resp = null;
+                System.IO.Stream resp = null;
                 Monitor.Enter(this.m_SendRespsLock);
                 if (this.m_SendDatas.Count > 0)
                 {
@@ -157,7 +165,7 @@ namespace QNetwork.Http.Server
                     //this.m_CurrentResp.Set(resp);
                 }
             }
-            if (this.m_CurrentResp.IsEnd == false)
+            if (this.m_CurrentResp.Length <= this.m_CurrentResp.Position)
             {
                 int send_len = this.m_CurrentResp.Read(this.m_SendBuf, 0, this.m_SendBuf.Length);
                 //System.Diagnostics.Trace.Write(Encoding.UTF8.GetString(m_SendBuf, 0, send_len));
@@ -206,7 +214,7 @@ namespace QNetwork.Http.Server
             }
         }
         object m_SendLock = new object();
-        IQResponseReader m_CurrentResp;
+        System.IO.Stream m_CurrentResp;
         void m_SendArgs_Completed(object sender, SocketAsyncEventArgs e)
         {
             Monitor.Enter(this.m_SendLock);

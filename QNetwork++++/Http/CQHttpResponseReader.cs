@@ -15,34 +15,47 @@ namespace QNetwork.Http.Server
     }
 
 
-    public interface IQResponseReader:IDisposable
-    {
-        int Read(byte[] buffer, int offset, int count);
-        bool IsEnd { get; }
+    //public interface Stream:IDisposable
+    //{
+    //    int Read(byte[] buffer, int offset, int count);
+    //    bool IsEnd { get; }
 
-    }
+    //}
 
-    public class CQHttpResponseReader : IQResponseReader
+    public class CQHttpResponseReader : System.IO.Stream
     {
         CQHttpResponse m_Resp;
         MemoryStream m_HeaderBuf = new MemoryStream();
 
         IQResponseReader_ReadStates m_ReadState;
-        long m_Length;
+        long m_Length = 0;
+        long m_Position = 0;
         public bool Set(CQHttpResponse resp)
         {
             bool result = true;
             this.m_Resp = resp;
             this.m_IsEnd = false;
             this.m_ReadState = IQResponseReader_ReadStates.None;
-
+            string str_header = this.m_Resp.ToString();
+            this.m_Length = this.m_Length + Encoding.ASCII.GetByteCount(str_header);
+            this.m_Length = this.m_Length + (this.m_Resp.Content.Length - this.m_Resp.Content.Position);
             return result;
         }
         bool m_IsEnd = true;
 
         public bool IsEnd => this.m_IsEnd;
 
-        public int Read(byte[] buffer, int offset, int count)
+        public override bool CanRead => true;
+
+        public override bool CanSeek => false;
+
+        public override bool CanWrite => false;
+
+        public override long Length => this.m_Length;
+
+        public override long Position { get => this.m_Position; set { } }
+
+        public override int Read(byte[] buffer, int offset, int count)
         {
             switch (this.m_ReadState)
             {
@@ -50,6 +63,7 @@ namespace QNetwork.Http.Server
                     {
                         string str_header = this.m_Resp.ToString();
                         byte[] buf = Encoding.UTF8.GetBytes(str_header);
+                        this.m_Position = this.m_Position + buf.Length;
                         this.m_HeaderBuf.SetLength(0);
                         this.m_HeaderBuf.Write(buf, 0, buf.Length);
                         this.m_HeaderBuf.Position = 0;
@@ -68,6 +82,7 @@ namespace QNetwork.Http.Server
                 if (this.m_ReadState == IQResponseReader_ReadStates.Header)
                 {
                     read_len = this.m_HeaderBuf.Read(buffer, offset, count);
+                    this.m_Position = this.m_Position + read_len;
                     if (this.m_HeaderBuf.Position == this.m_HeaderBuf.Length)
                     {
                         this.m_ReadState = IQResponseReader_ReadStates.Content;
@@ -80,6 +95,7 @@ namespace QNetwork.Http.Server
                     if ((this.m_Resp.Content != null) && (read_size > 0))
                     {
                         int rdlen = this.m_Resp.Content.Read(buffer, read_offset, read_size);
+                        this.m_Position = this.m_Position + rdlen;
                         read_len = read_len + rdlen;
                     }
                 }
@@ -128,6 +144,26 @@ namespace QNetwork.Http.Server
                 this.m_HeaderBuf = null;
             }
             this.m_Resp = null;
+        }
+
+        public override void Flush()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void SetLength(long value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            throw new NotImplementedException();
         }
     }
 }

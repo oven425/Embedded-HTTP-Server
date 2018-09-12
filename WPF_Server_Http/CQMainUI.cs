@@ -5,6 +5,7 @@ using System.Text;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
 using QNetwork.Http.Server;
+using QNetwork.Http.Server.Accept;
 
 namespace WPF_Server_Http.UIData
 {
