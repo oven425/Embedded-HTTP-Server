@@ -22,6 +22,8 @@ using System.Security.Cryptography;
 using WPF_Server_Http.UIData;
 using System.Web.Script.Serialization;
 using QNetwork.Http.Server.Accept;
+using QNetwork.Http.Server.Service;
+using WPF_Server_Http.Define;
 
 namespace WPF_Server_Http
 {
@@ -35,6 +37,19 @@ namespace WPF_Server_Http
         public MainWindow()
         {
             InitializeComponent();
+            //CQHttpResponse resp = new CQHttpResponse("");
+            //resp.Set200();
+            //CQHttpResponseReader respr = new CQHttpResponseReader();
+            //respr.Set(resp);
+            //byte[] bb = new byte[8192];
+            //while(true)
+            //{
+            //    int read_len = respr.Read(bb, 0, bb.Length);
+            //    if(read_len != bb.Length)
+            //    {
+            //        break;
+            //    }
+            //}
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -298,8 +313,8 @@ namespace WPF_Server_Http
         public List<string> Methods => this.m_Methods;
         public CQHttpService_WebSocket()
         {
-            this.m_Methods.Add("WEBSOCKET");
-            this.m_Methods.Add("WEBSOCKET_TEST");
+            this.m_Methods.Add("/WEBSOCKET");
+            this.m_Methods.Add("/WEBSOCKET_TEST");
         }
         public bool CloseHandler(List<string> handlers)
         {
@@ -338,9 +353,11 @@ namespace WPF_Server_Http
                             CQTCPHandler handler;
                             this.Extension.ControlTransfer(req.HandlerID, out handler);
                             websocket.Open(handler, req.HeaderRaw, req.HeaderRaw.Length);
+                            to_cache = true;
                         }
                     }
                     break;
+
             }
 
             return result;
@@ -348,7 +365,7 @@ namespace WPF_Server_Http
 
         public bool TimeOut_Cache()
         {
-            throw new NotImplementedException();
+            return true;
         }
 
         public bool Process_Cache(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
@@ -356,7 +373,21 @@ namespace WPF_Server_Http
             bool result = true;
             process_result_code = ServiceProcessResults.None;
             resp = null;
-
+            switch(req.URL.LocalPath.ToUpperInvariant())
+            {
+                //case "/WEBSOCKET_TEST":
+                //    {
+                //        //[4] = {[Upgrade, websocket]}
+                //        if ((req.Headers.ContainsKey("UPGRADE") == true) && (req.Headers["UPGRADE"] == "websocket"))
+                //        {
+                //            CQWebSocket websocket = new CQWebSocket();
+                //            CQTCPHandler handler;
+                //            this.Extension.ControlTransfer(req.HandlerID, out handler);
+                //            websocket.Open(handler, req.HeaderRaw, req.HeaderRaw.Length);
+                //        }
+                //    }
+                //    break;
+            }
             return result;
         }
     }

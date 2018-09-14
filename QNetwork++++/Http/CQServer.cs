@@ -9,6 +9,7 @@ using System.ComponentModel;
 using System.Threading;
 using System.Security.Cryptography;
 using QNetwork.Http.Server.Accept;
+using QNetwork.Http.Server.Service;
 
 namespace QNetwork.Http.Server
 {

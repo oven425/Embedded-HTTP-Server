@@ -22,7 +22,12 @@ namespace QNetwork.Http.Server
 
     //}
 
-    public class CQHttpResponseReader : System.IO.Stream
+    //public abstract class CQResponseReader:Stream
+    //{
+    //    bool IsEnd { get; }
+    //}
+
+    public class CQHttpResponseReader : Stream
     {
         CQHttpResponse m_Resp;
         MemoryStream m_HeaderBuf = new MemoryStream();
@@ -38,7 +43,10 @@ namespace QNetwork.Http.Server
             this.m_ReadState = IQResponseReader_ReadStates.None;
             string str_header = this.m_Resp.ToString();
             this.m_Length = this.m_Length + Encoding.ASCII.GetByteCount(str_header);
-            this.m_Length = this.m_Length + (this.m_Resp.Content.Length - this.m_Resp.Content.Position);
+            if ((this.m_Resp != null) && (this.m_Resp.Content != null))
+            {
+                this.m_Length = this.m_Length + (this.m_Resp.Content.Length - this.m_Resp.Content.Position);
+            }
             return result;
         }
         bool m_IsEnd = true;
@@ -63,7 +71,6 @@ namespace QNetwork.Http.Server
                     {
                         string str_header = this.m_Resp.ToString();
                         byte[] buf = Encoding.UTF8.GetBytes(str_header);
-                        this.m_Position = this.m_Position + buf.Length;
                         this.m_HeaderBuf.SetLength(0);
                         this.m_HeaderBuf.Write(buf, 0, buf.Length);
                         this.m_HeaderBuf.Position = 0;
@@ -128,8 +135,9 @@ namespace QNetwork.Http.Server
             return read_len;
         }
 
-        public void Dispose()
+        protected override void Dispose(bool disposing)
         {
+            base.Dispose(disposing);
             this.m_IsEnd = true;
             if (this.m_Resp.Content != null)
             {
@@ -137,7 +145,7 @@ namespace QNetwork.Http.Server
                 this.m_Resp.Content.Dispose();
                 this.m_Resp.Content = null;
             }
-            if(this.m_HeaderBuf != null)
+            if (this.m_HeaderBuf != null)
             {
                 this.m_HeaderBuf.Close();
                 this.m_HeaderBuf.Dispose();

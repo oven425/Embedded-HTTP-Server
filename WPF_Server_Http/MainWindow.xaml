@@ -25,28 +25,46 @@
             <TextBox Text="{Binding Listen_Port}" Grid.Column="3"/>
             <Button x:Name="button_add_listen" Click="button_add_listen_Click" Grid.Column="4">Add listen</Button>
         </Grid>
-        <ListView Grid.Row="1" ItemsSource="{Binding AddressList}">
-            <ListView.View>
-                <GridView>
-                    <GridViewColumn Header="State">
-                        <GridViewColumn.CellTemplate>
-                            <DataTemplate>
-                                <Rectangle Width="20" Height="20" Fill="{Binding ListenState,Converter={StaticResource listenstates2brush}}"/>
-                            </DataTemplate>
-                        </GridViewColumn.CellTemplate>
-                    </GridViewColumn>
-                    <GridViewColumn Header="IP" DisplayMemberBinding="{Binding Address.IP}"/>
-                    <GridViewColumn Header="Port" DisplayMemberBinding="{Binding Address.Port}"/>
-                    <GridViewColumn>
-                        <GridViewColumn.CellTemplate>
-                            <DataTemplate>
-                                <CheckBox x:Name="checkbox_listen_control" IsChecked="{Binding IsOpen}" Click="checkbox_listen_control_Click"/>
-                            </DataTemplate>
-                        </GridViewColumn.CellTemplate>
-                    </GridViewColumn>
-                </GridView>
-            </ListView.View>
-        </ListView>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <ListView Grid.Row="1" ItemsSource="{Binding AddressList}">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="State">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Rectangle Width="20" Height="20" Fill="{Binding ListenState,Converter={StaticResource listenstates2brush}}"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Header="IP" DisplayMemberBinding="{Binding Address.IP}"/>
+                        <GridViewColumn Header="Port" DisplayMemberBinding="{Binding Address.Port}"/>
+                        <GridViewColumn>
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox x:Name="checkbox_listen_control" IsChecked="{Binding IsOpen}" Click="checkbox_listen_control_Click"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+            <GridSplitter Grid.Column="1" HorizontalAlignment="Center" Width="3" VerticalAlignment="Stretch" ShowsPreview="True" Background="Gray"/>
+            <ListView Grid.Column="2">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="Time"/>
+                        <GridViewColumn Header="URL"/>
+                        <GridViewColumn Header="Status"/>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </Grid>
+        
         
     </Grid>
 </Window>

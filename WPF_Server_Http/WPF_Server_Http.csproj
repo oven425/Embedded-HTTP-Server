@@ -57,6 +57,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="CQListenAddress.cs" />
     <Compile Include="CQMainUI.cs" />
     <Compile Include="CQValueConvert.cs" />
     <Compile Include="MainWindow.xaml.cs">

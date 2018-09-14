@@ -70,7 +70,7 @@ namespace QNetwork.Http.Server
             return result;
         }
 
-        public bool AddSend(System.IO.Stream data)
+        public bool AddSend(Stream data)
         {
             bool result = true;
 #if Async_Args
@@ -151,7 +151,7 @@ namespace QNetwork.Http.Server
             {
                 return result;
             }
-            if (this.m_CurrentResp.Length > this.m_CurrentResp.Position)
+            if (this.m_CurrentResp.Length <= this.m_CurrentResp.Position)
             {
                 System.IO.Stream resp = null;
                 Monitor.Enter(this.m_SendRespsLock);
@@ -165,7 +165,7 @@ namespace QNetwork.Http.Server
                     //this.m_CurrentResp.Set(resp);
                 }
             }
-            if (this.m_CurrentResp.Length <= this.m_CurrentResp.Position)
+            if (this.m_CurrentResp.Length > this.m_CurrentResp.Position)
             {
                 int send_len = this.m_CurrentResp.Read(this.m_SendBuf, 0, this.m_SendBuf.Length);
                 //System.Diagnostics.Trace.Write(Encoding.UTF8.GetString(m_SendBuf, 0, send_len));

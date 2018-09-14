@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace QNetwork.Http.Server
+
+namespace QNetwork.Http.Server.Service
 {
     public enum ServiceProcessResults
     {
@@ -14,6 +15,19 @@ namespace QNetwork.Http.Server
         ControlTransfer = 4,
         WebSocket = 5
     }
+    public interface IQHttpService : IDisposable
+    {
+        bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code, out bool to_cache);
+        bool Process_Cache(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code);
+        bool TimeOut_Cache();
+        bool CloseHandler(List<string> handlers);
+        IQHttpServer_Extension Extension { set; get; }
+        List<string> Methods { get; }
+    }
+}
+namespace QNetwork.Http.Server
+{
+    
 
     public interface IQHttpServer_Extension
     {
@@ -21,15 +35,7 @@ namespace QNetwork.Http.Server
         bool ControlTransfer(string handlerid, out CQTCPHandler tcphandler);
     }
 
-    public interface IQHttpService:IDisposable
-    {
-        bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code, out bool to_cache);
-        bool Process_Cache(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code);
-        bool TimeOut_Cache();
-        bool CloseHandler(List<string> handlers);
-        IQHttpServer_Extension Extension { set; get; }
-        List<string> Methods {  get; }
-    }
+   
 
     //public abstract class CQHttpService : IQHttpService
     //{
