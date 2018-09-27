@@ -410,6 +410,19 @@ namespace QNetwork.Http.Server
             return true;
         }
 
+        public delegate bool ServiceChangeDelegate(IQHttpService service, bool isadd);
+        public event ServiceChangeDelegate OnServiceChange;
+
+
+        IQHttpRouter m_IQHttpRouter;
+        public bool Open(List<CQSocketListen_Address> address, IQHttpRouter router)
+        {
+            bool result = true;
+
+
+            return result;
+        }
+
         Dictionary<string, Type> m_Services1 = new Dictionary<string, Type>();
         public bool Open(List<CQSocketListen_Address> address, List<IQHttpService> services, bool adddefault=true)
         {

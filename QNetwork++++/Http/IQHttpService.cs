@@ -24,6 +24,11 @@ namespace QNetwork.Http.Server.Service
         IQHttpServer_Extension Extension { set; get; }
         List<string> Methods { get; }
     }
+
+    public interface IQHttpRouter
+    {
+        IQHttpService Process(CQHttpRequest req);
+    }
 }
 namespace QNetwork.Http.Server
 {
