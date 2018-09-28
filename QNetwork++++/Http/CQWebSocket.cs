@@ -43,7 +43,7 @@ namespace QNetwork.Http.Server
             string base64_str = Convert.ToBase64String(crypto);//把加密後的字串從Byte[]轉為字串
  
 
-            CQHttpResponse resp = new CQHttpResponse("");
+            CQHttpResponse resp = new CQHttpResponse("", "");
             resp.Code = "101";
             resp.Message = "Socket Protocol Handshake";
             resp.Protocol = "HTTP/1.1";

@@ -1,4 +1,6 @@
-﻿using QNetwork.Http.Server.Accept;
+﻿using QNetwork.Http.Server;
+using QNetwork.Http.Server.Accept;
+using QNetwork.Http.Server.Service;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -18,6 +20,18 @@ namespace WPF_Server_Http.Define
         }
         public CQSocketListen_Address Address { set { this.m_Address = value; this.Update("Address"); } get { return this.m_Address; } }
         public ListenStates ListenState { set { this.m_ListenState = value; this.Update("ListenState"); } get { return this.m_ListenState; } }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        void Update(string name) { if (this.PropertyChanged != null) { this.PropertyChanged(this, new PropertyChangedEventArgs(name)); } }
+    }
+
+    public class CQRequest_Service: INotifyPropertyChanged
+    {
+        CQHttpRequest m_HttpRequest;
+        IQHttpService m_HttpService;
+        public CQHttpRequest Request { set { this.m_HttpRequest = value; this.Update("Request"); } get { return this.m_HttpRequest; } }
+        public IQHttpService Service { set { this.m_HttpService = value; this.Update("Service"); } get { return this.m_HttpService; } }
+
 
         public event PropertyChangedEventHandler PropertyChanged;
         void Update(string name) { if (this.PropertyChanged != null) { this.PropertyChanged(this, new PropertyChangedEventArgs(name)); } }

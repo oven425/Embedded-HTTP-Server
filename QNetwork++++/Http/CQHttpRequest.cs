@@ -22,14 +22,17 @@ namespace QNetwork.Http.Server
         public Stream Content { set; get; }
         string m_HandlerID;
         public string HandlerID { get { return this.m_HandlerID; } }
+        public string ProcessID { get { return this.m_ProcessID; } }
         public Uri URL { set; get; }
         string m_Address;
         public byte[] HeaderRaw { set; get; }
+        string m_ProcessID;
         public CQHttpRequest(string handlerid, string address)
         {
             this.m_Address = address;
-            this.m_HandlerID = handlerid;
             this.CreateTime = DateTime.Now;
+            this.m_HandlerID = handlerid;
+            this.m_ProcessID = string.Format("{0}_{1}", this.m_HandlerID, this.CreateTime.Ticks);
             this.Headers = new Dictionary<string, string>();
         }
 

@@ -134,7 +134,7 @@ namespace QNetwork.Http.Server
                         Monitor.Enter(this.m_SessionsLock);
                         if (this.m_Sessions.ContainsKey(req.HandlerID) == true)
                         {
-                            resp = new CQHttpResponse(req.HandlerID);
+                            resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
                             resp.Set403();
                             CQHttpHandler handler = this.m_Sessions[req.HandlerID];
                             handler.SendResp(resp);
@@ -174,7 +174,12 @@ namespace QNetwork.Http.Server
             bool result = true;
             Monitor.Enter(this.m_RequestsLock);
             this.m_Requests.AddRange(requests);
+            for (int i = 0; i < requests.Count; i++)
+            {
+                this.ServiceChange(requests[i], null, Request_ServiceStates.Request);
+            }
             Monitor.Exit(this.m_RequestsLock);
+            
             return result;
         }
 
@@ -184,7 +189,7 @@ namespace QNetwork.Http.Server
             bool result = true;
             if (request.Headers.ContainsKey("Authorization") == false)
             {
-                resp = new CQHttpResponse(request.HandlerID);
+                resp = new CQHttpResponse(request.HandlerID, request.ProcessID);
                 resp.Set401();
             }
             else
@@ -204,7 +209,7 @@ namespace QNetwork.Http.Server
                             string bbstr = Convert.ToBase64String(Encoding.UTF8.GetBytes(bb));
                             if (bbstr != auth_str)
                             {
-                                resp = new CQHttpResponse(request.HandlerID);
+                                resp = new CQHttpResponse(request.HandlerID, request.ProcessID);
                                 resp.Set401();
                             }
                         }
@@ -248,7 +253,7 @@ namespace QNetwork.Http.Server
                             string bbstr = this.CreateDigestResponse(account, password, realm, uri, request.Method, nonce);
                             if (bbstr != response)
                             {
-                                resp = new CQHttpResponse(request.HandlerID);
+                                resp = new CQHttpResponse(request.HandlerID, request.ProcessID);
                                 resp.Set401();
                             }
 
@@ -319,16 +324,7 @@ namespace QNetwork.Http.Server
             to_cache = false;
             //System.Diagnostics.Trace.WriteLine(request.ResourcePath);
             resp = null;
-            //for (int i = 0; i < this.m_Services.Count; i++)
-            //{
-            //    this.m_Services[i].Process(request, out resp, out process_result_code);
 
-            //    if (process_result_code != (int)ServiceProcessResults.None)
-            //    {
-            //        break;
-            //    }
-
-            //}
             for (int i = 0; i < this.m_Caches.Count; i++)
             {
                 this.m_Caches[i].Process_Cache(request, out resp, out process_result_code);
@@ -342,6 +338,7 @@ namespace QNetwork.Http.Server
             if ((this.m_Services1.ContainsKey(request.URL.LocalPath.ToUpperInvariant()) == true) && ((process_result_code == (int)ServiceProcessResults.None)))
             {
                 IQHttpService instance = Activator.CreateInstance(this.m_Services1[request.URL.LocalPath.ToUpperInvariant()]) as IQHttpService;
+                this.ServiceChange(request, instance, Request_ServiceStates.Service);
                 instance.Extension = this;
                 if (instance != null)
                 {
@@ -410,9 +407,22 @@ namespace QNetwork.Http.Server
             return true;
         }
 
-        public delegate bool ServiceChangeDelegate(IQHttpService service, bool isadd);
+        public enum Request_ServiceStates
+        {
+            Request,
+            Service,
+            Response,
+            End
+        }
+        public delegate bool ServiceChangeDelegate(CQHttpRequest req, IQHttpService service, Request_ServiceStates isadd);
         public event ServiceChangeDelegate OnServiceChange;
-
+        private void ServiceChange(CQHttpRequest req, IQHttpService service, Request_ServiceStates isadd)
+        {
+            if (this.OnServiceChange != null)
+            {
+                this.OnServiceChange(req, service, isadd);
+            }
+        }
 
         IQHttpRouter m_IQHttpRouter;
         public bool Open(List<CQSocketListen_Address> address, IQHttpRouter router)

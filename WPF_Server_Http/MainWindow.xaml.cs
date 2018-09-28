@@ -24,6 +24,7 @@ using System.Web.Script.Serialization;
 using QNetwork.Http.Server.Accept;
 using QNetwork.Http.Server.Service;
 using WPF_Server_Http.Define;
+using static QNetwork.Http.Server.CQHttpServer;
 
 namespace WPF_Server_Http
 {
@@ -83,8 +84,40 @@ namespace WPF_Server_Http
                     this.m_MainUI.AddressList.Add(new CQListenAddress() { Address = net_address });
                 }
                 this.m_TestServer.OnListentStateChange += M_TestServer_OnListentStateChange;
+                this.m_TestServer.OnServiceChange += M_TestServer_OnServiceChange;
                 this.m_TestServer.Open(this.m_MainUI.AddressList.Select(x=>x.Address).ToList(), new List<IQHttpService>() { new CQHttpService_Test(), new CQHttpService_Playback(),new CQHttpService_WebSocket() } , true);
             }
+        }
+
+        private bool M_TestServer_OnServiceChange(CQHttpRequest req, IQHttpService service, Request_ServiceStates isadd)
+        {
+            this.Dispatcher.Invoke(new Action(() =>
+            {
+                switch (isadd)
+                {
+                    case Request_ServiceStates.Request:
+                            {
+                            this.m_MainUI.Request_Services.Add(new CQRequest_Service() { Request = req });
+                        }
+                        break;
+                    case Request_ServiceStates.Service:
+                        {
+                            var vv = this.m_MainUI.Request_Services.FirstOrDefault(x => x.Request == req);
+                            if(vv != null)
+                            {
+                                vv.Service = service;
+                            }
+                        }
+                        break;
+                    case Request_ServiceStates.Response:
+                        {
+
+                        }
+                        break;
+                }
+
+            }));
+            return true;
         }
 
         private bool M_TestServer_OnListentStateChange(CQSocketListen_Address listen_addres, ListenStates state)
@@ -336,7 +369,7 @@ namespace WPF_Server_Http
             {
                 case "/WEBSOCKET":
                     {
-                        resp = new CQHttpResponse(req.HandlerID);
+                        resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
                         resp.Content = new FileStream("../WebTest/Websocket.html", FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
                         resp.ContentLength = resp.Content.Length;
                         resp.ContentType = "text/html; charset=utf-8";
@@ -426,7 +459,7 @@ namespace WPF_Server_Http
                 resps.Clear();
                 for (int i = 0; i < this.m_NewPushHandlers.Count; i++)
                 {
-                    CQHttpResponse resp = new CQHttpResponse(this.m_NewPushHandlers[i]);
+                    CQHttpResponse resp = new CQHttpResponse(this.m_NewPushHandlers[i], "");
                     resp.Set200();
                     resp.Connection = Connections.KeepAlive;
                     resp.ContentType = "multipart/x-mixed-replace;boundary=\"QQQ\"";
@@ -441,7 +474,7 @@ namespace WPF_Server_Http
                 this.m_NewPushHandlers.Clear();
                 for (int i = 0; i < this.m_PushHandlers.Count; i++)
                 {
-                    CQHttpResponse resp = new CQHttpResponse(this.m_PushHandlers[i], CQHttpResponse.BuildTypes.MultiPart);
+                    CQHttpResponse resp = new CQHttpResponse(this.m_PushHandlers[i], "", CQHttpResponse.BuildTypes.MultiPart);
                     resp.Content = new MemoryStream();
 
                     //string str = string.Format("PushTest {0}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss.fff", System.Globalization.DateTimeFormatInfo.InvariantInfo));
@@ -504,7 +537,7 @@ namespace WPF_Server_Http
                 case "/EVENT4":
                     {
                         process_result_code = ServiceProcessResults.OK;
-                        resp = new CQHttpResponse(req.HandlerID);
+                        resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
                         resp.Set200();
                         resp.Connection = Connections.Close;
                     }
@@ -535,7 +568,7 @@ namespace WPF_Server_Http
                         //cc.Count++;
                         this.m_Test_Cache_Data++;
                         this.m_Test_Cache_ID = string.Format("{0}_{1}", DateTime.Now.Minute, DateTime.Now.Second);
-                        resp = new CQHttpResponse(req.HandlerID);
+                        resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
                         resp.Set200();
                         resp.Connection = Connections.KeepAlive;
                         string str = string.Format("ID:{0}\r\nCount:{1}", this.m_Test_Cache_ID, this.m_Test_Cache_Data);
@@ -572,7 +605,7 @@ namespace WPF_Server_Http
                         {
                             this.m_Test_Cache_Data++;
                             process_result_code = ServiceProcessResults.OK;
-                            resp = new CQHttpResponse(req.HandlerID);
+                            resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
                             resp.Set200();
                             resp.Connection = Connections.KeepAlive;
                             string str = string.Format("ID:{0}\r\nCount:{1}", this.m_Test_Cache_ID, this.m_Test_Cache_Data);

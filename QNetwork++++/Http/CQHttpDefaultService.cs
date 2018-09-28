@@ -40,7 +40,7 @@ namespace QNetwork.Http.Server.Service
         {
             to_cache = false;
             process_result_code = ServiceProcessResults.OK;
-            resp = new CQHttpResponse(req.HandlerID);
+            resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
             switch (req.ResourcePath)
             {
                 case "/PostTest":

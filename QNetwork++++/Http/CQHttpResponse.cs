@@ -29,15 +29,18 @@ namespace QNetwork.Http.Server
         public List<string> AccessControlAllowHeaders { set; get; }
         string m_HandlerID;
         public string HandlerID { get { return this.m_HandlerID; } }
+        string m_ProcessID;
+        public string ProcessID { get { return this.m_ProcessID; } }
         public Connections Connection { set; get; }
         public long ContentLength { set; get; }
         public string ContentType { set; get; }
         public BuildTypes BuildType { get { return this.m_BuildType; } }
-        public CQHttpResponse(string handlerid, BuildTypes builetype= BuildTypes.Basic)
+        public CQHttpResponse(string handlerid, string processid, BuildTypes builetype= BuildTypes.Basic)
         {
             this.AccessControlAllowHeaders = new List<string>();
             this.m_BuildType = builetype;
             this.m_HandlerID = handlerid;
+            this.m_ProcessID = processid;
             this.Headers = new Dictionary<string, string>();
             this.Message = "OK";
             this.Code = "200";
