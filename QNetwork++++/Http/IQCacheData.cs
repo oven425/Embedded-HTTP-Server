@@ -9,8 +9,30 @@ namespace QNetwork.Http.Server
     {
         string ID { get; }
         bool IsTimeOut(TimeSpan timeout);
-        object Data { set; get; }
+        bool IsUse { set; get; }
     }
+
+    public class CQCache_Test : IQCacheData
+    {
+        public CQCache_Test()
+        {
+
+        }
+        public string ID => throw new NotImplementedException();
+
+        public bool IsUse { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        public bool IsTimeOut(TimeSpan timeout)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public interface IQCacheManager
+    {
+
+    }
+
 
     //public class CQCacheData : IQCacheData
     //{

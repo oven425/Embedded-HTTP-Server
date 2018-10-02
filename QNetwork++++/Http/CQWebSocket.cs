@@ -20,6 +20,11 @@ namespace QNetwork.Http.Server
         public string ID => this.m_TcpHandler == null ? "" : this.m_TcpHandler.ID;
 
         public object Data { set; get; }
+
+        public bool IsUse => throw new NotImplementedException();
+
+        bool IQCacheData.IsUse { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
         bool m_IsEnd;
 
         public bool IsTimeOut(TimeSpan timeout)

@@ -51,6 +51,25 @@ namespace WPF_Server_Http
             //        break;
             //    }
             //}
+            CQCache_Test bb = this.Create<CQCache_Test>();
+            this.Create(typeof(CQCache_Test));
+            this.Add(new CQHttpService_Test());
+        }
+
+        public T Create<T>(T b) where T : new()
+        {
+            return new T();
+        }
+
+        void Create(Type type)
+        {
+            bool bb = type is IQCacheData;
+        }
+
+        public bool Add<T>(T a)
+        {
+            
+            return true;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
