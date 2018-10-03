@@ -109,12 +109,12 @@ namespace QNetwork.Http.Server
             while (req != null)
             {
                 ServiceProcessResults process_result;
-                bool to_cache;
+                CQCacheBase cache;
                 CQHttpResponse resp;
                 //this.ProcessWebSocket(req, out resp, out process_result);
                 //if(process_result == 0)
                 {
-                    this.ProcessRequest(req, out resp, out process_result, out to_cache);
+                    this.ProcessRequest(req, out resp, out process_result, out cache);
                     if ((resp != null) && (process_result == ServiceProcessResults.OK))
                     {
                         Monitor.Enter(this.m_SessionsLock);
@@ -317,11 +317,11 @@ namespace QNetwork.Http.Server
             return result;
         }
 
-        protected virtual bool ProcessRequest(CQHttpRequest request, out CQHttpResponse resp, out ServiceProcessResults process_result_code, out bool to_cache)
+        protected virtual bool ProcessRequest(CQHttpRequest request, out CQHttpResponse resp, out ServiceProcessResults process_result_code, out CQCacheBase cache)
         {
             bool result = true;
             process_result_code = ServiceProcessResults.None;
-            to_cache = false;
+            cache = null;
             //System.Diagnostics.Trace.WriteLine(request.ResourcePath);
             resp = null;
 
@@ -342,8 +342,8 @@ namespace QNetwork.Http.Server
                 instance.Extension = this;
                 if (instance != null)
                 {
-                    instance.Process(request, out resp, out process_result_code, out to_cache);
-                    if(to_cache == true)
+                    instance.Process(request, out resp, out process_result_code, out cache);
+                    if(cache != null)
                     {
                         this.m_Caches.Add(instance);
                     }

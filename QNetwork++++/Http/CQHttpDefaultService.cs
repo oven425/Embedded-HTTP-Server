@@ -36,9 +36,9 @@ namespace QNetwork.Http.Server.Service
         public IQHttpServer_Extension Extension { set; get; }
         public List<string> Methods => this.m_Methods;
 
-        public bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code, out bool to_cache)
+        public bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code, out CQCacheBase cache)
         {
-            to_cache = false;
+            cache = null;
             process_result_code = ServiceProcessResults.OK;
             resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
             switch (req.ResourcePath)

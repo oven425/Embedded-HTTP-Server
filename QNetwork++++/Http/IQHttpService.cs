@@ -17,7 +17,7 @@ namespace QNetwork.Http.Server.Service
     }
     public interface IQHttpService : IDisposable
     {
-        bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code, out bool to_cache);
+        bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code, out CQCacheBase cache);
         bool Process_Cache(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code);
         bool TimeOut_Cache();
         bool CloseHandler(List<string> handlers);

@@ -38,39 +38,10 @@ namespace WPF_Server_Http
         public MainWindow()
         {
             InitializeComponent();
-            //CQHttpResponse resp = new CQHttpResponse("");
-            //resp.Set200();
-            //CQHttpResponseReader respr = new CQHttpResponseReader();
-            //respr.Set(resp);
-            //byte[] bb = new byte[8192];
-            //while(true)
-            //{
-            //    int read_len = respr.Read(bb, 0, bb.Length);
-            //    if(read_len != bb.Length)
-            //    {
-            //        break;
-            //    }
-            //}
-            CQCache_Test bb = this.Create<CQCache_Test>();
-            this.Create(typeof(CQCache_Test));
-            this.Add(new CQHttpService_Test());
+            //CQCache1 bb = this.Create<CQCache1>();
         }
 
-        public T Create<T>(T b) where T : new()
-        {
-            return new T();
-        }
-
-        void Create(Type type)
-        {
-            bool bb = type is IQCacheData;
-        }
-
-        public bool Add<T>(T a)
-        {
-            
-            return true;
-        }
+       
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
@@ -289,17 +260,17 @@ namespace WPF_Server_Http
             throw new NotImplementedException();
         }
 
-        public bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code, out bool to_cache)
+        public bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code, out CQCacheBase cache)
         {
-            to_cache = false;
+            cache = null;
             bool result = true;
             process_result_code = ServiceProcessResults.None;
             resp = null;
+            cache = null;
             switch (req.URL.LocalPath.ToUpperInvariant())
             {
                 case "/PLAYBACK":
                     {
-                        to_cache = true;
                         string query_str = req.URL.Query;
                         if (string.IsNullOrEmpty(query_str) == true)
                         {
@@ -378,9 +349,9 @@ namespace WPF_Server_Http
             throw new NotImplementedException();
         }
 
-        public bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code, out bool to_cache)
+        public bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code, out CQCacheBase cache)
         {
-            to_cache = false;
+            cache = null;
             resp = null;
             process_result_code = 0;
             bool result = true;
@@ -405,7 +376,6 @@ namespace WPF_Server_Http
                             CQTCPHandler handler;
                             this.Extension.ControlTransfer(req.HandlerID, out handler);
                             websocket.Open(handler, req.HeaderRaw, req.HeaderRaw.Length);
-                            to_cache = true;
                         }
                     }
                     break;
@@ -533,9 +503,9 @@ namespace WPF_Server_Http
 
         string m_Test_Cache_ID = "";
         int m_Test_Cache_Data = 0;
-        public bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code, out bool to_cache)
+        public bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code, out CQCacheBase cache)
         {
-            to_cache = false;
+            cache = null;
             process_result_code = 0;
             resp = null;
             bool result = true;
@@ -596,7 +566,6 @@ namespace WPF_Server_Http
                         resp.Content.Write(str_buf, 0, str_buf.Length);
                         resp.Content.Position = 0;
                         resp.ContentLength = resp.Content.Length;
-                        to_cache = true;
                     }
                     break;
             }

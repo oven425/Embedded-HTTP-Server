@@ -12,24 +12,41 @@ namespace QNetwork.Http.Server
         bool IsUse { set; get; }
     }
 
-    public class CQCache_Test : IQCacheData
+    public class CQCacheBase
     {
-        public CQCache_Test()
+        public CQCacheBase()
         {
 
         }
-        public string ID => throw new NotImplementedException();
-
-        public bool IsUse { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-        public bool IsTimeOut(TimeSpan timeout)
+        public string ID { protected set; get; }
+        public virtual bool IsTimeOut(TimeSpan timeout)
         {
-            throw new NotImplementedException();
+            return true;
+        }
+        public string IsUse { protected set; get; }
+    }
+
+    public class CQCache1: CQCacheBase
+    {
+        public CQCache1()
+        {
+
+        }
+
+        public override bool IsTimeOut(TimeSpan timeout)
+        {
+            return base.IsTimeOut(timeout);
         }
     }
 
-    public interface IQCacheManager
+    public class CQCacheManager
     {
+        public Dictionary<string, CQCacheBase> Caches { protected set; get; }
+        public T Create<T>() where T : CQCacheBase, new()
+        {
+            return new T();
+        }
+
 
     }
 

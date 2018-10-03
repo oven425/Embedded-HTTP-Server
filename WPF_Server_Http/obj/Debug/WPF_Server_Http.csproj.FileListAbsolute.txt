@@ -14,3 +14,4 @@ C:\Users\QQ\Desktop\QNetwork-master\WPF_Server_Http\obj\Debug\WPF_Server_Http.cs
 C:\Users\QQ\Desktop\QNetwork-master\WPF_Server_Http\obj\Debug\WPF_Server_Http.exe
 C:\Users\QQ\Desktop\QNetwork-master\WPF_Server_Http\obj\Debug\WPF_Server_Http.pdb
 C:\Users\QQ\Desktop\QNetwork-master\WPF_Server_Http\obj\Debug\WPF_Server_Http.csprojAssemblyReference.cache
+C:\Users\QQ\Desktop\QNetwork-master\Debug\WPF_Server_Http.exe.config
