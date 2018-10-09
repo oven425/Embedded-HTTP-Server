@@ -32,12 +32,18 @@ namespace QNetwork.Http.Server.Service
 }
 namespace QNetwork.Http.Server
 {
-    
+    public enum CacheOperates
+    {
+        Create,
+        Get,
+        Destory
+    }
 
     public interface IQHttpServer_Extension
     {
         bool SendMultiPart(List<CQHttpResponse> datas);
         bool ControlTransfer(string handlerid, out CQTCPHandler tcphandler);
+        bool CacheControl(CacheOperates op, string service = "default");
     }
 
    

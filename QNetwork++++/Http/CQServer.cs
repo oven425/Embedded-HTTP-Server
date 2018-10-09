@@ -506,6 +506,31 @@ namespace QNetwork.Http.Server
             Monitor.Exit(this.m_RequestsLock);
             return true;
         }
+
+        public bool CacheControl(CacheOperates op, string service = "default")
+        {
+            bool result = true;
+            switch(op)
+            {
+                case CacheOperates.Create:
+                    {
+                        
+                    }
+                    break;
+                case CacheOperates.Destory:
+                    {
+
+                    }
+                    break;
+                case CacheOperates.Get:
+                    {
+
+                    }
+                    break;
+            }
+
+            return result;
+        }
     }
 
    
