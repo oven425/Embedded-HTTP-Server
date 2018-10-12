@@ -10,6 +10,7 @@ using System.Threading;
 using System.Security.Cryptography;
 using QNetwork.Http.Server.Accept;
 using QNetwork.Http.Server.Service;
+using QNetwork.Http.Server.Cache;
 
 namespace QNetwork.Http.Server
 {

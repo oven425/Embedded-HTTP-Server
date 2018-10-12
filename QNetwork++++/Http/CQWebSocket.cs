@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.ComponentModel;
+using QNetwork.Http.Server.Cache;
 
 namespace QNetwork.Http.Server
 {

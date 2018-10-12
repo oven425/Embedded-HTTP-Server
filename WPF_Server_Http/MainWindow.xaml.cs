@@ -25,6 +25,7 @@ using QNetwork.Http.Server.Accept;
 using QNetwork.Http.Server.Service;
 using WPF_Server_Http.Define;
 using static QNetwork.Http.Server.CQHttpServer;
+using QNetwork.Http.Server.Cache;
 
 namespace WPF_Server_Http
 {
@@ -327,6 +328,11 @@ namespace WPF_Server_Http
         {
             return this.m_IsEnd;
         }
+
+        //public bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code, out CQCacheBase cache)
+        //{
+        //    throw new NotImplementedException();
+        //}
     }
 
     public class CQHttpService_WebSocket : IQHttpService

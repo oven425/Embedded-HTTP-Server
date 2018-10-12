@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
-namespace QNetwork.Http.Server
+namespace QNetwork.Http.Server.Cache
 {
     public interface IQCacheData
     {

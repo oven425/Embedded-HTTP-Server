@@ -1,4 +1,5 @@
 ﻿using QNetwork.Http.Server;
+using QNetwork.Http.Server.Cache;
 using System;
 using System.Collections.Generic;
 using System.IO;
