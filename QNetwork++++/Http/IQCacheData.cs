@@ -6,18 +6,23 @@ using System.Threading;
 
 namespace QNetwork.Http.Server.Cache
 {
-    public interface IQCacheData
-    {
-        string ID { get; }
-        bool IsTimeOut(TimeSpan timeout);
-        bool IsUse { set; get; }
-    }
+    //public interface IQCacheData
+    //{
+    //    string ID { get; }
+    //    bool IsTimeOut(TimeSpan timeout);
+    //    bool IsUse { set; get; }
+    //}
 
     public class CQCacheBase
     {
         public CQCacheBase()
         {
             this.ID = Guid.NewGuid().ToString();
+        }
+
+        public CQCacheBase(string id)
+        {
+            this.ID = id;
         }
         public string ID { protected set; get; }
         public virtual bool IsTimeOut(TimeSpan timeout)
@@ -33,6 +38,14 @@ namespace QNetwork.Http.Server.Cache
         {
 
         }
+
+        public CQCache1(string id)
+            :base(id)
+        {
+
+        }
+
+        public int Count { set; get; }
 
         public override bool IsTimeOut(TimeSpan timeout)
         {
