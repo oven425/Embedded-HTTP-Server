@@ -40,6 +40,8 @@ namespace WPF_Server_Http
         {
             InitializeComponent();
             //CQCache1 bb = this.Create<CQCache1>();
+
+           
         }
 
        
@@ -432,11 +434,11 @@ namespace WPF_Server_Http
         public IQHttpServer_Extension Extension { set; get; }
 
         public List<string> Methods => this.m_Methods;
-        static Dictionary<string, CQCacheBase> m_Caches;
-        static CQHttpService_Test()
-        {
-            m_Caches = new Dictionary<string, CQCacheBase>();
-        }
+        //static Dictionary<string, CQCacheBase> m_Caches;
+        //static CQHttpService_Test()
+        //{
+        //    m_Caches = new Dictionary<string, CQCacheBase>();
+        //}
 
         public CQHttpService_Test()
         {
@@ -565,19 +567,21 @@ namespace WPF_Server_Http
                         {
                             query_str = req.URL.Query.Remove(0, 1);
                         }
-                        if (m_Caches.ContainsKey(query_str) == true)
-                        {
-                            cache = m_Caches[query_str] as CQCache1;
-                            cc = (CQCache1)cache;
-                        }
-                        else
-                        {
-                            string id = m_ID.ToString();
-                            m_ID++;
-                            cc = new CQCache1(id);
-                            cache = cc;
-                            m_Caches.Add(cache.ID, cache);
-                        }
+
+                        this.Extension.CacheControl(CacheOperates.Get, query_str, out cc);
+                        //if (m_Caches.ContainsKey(query_str) == true)
+                        //{
+                        //    cache = m_Caches[query_str] as CQCache1;
+                        //    cc = (CQCache1)cache;
+                        //}
+                        //else
+                        //{
+                        //    string id = m_ID.ToString();
+                        //    m_ID++;
+                        //    cc = new CQCache1(id);
+                        //    cache = cc;
+                        //    m_Caches.Add(cache.ID, cache);
+                        //}
                         cc.Count++;
                         //this.m_Test_Cache_Data++;
                         //this.m_Test_Cache_ID = string.Format("{0}_{1}", DateTime.Now.Minute, DateTime.Now.Second);
@@ -692,5 +696,25 @@ namespace WPF_Server_Http
         
     }
 
-    
+
+    public class CQCache1 : CQCacheBase
+    {
+        public CQCache1()
+        {
+
+        }
+
+        public CQCache1(string id)
+            : base(id)
+        {
+
+        }
+
+        public int Count { set; get; }
+
+        public override bool IsTimeOut(TimeSpan timeout)
+        {
+            return base.IsTimeOut(timeout);
+        }
+    }
 }

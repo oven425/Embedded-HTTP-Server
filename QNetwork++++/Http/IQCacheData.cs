@@ -6,13 +6,6 @@ using System.Threading;
 
 namespace QNetwork.Http.Server.Cache
 {
-    //public interface IQCacheData
-    //{
-    //    string ID { get; }
-    //    bool IsTimeOut(TimeSpan timeout);
-    //    bool IsUse { set; get; }
-    //}
-
     public class CQCacheBase
     {
         public CQCacheBase()
@@ -24,7 +17,7 @@ namespace QNetwork.Http.Server.Cache
         {
             this.ID = id;
         }
-        public string ID { protected set; get; }
+        public string ID { internal set; get; }
         public virtual bool IsTimeOut(TimeSpan timeout)
         {
             return true;
@@ -32,46 +25,64 @@ namespace QNetwork.Http.Server.Cache
         public string IsUse { protected set; get; }
     }
 
-    public class CQCache1: CQCacheBase
-    {
-        public CQCache1()
-        {
-
-        }
-
-        public CQCache1(string id)
-            :base(id)
-        {
-
-        }
-
-        public int Count { set; get; }
-
-        public override bool IsTimeOut(TimeSpan timeout)
-        {
-            return base.IsTimeOut(timeout);
-        }
-    }
+    
 
     public class CQCacheManager
     {
+        public string NickName { set; get; }
         object m_CachesLock = new object();
         public Dictionary<string, CQCacheBase> Caches { protected set; get; }
-        virtual public T Create<T>() where T : CQCacheBase, new()
+
+        public CQCacheManager()
+        {
+            this.NickName = "default";
+            this.Caches = new Dictionary<string, CQCacheBase>();
+        }
+
+        virtual public T Get<T>(string id) where T : CQCacheBase, new()
         {
             Monitor.Enter(this.m_CachesLock);
-            T aa = new T();
-            this.Caches.Add(aa.ID, aa);
+            T aa = null;
+            if (this.Caches.ContainsKey(id) == true)
+            {
+                aa = this.Caches[id] as T;
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(id) == true)
+                {
+                    aa = new T();
+                }
+                else
+                {
+                    aa = new T();
+                    aa.ID = id;
+                }
+                this.Caches.Add(aa.ID, aa);
+            }
+            
             Monitor.Exit(this.m_CachesLock);
             return aa;
         }
 
-        public T Get<T>(string id)
-        {
-            T aa = default(T);
-            
-            return aa;
-        }
+
+
+
+        //virtual public T Create<T>() where T : CQCacheBase, new()
+        //{
+        //    Monitor.Enter(this.m_CachesLock);
+        //    T aa = new T();
+        //    this.Caches.Add(aa.ID, aa);
+        //    Monitor.Exit(this.m_CachesLock);
+        //    return aa;
+        //}
+
+        //public T Get<T>(string id)
+        //{
+        //    T aa = default(T);
+
+        //    return aa;
+        //}
 
         virtual public bool TimeOut()
         {
@@ -86,37 +97,5 @@ namespace QNetwork.Http.Server.Cache
 
             return result;
         }
-
-
-
     }
-
-
-    //public class CQCacheData : IQCacheData
-    //{
-    //    public CQCacheData(string id)
-    //    {
-    //        this.m_CreateTime = DateTime.Now;
-    //        this.m_ID = id;
-    //    }
-    //    string m_ID;
-    //    public string ID { get { return this.m_ID; } }
-    //    DateTime m_CreateTime;
-    //    public bool IsTimeOut(TimeSpan timeout)
-    //    {
-    //        bool result = true;
-    //        if (DateTime.Now - this.m_CreateTime > timeout)
-    //        {
-    //            result = true;
-    //        }
-    //        else
-    //        {
-    //            result = false;
-    //        }
-    //        return result;
-    //    }
-
-    //    public object Data { set; get; }
-
-    //}
 }

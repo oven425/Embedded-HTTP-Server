@@ -23,7 +23,8 @@ namespace QNetwork.Http.Server
         List<CQHttpRequest> m_Requests = new List<CQHttpRequest>();
         object m_RequestsLock = new object();
         List<IQHttpService> m_Services = new List<IQHttpService>();
-        List<IQHttpService> m_Caches = new List<IQHttpService>();
+
+        Dictionary<string, CQCacheManager> m_Caches = new Dictionary<string, CQCacheManager>();
         public CQHttpServer()
         {
             for (int i = 0; i < 8; i++)
@@ -63,10 +64,10 @@ namespace QNetwork.Http.Server
                     }
                 }
 
-                foreach (IQHttpService service in this.m_Caches)
-                {
-                    service.TimeOut_Cache();
-                }
+                //foreach (IQHttpService service in this.m_Caches)
+                //{
+                //    service.TimeOut_Cache();
+                //}
                 var threads_nobusy = this.m_Threads.Where(x=>x.IsBusy == false);
                 if (threads_nobusy.Count() > 0)
                 {
@@ -326,16 +327,16 @@ namespace QNetwork.Http.Server
             //System.Diagnostics.Trace.WriteLine(request.ResourcePath);
             resp = null;
 
-            for (int i = 0; i < this.m_Caches.Count; i++)
-            {
-                this.m_Caches[i].Process_Cache(request, out resp, out process_result_code);
+            //for (int i = 0; i < this.m_Caches.Count; i++)
+            //{
+            //    this.m_Caches[i].Process_Cache(request, out resp, out process_result_code);
 
-                if (process_result_code != (int)ServiceProcessResults.None)
-                {
-                    break;
-                }
+            //    if (process_result_code != (int)ServiceProcessResults.None)
+            //    {
+            //        break;
+            //    }
 
-            }
+            //}
             if ((this.m_Services1.ContainsKey(request.URL.LocalPath.ToUpperInvariant()) == true) && ((process_result_code == (int)ServiceProcessResults.None)))
             {
                 IQHttpService instance = Activator.CreateInstance(this.m_Services1[request.URL.LocalPath.ToUpperInvariant()]) as IQHttpService;
@@ -344,10 +345,10 @@ namespace QNetwork.Http.Server
                 if (instance != null)
                 {
                     instance.Process(request, out resp, out process_result_code, out cache);
-                    if(cache != null)
-                    {
-                        this.m_Caches.Add(instance);
-                    }
+                    //if(cache != null)
+                    //{
+                    //    this.m_Caches.Add(instance);
+                    //}
                 }
             }
             else
@@ -508,14 +509,25 @@ namespace QNetwork.Http.Server
             return true;
         }
 
-        public bool CacheControl(CacheOperates op, string service = "default")
+        public bool CacheControl<T>(CacheOperates op, string id, out T cache, string nickname = "default") where T : CQCacheBase, new()
         {
+            cache = null;
             bool result = true;
-            switch(op)
+            switch (op)
             {
                 case CacheOperates.Create:
                     {
-                        
+                        CQCacheManager mm = null;
+                        if (this.m_Caches.ContainsKey(nickname) == true)
+                        {
+                            mm = this.m_Caches[nickname];
+                        }
+                        else
+                        {
+                            mm = new CQCacheManager();
+                        }
+
+
                     }
                     break;
                 case CacheOperates.Destory:
@@ -525,9 +537,14 @@ namespace QNetwork.Http.Server
                     break;
                 case CacheOperates.Get:
                     {
-
+                        if (this.m_Caches.ContainsKey(nickname) == false)
+                        {
+                            this.m_Caches.Add(nickname, new CQCacheManager());
+                        }
+                        cache = this.m_Caches[nickname].Get<T>(id);
                     }
                     break;
+
             }
 
             return result;
