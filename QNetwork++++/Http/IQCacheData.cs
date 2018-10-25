@@ -30,7 +30,7 @@ namespace QNetwork.Http.Server.Cache
     public class CQCacheManager
     {
         public string NickName { set; get; }
-        object m_CachesLock = new object();
+        protected object m_CachesLock = new object();
         public Dictionary<string, CQCacheBase> Caches { protected set; get; }
 
         public CQCacheManager()
@@ -39,7 +39,15 @@ namespace QNetwork.Http.Server.Cache
             this.Caches = new Dictionary<string, CQCacheBase>();
         }
 
-        virtual public T Get<T>(string id) where T : CQCacheBase, new()
+        virtual protected T Create<T>(string id) where T: CQCacheBase, new()
+        {
+            T aa = null;
+            aa = new T();
+            aa.ID = id;
+            return aa;
+        }
+
+        virtual public T Get<T>(string id, bool not_exist_build) where T : CQCacheBase, new()
         {
             Monitor.Enter(this.m_CachesLock);
             T aa = null;
@@ -49,48 +57,32 @@ namespace QNetwork.Http.Server.Cache
             }
             else
             {
-                if (string.IsNullOrEmpty(id) == true)
+                if(not_exist_build == true)
                 {
-                    aa = new T();
+                    if (string.IsNullOrEmpty(id) == true)
+                    {
+                        aa = new T();
+                    }
+                    else
+                    {
+                        aa = new T();
+                    }
+                    this.Caches.Add(aa.ID, aa);
                 }
-                else
-                {
-                    aa = new T();
-                    aa.ID = id;
-                }
-                this.Caches.Add(aa.ID, aa);
             }
             
             Monitor.Exit(this.m_CachesLock);
             return aa;
         }
 
-
-
-
-        //virtual public T Create<T>() where T : CQCacheBase, new()
-        //{
-        //    Monitor.Enter(this.m_CachesLock);
-        //    T aa = new T();
-        //    this.Caches.Add(aa.ID, aa);
-        //    Monitor.Exit(this.m_CachesLock);
-        //    return aa;
-        //}
-
-        //public T Get<T>(string id)
-        //{
-        //    T aa = default(T);
-
-        //    return aa;
-        //}
-
         virtual public bool TimeOut()
         {
             bool result = true;
             Monitor.Enter(this.m_CachesLock);
-            for(int i=0; i<this.Caches.Count; i++)
+            List<CQCacheBase> tt = this.Caches.Values.Where(x => x.IsTimeOut(TimeSpan.FromMinutes(1)) == true).ToList();
+            for(int i=0; i< tt.Count; i++)
             {
-
+                this.Caches.Remove(tt[i].ID);
             }
 
             Monitor.Exit(this.m_CachesLock);

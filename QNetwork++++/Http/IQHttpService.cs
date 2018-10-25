@@ -18,9 +18,8 @@ namespace QNetwork.Http.Server.Service
     }
     public interface IQHttpService : IDisposable
     {
-        bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code, out CQCacheBase cache);
-        //bool Process_Cache(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code);
-        bool TimeOut_Cache();
+        bool RegisterCacheManager();
+        bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code);
         bool CloseHandler(List<string> handlers);
         IQHttpServer_Extension Extension { set; get; }
         List<string> Methods { get; }
@@ -46,7 +45,8 @@ namespace QNetwork.Http.Server
     {
         bool SendMultiPart(List<CQHttpResponse> datas);
         bool ControlTransfer(string handlerid, out CQTCPHandler tcphandler);
-        bool CacheControl<T>(CacheOperates op, string id,  out T cache, string nickname = "default") where T : CQCacheBase, new();
+        bool CacheControl<T>(CacheOperates op, string id,  ref T cache, bool not_exist_build=true, string nickname = "default") where T : CQCacheBase, new();
+        bool CacheManger_Registered<T>(string name = "default") where T : CQCacheManager, new();
     }
 
    

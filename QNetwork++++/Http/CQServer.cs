@@ -24,7 +24,7 @@ namespace QNetwork.Http.Server
         object m_RequestsLock = new object();
         List<IQHttpService> m_Services = new List<IQHttpService>();
 
-        Dictionary<string, CQCacheManager> m_Caches = new Dictionary<string, CQCacheManager>();
+        Dictionary<string, CQCacheManager> m_CacheManagers = new Dictionary<string, CQCacheManager>();
         public CQHttpServer()
         {
             for (int i = 0; i < 8; i++)
@@ -64,10 +64,10 @@ namespace QNetwork.Http.Server
                     }
                 }
 
-                //foreach (IQHttpService service in this.m_Caches)
-                //{
-                //    service.TimeOut_Cache();
-                //}
+                for(int i= 0; i<this.m_CacheManagers.Count; i++)
+                {
+                    this.m_CacheManagers.ElementAt(i).Value.TimeOut();
+                }
                 var threads_nobusy = this.m_Threads.Where(x=>x.IsBusy == false);
                 if (threads_nobusy.Count() > 0)
                 {
@@ -342,9 +342,10 @@ namespace QNetwork.Http.Server
                 IQHttpService instance = Activator.CreateInstance(this.m_Services1[request.URL.LocalPath.ToUpperInvariant()]) as IQHttpService;
                 this.ServiceChange(request, instance, Request_ServiceStates.Service);
                 instance.Extension = this;
+                instance.RegisterCacheManager();
                 if (instance != null)
                 {
-                    instance.Process(request, out resp, out process_result_code, out cache);
+                    instance.Process(request, out resp, out process_result_code);
                     //if(cache != null)
                     //{
                     //    this.m_Caches.Add(instance);
@@ -509,54 +510,75 @@ namespace QNetwork.Http.Server
             return true;
         }
 
-        public bool CacheControl<T>(CacheOperates op, string id, out T cache, string nickname = "default") where T : CQCacheBase, new()
+        //bool CacheControl<T, T1>(CacheOperates op, string id, ref T cache, T1 manager, bool not_exist_build = true, string nickname = "default") where T : CQCacheBase where T1:CQCacheManager, new()
+        //{
+        //    bool result = true;
+        //    switch (op)
+        //    {
+        //        case CacheOperates.Get:
+        //            {
+        //                CQCacheManager manager1 = null;
+        //                if (this.m_Caches.ContainsKey(nickname) == false)
+        //                {
+        //                    if (not_exist_build == true)
+        //                    {
+        //                        manager1 = new T1();
+        //                        this.m_Caches.Add(nickname, manager);
+        //                    }
+        //                }
+        //                else
+        //                {
+        //                    manager1 = this.m_Caches[nickname];
+        //                }
+        //                if (manager != null)
+        //                {
+        //                    cache = manager1.Get<T>(id, not_exist_build);
+        //                }
+        //            }
+        //            break;
+        //    }
+        //    return result;
+        //}
+
+        virtual public bool CacheManger_Registered<T>(string name = "default") where T:CQCacheManager, new()
         {
-            cache = null;
+            bool result = true;
+            if(this.m_CacheManagers.ContainsKey(name) == false)
+            {
+                this.m_CacheManagers.Add(name, new T());
+            }
+            return result;
+        }
+
+        virtual public bool CacheControl<T>(CacheOperates op, string id, ref T cache, bool not_exist_build, string nickname = "default") where T : CQCacheBase, new()
+        {
             bool result = true;
             switch (op)
             {
-                case CacheOperates.Create:
+                case CacheOperates.Get:
                     {
-                        CQCacheManager mm = null;
-                        if (this.m_Caches.ContainsKey(nickname) == true)
+                        CQCacheManager manager = null;
+                        if (this.m_CacheManagers.ContainsKey(nickname) == false)
                         {
-                            mm = this.m_Caches[nickname];
+                            if(not_exist_build == true)
+                            {
+                                manager = new CQCacheManager();
+                                this.m_CacheManagers.Add(nickname, manager);
+                            }
                         }
                         else
                         {
-                            mm = new CQCacheManager();
+                            manager = this.m_CacheManagers[nickname];
                         }
-
-
-                    }
-                    break;
-                case CacheOperates.Destory:
-                    {
-
-                    }
-                    break;
-                case CacheOperates.Get:
-                    {
-                        if (this.m_Caches.ContainsKey(nickname) == false)
+                        if(manager != null)
                         {
-                            this.m_Caches.Add(nickname, new CQCacheManager());
+                            cache = manager.Get<T>(id, not_exist_build);
                         }
-                        cache = this.m_Caches[nickname].Get<T>(id);
                     }
                     break;
-
             }
 
             return result;
         }
     }
-
-   
-
-    
-
-    
-    
-
-    
 }

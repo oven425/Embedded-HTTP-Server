@@ -11,7 +11,6 @@ namespace QNetwork.Http.Server.Service
 {
     public class CQHttpDefaultService : IQHttpService
     {
-        int m_IconIndex = 0;
         List<string> m_Icons = new List<string>();
         List<string> m_Methods = new List<string>();
         public CQHttpDefaultService()
@@ -32,14 +31,12 @@ namespace QNetwork.Http.Server.Service
                 dst.Write(buf, 0, read_len);
             }
         }
-        object m_IconIndexLock = new object();
 
         public IQHttpServer_Extension Extension { set; get; }
         public List<string> Methods => this.m_Methods;
 
-        public bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code, out CQCacheBase cache)
+        public bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
         {
-            cache = null;
             process_result_code = ServiceProcessResults.OK;
             resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
             switch (req.ResourcePath)
@@ -59,14 +56,7 @@ namespace QNetwork.Http.Server.Service
                     {
                         if (this.m_Icons.Count() > 0)
                         {
-                            resp.Content = new FileStream(this.m_Icons[this.m_IconIndex++], FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                            Monitor.Enter(this.m_IconIndexLock);
-                            this.m_IconIndex = this.m_IconIndex + 1;
-                            if (this.m_IconIndex >= this.m_Icons.Count)
-                            {
-                                this.m_IconIndex = 0;
-                            }
-                            Monitor.Exit(this.m_IconIndexLock);
+                            resp.Content = new FileStream(this.m_Icons[0], FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 
                             resp.Content.Position = 0;
                             resp.ContentLength = resp.Content.Length;
@@ -142,9 +132,12 @@ namespace QNetwork.Http.Server.Service
             throw new NotImplementedException();
         }
 
-        public bool Process_Cache(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
+        public bool RegisterCacheManager()
         {
-            throw new NotImplementedException();
+            bool result = true;
+
+
+            return result;
         }
     }
 }

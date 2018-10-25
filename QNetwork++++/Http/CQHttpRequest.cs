@@ -36,6 +36,43 @@ namespace QNetwork.Http.Server
             this.Headers = new Dictionary<string, string>();
         }
 
+        static public bool Parse(string src, out Dictionary<string,string> dst)
+        {
+            bool result = true;
+            dst = new Dictionary<string, string>();
+            try
+            {
+                if(src[0] == '?')
+                {
+                    src = src.Remove(0, 1);
+                }
+                string[] sl_1 = src.Split(new string[] { " & ", " &", "& ", "&" }, StringSplitOptions.RemoveEmptyEntries);
+                for(int i=0; i<sl_1.Length; i++)
+                {
+                    string[] sl_2 = sl_1[i].Split(new string[] { " = ", " =", "= ", "=" }, StringSplitOptions.RemoveEmptyEntries);
+                    if(sl_2.Length == 2)
+                    {
+                        if(dst.ContainsKey(sl_2[0]) == true)
+                        {
+                            dst[sl_2[0]] = sl_2[1];
+                        }
+                        else
+                        {
+                            dst.Add(sl_2[0], sl_2[1]);
+                        }
+                    }
+                }
+            }
+            catch(Exception ee)
+            {
+                System.Diagnostics.Trace.WriteLine(ee.Message);
+                System.Diagnostics.Trace.WriteLine(ee.StackTrace);
+                result = false;
+            }
+
+            return result;
+        }
+
         public bool ParseHeader(byte[] data, int data_offset, int len)
         {
             this.HeaderRaw = new byte[len];

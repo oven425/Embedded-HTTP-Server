@@ -41,10 +41,10 @@ namespace WPF_Server_Http
             InitializeComponent();
             //CQCache1 bb = this.Create<CQCache1>();
 
-           
+
         }
 
-       
+
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
@@ -71,7 +71,7 @@ namespace WPF_Server_Http
                         this.m_MainUI.AddressList.Add(new CQListenAddress() { Address = net_address });
                     }
                 }
-                if(this.m_MainUI.AddressList.Any(x=>x.Address.ToEndPint().ToString() == "127.0.0.1") == false)
+                if (this.m_MainUI.AddressList.Any(x => x.Address.ToEndPint().ToString() == "127.0.0.1") == false)
                 {
                     CQSocketListen_Address net_address = new CQSocketListen_Address() { IP = "127.0.0.1", Port = 3333 };
                     this.m_MainUI.AddressList.Add(new CQListenAddress() { Address = net_address });
@@ -90,14 +90,14 @@ namespace WPF_Server_Http
                 switch (isadd)
                 {
                     case Request_ServiceStates.Request:
-                            {
+                        {
                             this.m_MainUI.Request_Services.Add(new CQRequest_Service() { Request = req });
                         }
                         break;
                     case Request_ServiceStates.Service:
                         {
                             var vv = this.m_MainUI.Request_Services.FirstOrDefault(x => x.Request == req);
-                            if(vv != null)
+                            if (vv != null)
                             {
                                 vv.Service = service;
                             }
@@ -117,7 +117,7 @@ namespace WPF_Server_Http
         private bool M_TestServer_OnListentStateChange(CQSocketListen_Address listen_addres, ListenStates state)
         {
             var vv = this.m_MainUI.AddressList.Where(x => x.Address == listen_addres);
-            foreach(var oo in vv)
+            foreach (var oo in vv)
             {
                 oo.ListenState = state;
             }
@@ -137,205 +137,17 @@ namespace WPF_Server_Http
             CQListenAddress address = checkbox.DataContext as CQListenAddress;
             if (checkbox != null)
             {
-                if(address.IsOpen == true)
+                if (address.IsOpen == true)
                 {
                     this.m_TestServer.OpenListen(address.Address);
                 }
                 else
                 {
                     this.m_TestServer.CloseListen(address.Address);
-                    
+
                 }
             }
         }
-    }
-
-    //public class CQRecordPlaybackT : IQCacheData
-    //{
-    //    bool m_IsEnd = false;
-    //    string m_ID;
-    //    CQTCPHandler m_TCPHandler;
-    //    public CQRecordPlaybackT(CQTCPHandler tcp_handler, string id)
-    //    {
-    //        this.m_ID = id;
-    //        this.m_TCPHandler = tcp_handler;
-    //        this.m_TCPHandler.OnParse += M_TCPHandler_OnParse;
-    //    }
-
-    //    private bool M_TCPHandler_OnParse(Stream data)
-    //    {
-
-    //        return true;
-    //        //throw new NotImplementedException();
-    //    }
-
-    //    public string ID { get { return this.m_ID; } }
-
-    //    public bool IsTimeOut(TimeSpan timeout)
-    //    {
-    //        return this.m_IsEnd;
-    //    }
-
-    //    public bool Control(string cmd)
-    //    {
-    //        bool result = true;
-
-    //        return result;
-    //    }
-
-    //    public bool Open()
-    //    {
-    //        bool result = true;
-    //        string str = string.Format("CQRecordPlaybackT {0} {1}", this.ID, DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss.fff", System.Globalization.DateTimeFormatInfo.InvariantInfo));
-    //        byte[] buf = Encoding.ASCII.GetBytes(str);
-    //        CQHttpResponse resp = new CQHttpResponse("");
-    //        resp.Content = new MemoryStream();
-    //        resp.Content.Write(buf, 0, buf.Length);
-    //        resp.Content.Position = 0;
-    //        resp.ContentLength = buf.Length;
-    //        resp.ContentType = "text/plain";
-    //        //string str_header = resp.ToString();
-    //        //this.m_Socket.Send(Encoding.UTF8.GetBytes(str_header));
-    //        //this.m_Socket.Send(buf);
-    //        //this.m_Socket.Close();
-    //        CQHttpResponseReader resp_reader = new CQHttpResponseReader();
-    //        resp_reader.Set(resp);
-    //        this.m_TCPHandler.AddSend(resp_reader);
-    //        //this.m_IsEnd = true;
-    //        return result;
-    //    }
-
-    //    public object Data { set; get; }
-    //}
-
-    public class CQHttpService_Playback : IQHttpService
-    {
-        List<string> m_Methods;
-        CQTCPHandler m_TCPHandler;
-        BackgroundWorker m_Thread;
-        bool m_IsEnd = false;
-        public CQHttpService_Playback()
-        {
-            this.m_Thread = new BackgroundWorker();
-            this.m_Thread.DoWork += M_Thread_DoWork;
-            this.m_Methods = new List<string>();
-            this.m_Methods.Add("/PLAYBACK");
-        }
-
-        string m_Command;
-        private void M_Thread_DoWork(object sender, DoWorkEventArgs e)
-        {
-            try
-            {
-                while (true)
-                {
-
-                    StringBuilder strb = new StringBuilder();
-                    strb.AppendLine(DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss.fff", System.Globalization.DateTimeFormatInfo.InvariantInfo));
-                    strb.AppendLine(string.Format("Command:{0}", this.m_Command));
-                    byte[] bb = Encoding.ASCII.GetBytes(strb.ToString());
-                    this.m_TCPHandler.Send(bb, bb.Length);
-                    System.Threading.Thread.Sleep(1000);
-                }
-            }
-            catch(Exception ee)
-            {
-                System.Diagnostics.Trace.WriteLine(ee.Message);
-                System.Diagnostics.Trace.WriteLine(ee.StackTrace);
-                this.m_IsEnd = true;
-            }
-            finally
-            {
-
-            }
-        }
-
-        public IQHttpServer_Extension Extension { set; get; }
-
-        public List<string> Methods => this.m_Methods;
-
-        public bool CloseHandler(List<string> handlers)
-        {
-            return true;
-        }
-
-        public void Dispose()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code, out CQCacheBase cache)
-        {
-            cache = null;
-            bool result = true;
-            process_result_code = ServiceProcessResults.None;
-            resp = null;
-            cache = null;
-            switch (req.URL.LocalPath.ToUpperInvariant())
-            {
-                case "/PLAYBACK":
-                    {
-                        string query_str = req.URL.Query;
-                        if (string.IsNullOrEmpty(query_str) == true)
-                        {
-                            process_result_code = ServiceProcessResults.ControlTransfer;
-                            CQTCPHandler tcp;
-                            this.Extension.ControlTransfer(req.HandlerID, out tcp);
-                            this.m_TCPHandler = tcp;
-                            this.m_TCPHandler.OnParse += M_TCPHandler_OnParse;
-                            if(this.m_Thread.IsBusy == false)
-                            {
-                                this.m_Thread.RunWorkerAsync();
-                            }
-                            
-                            //this.m_TCPHandler.AddSend(resp_reader);
-                            //this.m_IsEnd = true;
-
-                            //CQRecordPlaybackT tt = new CQRecordPlaybackT(tcp, (++this.m_SessionID).ToString());
-                            //tt.Open();
-                        }
-                        else
-                        {
-                            //query_str = query_str.Remove(0, 1);
-                            //if (this.m_Caches.ContainsKey(query_str) == true)
-                            //{
-                            //    CQRecordPlaybackT ppt = this.m_Caches[query_str] as CQRecordPlaybackT;
-                            //    ppt.Control(query_str);
-                            //}
-                        }
-                    }
-                    break;
-            }
-
-            return result;
-        }
-
-        private bool M_TCPHandler_OnParse(System.IO.Stream data)
-        {
-            byte[] bb = new byte[data.Length];
-            data.Position = 0;
-            data.Read(bb, 0, bb.Length);
-            this.m_Command = Encoding.ASCII.GetString(bb);
-            return true;
-        }
-
-        public bool Process_Cache(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
-        {
-            bool result = true;
-            process_result_code = ServiceProcessResults.None;
-            resp = null;
-            return result;
-        }
-
-        public bool TimeOut_Cache()
-        {
-            return this.m_IsEnd;
-        }
-
-        //public bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code, out CQCacheBase cache)
-        //{
-        //    throw new NotImplementedException();
-        //}
     }
 
     //public class CQHttpService_WebSocket : IQHttpService
@@ -447,6 +259,7 @@ namespace WPF_Server_Http
             this.m_Methods.Add("/PUSH");
             this.m_Methods.Add("/EVENT4");
             this.m_Methods.Add("/TEST");
+            this.m_Methods.Add("/TEST1");
         }
 
         void m_Thread_PushT_DoWork(object sender, DoWorkEventArgs e)
@@ -515,12 +328,8 @@ namespace WPF_Server_Http
             }
         }
 
-        //string m_Test_Cache_ID = "";
-        //int m_Test_Cache_Data = 0;
-        static int m_ID = 0;
-        public bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code, out CQCacheBase cache)
+        public bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
         {
-            cache = null;
             process_result_code = 0;
             resp = null;
             bool result = true;
@@ -546,117 +355,86 @@ namespace WPF_Server_Http
                         resp.Connection = Connections.Close;
                     }
                     break;
-                case "TEST1":
+                case "/TEST1":
                     {
                         process_result_code = ServiceProcessResults.OK;
-                        string query_str = "";
-                        if (string.IsNullOrEmpty(req.URL.Query) == false)
+                        CQCache1 cc = null;
+                        Dictionary<string, string> param;
+                        CQHttpRequest.Parse(req.URL.Query, out param);
+                        if (param.ContainsKey("ID") == true)
                         {
-                            query_str = req.URL.Query.Remove(0, 1);
+                            this.Extension.CacheControl(CacheOperates.Get, param["ID"], ref cc, false, "Test1");
+                        }
+                        else
+                        {
+                            this.Extension.CacheControl(CacheOperates.Get, "", ref cc, true, "Test1");
+                        }
+                        if (cc == null)
+                        {
+                            resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+                            resp.Set200();
+                            resp.Connection = Connections.KeepAlive;
+                            string str = string.Format("Time:{0}\r\nID:{1} not exist"
+                                , DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss", System.Globalization.DateTimeFormatInfo.InvariantInfo)
+                                , param["ID"]);
+                            resp.BuildContentFromString(str);
+                        }
+                        else
+                        {
+                            cc.Count++;
+                            resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+                            resp.Set200();
+                            resp.Connection = Connections.KeepAlive;
+                            string str = string.Format("Time:{0}\r\nID:{1}\r\nCount:{2}"
+                                , DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss", System.Globalization.DateTimeFormatInfo.InvariantInfo)
+                                , cc.ID
+                                , cc.Count);
+                            resp.BuildContentFromString(str);
                         }
                     }
                     break;
                 case "/TEST":
                     {
                         process_result_code = ServiceProcessResults.OK;
-                        //CQTestData cc = null;
-                        //CQCacheData cache = null;
-                        string query_str = "";
                         CQCache1 cc = null;
-                        if (string.IsNullOrEmpty(req.URL.Query) == false)
+                        Dictionary<string, string> param;
+                        CQHttpRequest.Parse(req.URL.Query, out param);
+                        if (param.ContainsKey("ID") == true)
                         {
-                            query_str = req.URL.Query.Remove(0, 1);
+                            this.Extension.CacheControl(CacheOperates.Get, param["ID"], ref cc, false);
+                        }
+                        else
+                        {
+                            this.Extension.CacheControl(CacheOperates.Get, "", ref cc);
                         }
 
-                        this.Extension.CacheControl(CacheOperates.Get, query_str, out cc);
-                        //if (m_Caches.ContainsKey(query_str) == true)
-                        //{
-                        //    cache = m_Caches[query_str] as CQCache1;
-                        //    cc = (CQCache1)cache;
-                        //}
-                        //else
-                        //{
-                        //    string id = m_ID.ToString();
-                        //    m_ID++;
-                        //    cc = new CQCache1(id);
-                        //    cache = cc;
-                        //    m_Caches.Add(cache.ID, cache);
-                        //}
-                        cc.Count++;
-                        //this.m_Test_Cache_Data++;
-                        //this.m_Test_Cache_ID = string.Format("{0}_{1}", DateTime.Now.Minute, DateTime.Now.Second);
-                        resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
-                        resp.Set200();
-                        resp.Connection = Connections.KeepAlive;
-                        string str = string.Format("ID:{0}\r\nCount:{1}", cc.ID, cc.Count);
-                        byte[] str_buf = Encoding.ASCII.GetBytes(str);
-                        resp.Content = new MemoryStream();
-                        resp.Content.Write(str_buf, 0, str_buf.Length);
-                        resp.Content.Position = 0;
-                        resp.ContentLength = resp.Content.Length;
+                        if (cc == null)
+                        {
+                            resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+                            resp.Set200();
+                            resp.Connection = Connections.KeepAlive;
+                            string str = string.Format("Time:{0}\r\nID:{1} not exist"
+                                , DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss", System.Globalization.DateTimeFormatInfo.InvariantInfo)
+                                , param["ID"]);
+                            resp.BuildContentFromString(str);
+                        }
+                        else
+                        {
+                            cc.Count++;
+                            resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+                            resp.Set200();
+                            resp.Connection = Connections.KeepAlive;
+                            string str = string.Format("Time:{0}\r\nID:{1}\r\nCount:{2}"
+                                , DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss", System.Globalization.DateTimeFormatInfo.InvariantInfo)
+                                , cc.ID
+                                , cc.Count);
+                            resp.BuildContentFromString(str);
+                        }
                     }
                     break;
             }
             return result;
         }
-
-        public bool Process_Cache(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
-        {
-            process_result_code = 0;
-
-            resp = null;
-            bool result = true;
-            //switch(req.URL.LocalPath.ToUpperInvariant())
-            //{
-            //    case "/TEST":
-            //        {
-
-            //            //CQTestData cc = null;
-            //            //CQCacheData cache = null;
-            //            string query_str = "";
-            //            if (string.IsNullOrEmpty(req.URL.Query) == false)
-            //            {
-            //                query_str = req.URL.Query.Remove(0, 1);
-            //            }
-            //            if(query_str == this.m_Test_Cache_ID)
-            //            {
-            //                this.m_Test_Cache_Data++;
-            //                process_result_code = ServiceProcessResults.OK;
-            //                resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
-            //                resp.Set200();
-            //                resp.Connection = Connections.KeepAlive;
-            //                string str = string.Format("ID:{0}\r\nCount:{1}", this.m_Test_Cache_ID, this.m_Test_Cache_Data);
-            //                byte[] str_buf = Encoding.ASCII.GetBytes(str);
-            //                resp.Content = new MemoryStream();
-            //                resp.Content.Write(str_buf, 0, str_buf.Length);
-            //                resp.Content.Position = 0;
-            //                resp.ContentLength = resp.Content.Length;
-            //            }
-            //            //if (this.m_Caches.ContainsKey(query_str) == true)
-            //            //{
-            //            //    cache = this.m_Caches[query_str] as CQCacheData;
-            //            //    cc = cache.Data as CQTestData;
-            //            //}
-            //            //else
-            //            //{
-
-            //            //cache = new CQCacheData(id);
-            //            //cache.Data = cc = new CQTestData();
-            //            //this.m_Caches.Add(cache.ID, cache);
-            //            //}
-            //            //cc.Count++;
-
-            //        }
-            //        break;
-            //}
-
-            return result;
-        }
-
-        //public class CQTestData
-        //{
-        //    public int Count { set; get; }
-        //}
 
         public bool TimeOut_Cache()
         {
@@ -693,28 +471,11 @@ namespace WPF_Server_Http
             throw new NotImplementedException();
         }
 
-        
-    }
-
-
-    public class CQCache1 : CQCacheBase
-    {
-        public CQCache1()
+        public bool RegisterCacheManager()
         {
-
+            bool result = true;
+            this.Extension.CacheManger_Registered<CQCacheManager_Test1>("Test1");
+            return result;
         }
-
-        public CQCache1(string id)
-            : base(id)
-        {
-
-        }
-
-        public int Count { set; get; }
-
-        public override bool IsTimeOut(TimeSpan timeout)
-        {
-            return base.IsTimeOut(timeout);
-        }
-    }
+    }    
 }

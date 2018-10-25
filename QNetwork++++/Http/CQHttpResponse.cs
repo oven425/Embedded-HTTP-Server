@@ -148,6 +148,33 @@ namespace QNetwork.Http.Server
             this.Message = message;
         }
 
+        public bool BuildContentFromString(string data)
+        {
+            bool result = true;
+            byte[] str_buf = Encoding.ASCII.GetBytes(data);
+            if(this.Content != null)
+            {
+                if(this.Content is MemoryStream)
+                {
+                    this.Content.SetLength(0);
+                }
+                else
+                {
+                    this.Content.Close();
+                    this.Content.Dispose();
+                    this.Content = null;
+                }
+            }
+            if(this.Content == null)
+            {
+                this.Content = new MemoryStream();
+            }
+            this.Content.Write(str_buf, 0, str_buf.Length);
+            this.Content.Position = 0;
+            this.ContentLength = this.Content.Length;
+
+            return result;
+        }
 
         public void Dispose()
         {
