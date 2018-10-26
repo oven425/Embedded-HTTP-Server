@@ -36,4 +36,18 @@ namespace WPF_Server_Http.Define
         public event PropertyChangedEventHandler PropertyChanged;
         void Update(string name) { if (this.PropertyChanged != null) { this.PropertyChanged(this, new PropertyChangedEventArgs(name)); } }
     }
+
+    public class CQSession_Process
+    {
+        CQHttpRequest m_HttpRequest;
+        CQHttpResponse m_HttpResponse;
+        IQHttpService m_HttpService;
+        public CQHttpRequest Request { set { this.m_HttpRequest = value; this.Update("Request"); } get { return this.m_HttpRequest; } }
+        public CQHttpResponse Response { set { this.m_HttpResponse = value; this.Update("Response"); } get { return this.m_HttpResponse; } }
+        public IQHttpService Service { set { this.m_HttpService = value; this.Update("Service"); } get { return this.m_HttpService; } }
+
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        void Update(string name) { if (this.PropertyChanged != null) { this.PropertyChanged(this, new PropertyChangedEventArgs(name)); } }
+    }
 }

@@ -23,7 +23,7 @@ namespace QNetwork.Http.Server
         List<CQHttpRequest> m_Requests = new List<CQHttpRequest>();
         object m_RequestsLock = new object();
         List<IQHttpService> m_Services = new List<IQHttpService>();
-
+        object m_CacheManagersLock = new object();
         Dictionary<string, CQCacheManager> m_CacheManagers = new Dictionary<string, CQCacheManager>();
         public CQHttpServer()
         {
@@ -123,6 +123,7 @@ namespace QNetwork.Http.Server
                         if (this.m_Sessions.ContainsKey(req.HandlerID) == true)
                         {
                             CQHttpHandler handler = this.m_Sessions[req.HandlerID];
+                            this.ServiceChange(req, null, Request_ServiceStates.Response);
                             handler.SendResp(resp);
                         }
                         Monitor.Exit(this.m_SessionsLock);
@@ -340,17 +341,14 @@ namespace QNetwork.Http.Server
             if ((this.m_Services1.ContainsKey(request.URL.LocalPath.ToUpperInvariant()) == true) && ((process_result_code == (int)ServiceProcessResults.None)))
             {
                 IQHttpService instance = Activator.CreateInstance(this.m_Services1[request.URL.LocalPath.ToUpperInvariant()]) as IQHttpService;
-                this.ServiceChange(request, instance, Request_ServiceStates.Service);
+                this.ServiceChange(request, instance, Request_ServiceStates.Service_Begin);
                 instance.Extension = this;
                 instance.RegisterCacheManager();
                 if (instance != null)
                 {
                     instance.Process(request, out resp, out process_result_code);
-                    //if(cache != null)
-                    //{
-                    //    this.m_Caches.Add(instance);
-                    //}
                 }
+                this.ServiceChange(request, instance, Request_ServiceStates.Service_End);
             }
             else
             {
@@ -413,7 +411,8 @@ namespace QNetwork.Http.Server
         public enum Request_ServiceStates
         {
             Request,
-            Service,
+            Service_Begin,
+            Service_End,
             Response,
             End
         }
@@ -543,16 +542,19 @@ namespace QNetwork.Http.Server
         virtual public bool CacheManger_Registered<T>(string name = "default") where T:CQCacheManager, new()
         {
             bool result = true;
+            Monitor.Enter(this.m_CacheManagersLock);
             if(this.m_CacheManagers.ContainsKey(name) == false)
             {
                 this.m_CacheManagers.Add(name, new T());
             }
+            Monitor.Exit(this.m_CacheManagersLock);
             return result;
         }
 
         virtual public bool CacheControl<T>(CacheOperates op, string id, ref T cache, bool not_exist_build, string nickname = "default") where T : CQCacheBase, new()
         {
             bool result = true;
+            Monitor.Enter(this.m_CacheManagersLock);
             switch (op)
             {
                 case CacheOperates.Get:
@@ -577,7 +579,7 @@ namespace QNetwork.Http.Server
                     }
                     break;
             }
-
+            Monitor.Exit(this.m_CacheManagersLock);
             return result;
         }
     }

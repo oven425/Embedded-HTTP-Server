@@ -94,7 +94,7 @@ namespace WPF_Server_Http
                             this.m_MainUI.Request_Services.Add(new CQRequest_Service() { Request = req });
                         }
                         break;
-                    case Request_ServiceStates.Service:
+                    case Request_ServiceStates.Service_Begin:
                         {
                             var vv = this.m_MainUI.Request_Services.FirstOrDefault(x => x.Request == req);
                             if (vv != null)
@@ -104,6 +104,11 @@ namespace WPF_Server_Http
                         }
                         break;
                     case Request_ServiceStates.Response:
+                        {
+
+                        }
+                        break;
+                    case Request_ServiceStates.End:
                         {
 
                         }

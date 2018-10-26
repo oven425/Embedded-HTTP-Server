@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -25,8 +26,6 @@ namespace QNetwork.Http.Server.Cache
         public string IsUse { protected set; get; }
     }
 
-    
-
     public class CQCacheManager
     {
         public string NickName { set; get; }
@@ -39,7 +38,7 @@ namespace QNetwork.Http.Server.Cache
             this.Caches = new Dictionary<string, CQCacheBase>();
         }
 
-        virtual protected T Create<T>(string id) where T: CQCacheBase, new()
+        virtual protected T Create<T>(string id) where T : CQCacheBase, new()
         {
             T aa = null;
             aa = new T();
@@ -57,7 +56,7 @@ namespace QNetwork.Http.Server.Cache
             }
             else
             {
-                if(not_exist_build == true)
+                if (not_exist_build == true)
                 {
                     if (string.IsNullOrEmpty(id) == true)
                     {
@@ -66,11 +65,12 @@ namespace QNetwork.Http.Server.Cache
                     else
                     {
                         aa = new T();
+                        aa.ID = id;
                     }
                     this.Caches.Add(aa.ID, aa);
                 }
             }
-            
+
             Monitor.Exit(this.m_CachesLock);
             return aa;
         }
@@ -80,7 +80,7 @@ namespace QNetwork.Http.Server.Cache
             bool result = true;
             Monitor.Enter(this.m_CachesLock);
             List<CQCacheBase> tt = this.Caches.Values.Where(x => x.IsTimeOut(TimeSpan.FromMinutes(1)) == true).ToList();
-            for(int i=0; i< tt.Count; i++)
+            for (int i = 0; i < tt.Count; i++)
             {
                 this.Caches.Remove(tt[i].ID);
             }
