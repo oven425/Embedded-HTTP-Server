@@ -7,6 +7,11 @@ using System.Threading;
 
 namespace QNetwork.Http.Server.Cache
 {
+    public interface IQCache
+    {
+        string ID { set; get; }
+        bool IsTimeOut(TimeSpan timeout);
+    }
     public class CQCacheBase
     {
         public CQCacheBase()
