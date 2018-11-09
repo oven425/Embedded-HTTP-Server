@@ -265,6 +265,7 @@ namespace WPF_Server_Http
             this.m_Methods.Add("/EVENT4");
             this.m_Methods.Add("/TEST");
             this.m_Methods.Add("/TEST1");
+            this.m_Methods.Add("/PostTest");
         }
 
         void m_Thread_PushT_DoWork(object sender, DoWorkEventArgs e)
@@ -338,8 +339,30 @@ namespace WPF_Server_Http
             process_result_code = 0;
             resp = null;
             bool result = true;
-            switch (req.URL.LocalPath.ToUpperInvariant())
+            switch (req.URL.LocalPath)
             {
+                case "/PostTest":
+                    {
+                        process_result_code = ServiceProcessResults.OK;
+                        resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+                        resp.Content = new MemoryStream();
+                        byte[] bb = new byte[8192];
+                        while(true)
+                        {
+                            int read_len = req.Content.Read(bb, 0, bb.Length);
+                            
+                            resp.Content.Write(bb, 0, read_len);
+                            if(read_len != bb.Length)
+                            {
+                                break;
+                            }
+                        }
+                        resp.ContentLength = resp.Content.Length;
+                        resp.Content.Position = 0;
+                        resp.Connection = Connections.KeepAlive;
+                        resp.Set200();
+                    }
+                    break;
                 case "/PUSHT":
                     {
                         this.m_NewPushHandlers.Add(req.HandlerID);

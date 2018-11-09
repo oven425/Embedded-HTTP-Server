@@ -42,23 +42,26 @@ namespace QNetwork.Http.Server
             dst = new Dictionary<string, string>();
             try
             {
-                if(src[0] == '?')
+                if(string.IsNullOrEmpty(src) == false)
                 {
-                    src = src.Remove(0, 1);
-                }
-                string[] sl_1 = src.Split(new string[] { " & ", " &", "& ", "&" }, StringSplitOptions.RemoveEmptyEntries);
-                for(int i=0; i<sl_1.Length; i++)
-                {
-                    string[] sl_2 = sl_1[i].Split(new string[] { " = ", " =", "= ", "=" }, StringSplitOptions.RemoveEmptyEntries);
-                    if(sl_2.Length == 2)
+                    if (src[0] == '?')
                     {
-                        if(dst.ContainsKey(sl_2[0]) == true)
+                        src = src.Remove(0, 1);
+                    }
+                    string[] sl_1 = src.Split(new string[] { " & ", " &", "& ", "&" }, StringSplitOptions.RemoveEmptyEntries);
+                    for (int i = 0; i < sl_1.Length; i++)
+                    {
+                        string[] sl_2 = sl_1[i].Split(new string[] { " = ", " =", "= ", "=" }, StringSplitOptions.RemoveEmptyEntries);
+                        if (sl_2.Length == 2)
                         {
-                            dst[sl_2[0]] = sl_2[1];
-                        }
-                        else
-                        {
-                            dst.Add(sl_2[0], sl_2[1]);
+                            if (dst.ContainsKey(sl_2[0]) == true)
+                            {
+                                dst[sl_2[0]] = sl_2[1];
+                            }
+                            else
+                            {
+                                dst.Add(sl_2[0], sl_2[1]);
+                            }
                         }
                     }
                 }

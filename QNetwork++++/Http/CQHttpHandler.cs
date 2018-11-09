@@ -108,14 +108,6 @@ namespace QNetwork.Http.Server
                             findindex = i + 4;
                             req_ = new byte[findindex];
                             Array.Copy(this.m_HeaderBuf, req_, findindex);
-                            //this.m_Temp.Position = 0;
-                            //this.m_Temp.Read(req_, 0, req_.Length);
-                            //this.m_Temp.SetLength(0);
-                            //if (findindex < ddata.Length)
-                            //{
-                            //    this.m_Temp.Write(ddata, findindex, ddata.Length - findindex);
-                            //    this.m_Temp.Position = 0;
-                            //}
                             break;
                         }
                     }
@@ -142,6 +134,8 @@ namespace QNetwork.Http.Server
                             this.m_RecvRequest = req;
                             this.m_ContentLength = this.m_RecvRequest.ContentLength;
                             this.m_RecvRequest.Content = new MemoryStream();
+                            int rrsize = read_len - findindex;
+                            this.m_RecvRequest.Content.Write(this.m_HeaderBuf, findindex, rrsize);
                         }
                         else
                         {
@@ -157,39 +151,50 @@ namespace QNetwork.Http.Server
                 }
                 else if(this.m_ParseState == ParseStates.RecvContent)
                 {
-                    //this.m_Temp.Position = 0;
-                    //int recv_len = this.m_ContentBuf.Length;
-                    //if (recv_len > this.m_ContentLength)
-                    //{
-                    //    recv_len = (int)this.m_ContentLength;
-                    //}
-                    //int read_len = this.m_Temp.Read(this.m_ContentBuf, 0, recv_len);
-                    //this.m_ContentLength = this.m_ContentLength - read_len;
-                    //this.m_RecvRequest.Content.Write(this.m_ContentBuf, 0, read_len);
-                    //if (this.m_ContentLength > 0)
-                    //{
+                    long rrsize = this.m_RecvRequest.ContentLength - this.m_RecvRequest.Content.Length;
+                    if(rrsize > data.Length)
+                    {
+                        while(true)
+                        {
+                            int read_len = data.Read(this.m_ContentBuf, 0, this.m_ContentBuf.Length);
+                            this.m_RecvRequest.Content.Write(this.m_ContentBuf, 0, read_len);
+                            if(read_len != this.m_ContentBuf.Length)
+                            {
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
 
-                    //}
-                    //else
-                    //{
-                    //    this.m_ParseState = ParseStates.Header;
-                    //    this.m_RecvRequest.Content.Position = 0;
-                    //    requests.Add(this.m_RecvRequest);
-                    //    if ((this.m_Temp.Length - this.m_Temp.Position) > 0)
-                    //    {
-                    //        byte[] ddata = this.m_Temp.ToArray();
-                    //        this.m_Temp.Write(ddata, (int)this.m_Temp.Position, (int)(this.m_Temp.Length - this.m_Temp.Position));
-                    //    }
-                            
-                    //}
+                        if (rrsize > this.m_ContentBuf.Length)
+                        {
+                            System.Diagnostics.Trace.WriteLine("");
+                        }
+                        else
+                        {
+                            int read_len = data.Read(this.m_ContentBuf, 0, this.m_ContentBuf.Length);
+                            this.m_RecvRequest.Content.Write(this.m_ContentBuf, 0, read_len);
+                        }
+                    }
+
                 }
-                if((data.Length - data.Position) <=0)
+                if ((this.m_ParseState == ParseStates.RecvContent) && (this.m_RecvRequest.Content.Length == this.m_RecvRequest.ContentLength))
                 {
+                    this.m_ParseState = ParseStates.Header;
+                    this.m_RecvRequest.Content.Position = 0;
+                    requests.Add(this.m_RecvRequest);
+                }
+
+                if ((data.Length - data.Position) <= 0)
+                {
+                    
                     data.SetLength(0);
                     isparse_end = true;
                 }
-                
-            
+               
+
+
             }
             if(data.Length>this.MaxHeaderSize)
             {

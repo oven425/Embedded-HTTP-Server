@@ -48,7 +48,7 @@ namespace QNetwork.Http.Server.Accept
         byte[] m_AcceptBuf;
         CQSocketListen_Address m_Address;
         public CQSocketListen_Address Addrss { get { return this.m_Address; } }
-        public delegate bool NewClientDelegate(Socket socket, byte[] data, int len);
+        public delegate bool NewClientDelegate(CQSocketListen listen, Socket socket, byte[] data, int len);
         public event NewClientDelegate OnNewClient;
         public delegate bool ListenStateDelegate(CQSocketListen listen);
         public event ListenStateDelegate OnListenState;
@@ -140,7 +140,12 @@ namespace QNetwork.Http.Server.Accept
         {
             if(this.OnNewClient != null)
             {
-                this.OnNewClient(socket, buf, len);
+                this.OnNewClient(this, socket, buf, len);
+            }
+            else
+            {
+                socket.Close();
+                socket = null;
             }
         }
         private void m_AcceptArgs_Completed(object sender, SocketAsyncEventArgs e)

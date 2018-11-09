@@ -22,7 +22,6 @@ namespace QNetwork.Http.Server
         Dictionary<string, CQHttpHandler> m_Sessions = new Dictionary<string, CQHttpHandler>();
         List<CQHttpRequest> m_Requests = new List<CQHttpRequest>();
         object m_RequestsLock = new object();
-        List<IQHttpService> m_Services = new List<IQHttpService>();
         object m_CacheManagersLock = new object();
         Dictionary<string, CQCacheManager> m_CacheManagers = new Dictionary<string, CQCacheManager>();
         public CQHttpServer()
@@ -56,13 +55,13 @@ namespace QNetwork.Http.Server
                     this.m_Sessions.Remove(handler.ID);
                 }
                 Monitor.Exit(this.m_SessionsLock);
-                if (closehandlers.Count > 0)
-                {
-                    for (int i = 0; i < this.m_Services.Count; i++)
-                    {
-                        this.m_Services[i].CloseHandler(closehandlers);
-                    }
-                }
+                //if (closehandlers.Count > 0)
+                //{
+                //    for (int i = 0; i < this.m_Services.Count; i++)
+                //    {
+                //        this.m_Services[i].CloseHandler(closehandlers);
+                //    }
+                //}
 
                 for(int i= 0; i<this.m_CacheManagers.Count; i++)
                 {
@@ -116,7 +115,7 @@ namespace QNetwork.Http.Server
                 //this.ProcessWebSocket(req, out resp, out process_result);
                 //if(process_result == 0)
                 {
-                    this.ProcessRequest(req, out resp, out process_result, out cache);
+                    this.ProcessRequest(req, out resp, out process_result);
                     if ((resp != null) && (process_result == ServiceProcessResults.OK))
                     {
                         Monitor.Enter(this.m_SessionsLock);
@@ -155,10 +154,10 @@ namespace QNetwork.Http.Server
             }
         }
 
-        bool ProcessAccept(Socket client, byte[] acceptbuf, int accept_len)
+        bool ProcessAccept(CQSocketListen listen, Socket client, byte[] acceptbuf, int accept_len)
         {
             bool result = true;
-            CQTCPHandler tcphandler = new CQTCPHandler(client);
+            CQTCPHandler tcphandler = new CQTCPHandler(client, listen.Addrss);
             CQHttpHandler session = new CQHttpHandler(tcphandler);
             session.OnNewRequest += new CQHttpHandler.NewRequestDelegate(session_OnNewRequest);
             Monitor.Enter(this.m_SessionsLock);
@@ -320,27 +319,26 @@ namespace QNetwork.Http.Server
             return result;
         }
 
-        protected virtual bool ProcessRequest(CQHttpRequest request, out CQHttpResponse resp, out ServiceProcessResults process_result_code, out CQCacheBase cache)
+        protected virtual IQHttpService GetService(CQHttpRequest request)
+        {
+            IQHttpService service = null;
+            var vv = this.m_Service.FirstOrDefault(x => x.Urls.Any(y => y == request.URL.LocalPath) == true);
+            if (vv != null)
+            {
+                service = Activator.CreateInstance(vv.Service) as IQHttpService;
+            }
+            return service;
+        }
+
+        protected bool ProcessRequest(CQHttpRequest request, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
         {
             bool result = true;
             process_result_code = ServiceProcessResults.None;
-            cache = null;
-            //System.Diagnostics.Trace.WriteLine(request.ResourcePath);
+            //cache = null;
             resp = null;
-
-            //for (int i = 0; i < this.m_Caches.Count; i++)
-            //{
-            //    this.m_Caches[i].Process_Cache(request, out resp, out process_result_code);
-
-            //    if (process_result_code != (int)ServiceProcessResults.None)
-            //    {
-            //        break;
-            //    }
-
-            //}
-            if ((this.m_Services1.ContainsKey(request.URL.LocalPath.ToUpperInvariant()) == true) && ((process_result_code == (int)ServiceProcessResults.None)))
+            IQHttpService instance = this.GetService(request);
+            if(instance != null)
             {
-                IQHttpService instance = Activator.CreateInstance(this.m_Services1[request.URL.LocalPath.ToUpperInvariant()]) as IQHttpService;
                 this.ServiceChange(request, instance, Request_ServiceStates.Service_Begin);
                 instance.Extension = this;
                 instance.RegisterCacheManager();
@@ -352,11 +350,37 @@ namespace QNetwork.Http.Server
             }
             else
             {
-
+                resp = new CQHttpResponse(request.HandlerID, "");
+                resp.Set404();
             }
-            
+
+            //if ((this.m_Services1.ContainsKey(request.URL.LocalPath) == true) && ((process_result_code == (int)ServiceProcessResults.None)))
+            //{
+            //    List<Type> types = this.m_Services1[request.URL.LocalPath];
+            //    if(types.Count > 0)
+            //    {
+            //        IQHttpService instance = Activator.CreateInstance(types[0]) as IQHttpService;
+            //        this.ServiceChange(request, instance, Request_ServiceStates.Service_Begin);
+            //        instance.Extension = this;
+            //        instance.RegisterCacheManager();
+            //        if (instance != null)
+            //        {
+            //            instance.Process(request, out resp, out process_result_code);
+            //        }
+            //        this.ServiceChange(request, instance, Request_ServiceStates.Service_End);
+            //    }
+            //    else
+            //    {
+
+            //    }
+            //}
+            //else
+            //{
+
+            //}
+
             return result;
-        }
+        } 
 
         public bool Close()
         {
@@ -426,39 +450,66 @@ namespace QNetwork.Http.Server
             }
         }
 
-        IQHttpRouter m_IQHttpRouter;
-        public bool Open(List<CQSocketListen_Address> address, IQHttpRouter router)
+        //Dictionary<string, List<Type>> m_Services1 = new Dictionary<string, List<Type>>();
+        public class CQRouterData
         {
-            bool result = true;
-
-
-            return result;
+            public List<string> Urls { set; get; }
+            public Type Service { set; get; }
+            public CQRouterData()
+            {
+                this.Urls = new List<string>();
+            }
         }
-
-        Dictionary<string, Type> m_Services1 = new Dictionary<string, Type>();
+        List<CQRouterData> m_Service = new List<CQRouterData>();
         public bool Open(List<CQSocketListen_Address> address, List<IQHttpService> services, bool adddefault=true)
         {
             bool result = true;
-            for (int i = 0; i < services.Count; i++)
-            {
-                services[i].Extension = this;
-                this.m_Services.Add(services[i]);
-            }
-            if(adddefault == true)
-            {
-                this.m_Services.Add(new CQHttpDefaultService());
-            }
-            for(int i=0; i<address.Count; i++)
+            //for (int i = 0; i < services.Count; i++)
+            //{
+            //    services[i].Extension = this;
+            //    this.m_Services.Add(services[i]);
+            //}
+            //if(adddefault == true)
+            //{
+            //    this.m_Services.Add(new CQHttpDefaultService());
+            //}
+            for (int i = 0; i < address.Count; i++)
             {
                 this.OpenListen(address[i]);
             }
-            for(int i=0; i < this.m_Services.Count; i++)
+            for (int i = 0; i < services.Count; i++)
             {
-                Type type = this.m_Services[i].GetType();
-                for(int j=0; j < this.m_Services[i].Methods.Count; j++)
-                {
-                    this.m_Services1.Add(this.m_Services[i].Methods[j], type);
-                }
+                CQRouterData rd = new CQRouterData();
+                rd.Urls.AddRange(services[i].Methods);
+                rd.Service = services[i].GetType();
+                this.m_Service.Add(rd);
+                //Type type = services[i].GetType();
+                //for (int j = 0; j < services[i].Methods.Count; j++)
+                //{
+                //    if(this.m_Services1.ContainsKey(services[i].Methods[j]) == false)
+                //    {
+                //        this.m_Services1.Add(services[i].Methods[j], new List<Type>());
+                //    }
+                //    this.m_Services1[services[i].Methods[j]].Add(type);
+                //}
+            }
+
+            if (adddefault == true)
+            {
+                CQHttpDefaultService ds = new CQHttpDefaultService();
+                CQRouterData rd = new CQRouterData();
+                rd.Urls.AddRange(ds.Methods);
+                rd.Service = ds.GetType();
+                this.m_Service.Add(rd);
+
+                //for (int i=0; i<ds.Methods.Count; i++)
+                //{
+                //    if (this.m_Services1.ContainsKey(ds.Methods[i]) == false)
+                //    {
+                //        this.m_Services1.Add(ds.Methods[i], new List<Type>());
+                //    }
+                //    this.m_Services1[ds.Methods[i]].Add(ds.GetType());
+                //}
             }
             if (this.m_Thread.IsBusy == false)
             {
@@ -468,9 +519,9 @@ namespace QNetwork.Http.Server
         }
 
 
-        private bool Listen_OnNewClient(Socket socket, byte[] data, int len)
+        private bool Listen_OnNewClient(CQSocketListen listen, Socket socket, byte[] data, int len)
         {
-            this.ProcessAccept(socket, data, len);
+            this.ProcessAccept(listen, socket, data, len);
             return true;
         }
 
@@ -508,36 +559,6 @@ namespace QNetwork.Http.Server
             Monitor.Exit(this.m_RequestsLock);
             return true;
         }
-
-        //bool CacheControl<T, T1>(CacheOperates op, string id, ref T cache, T1 manager, bool not_exist_build = true, string nickname = "default") where T : CQCacheBase where T1:CQCacheManager, new()
-        //{
-        //    bool result = true;
-        //    switch (op)
-        //    {
-        //        case CacheOperates.Get:
-        //            {
-        //                CQCacheManager manager1 = null;
-        //                if (this.m_Caches.ContainsKey(nickname) == false)
-        //                {
-        //                    if (not_exist_build == true)
-        //                    {
-        //                        manager1 = new T1();
-        //                        this.m_Caches.Add(nickname, manager);
-        //                    }
-        //                }
-        //                else
-        //                {
-        //                    manager1 = this.m_Caches[nickname];
-        //                }
-        //                if (manager != null)
-        //                {
-        //                    cache = manager1.Get<T>(id, not_exist_build);
-        //                }
-        //            }
-        //            break;
-        //    }
-        //    return result;
-        //}
 
         virtual public bool CacheManger_Registered<T>(string name = "default") where T:CQCacheManager, new()
         {

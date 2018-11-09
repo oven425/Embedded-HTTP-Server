@@ -19,7 +19,7 @@ namespace QNetwork.Http.Server.Service
             string[] files = Directory.GetFiles(str, "*.ico");
             this.m_Icons.AddRange(files);
             this.m_Methods.Add("/");
-            this.m_Methods.Add("/favicon.ico".ToUpperInvariant());
+            this.m_Methods.Add("/favicon.ico");
         }
 
         void CoppyStream(System.IO.Stream src, System.IO.Stream dst)

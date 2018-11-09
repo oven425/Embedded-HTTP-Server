@@ -8,11 +8,13 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.ComponentModel;
+using QNetwork.Http.Server.Accept;
 
 namespace QNetwork.Http.Server
 {
     public class CQTCPHandler
     {
+        public CQSocketListen_Address Accept_Address { protected set; get; }
         public MemoryStream RecvData { set; get; }
         protected ReaderWriterLockSlim m_SocketLock;
         byte[] m_RecvBuf;
@@ -28,12 +30,13 @@ namespace QNetwork.Http.Server
         public event ParseDeleagte OnParse;
         Queue<System.IO.Stream> m_SendDatas = new Queue<System.IO.Stream>();
         BackgroundWorker m_Thread;
-        public CQTCPHandler(Socket socket)
+        public CQTCPHandler(Socket socket, CQSocketListen_Address accept_address)
         {
             this.RecvData = new MemoryStream();
             this.m_SocketLock = new ReaderWriterLockSlim();
             this.m_ID = Guid.NewGuid().ToString("N");
             this.m_Socket = socket;
+            this.Accept_Address = accept_address;
         }
 
         void m_RecvArgs_Completed(object sender, SocketAsyncEventArgs e)

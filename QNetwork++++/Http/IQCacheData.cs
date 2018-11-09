@@ -9,10 +9,10 @@ namespace QNetwork.Http.Server.Cache
 {
     public interface IQCache
     {
-        string ID { set; get; }
+        string ID {  get; }
         bool IsTimeOut(TimeSpan timeout);
     }
-    public class CQCacheBase
+    public class CQCacheBase: IQCache
     {
         public CQCacheBase()
         {
