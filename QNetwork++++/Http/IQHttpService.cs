@@ -18,6 +18,7 @@ namespace QNetwork.Http.Server.Service
     }
     public interface IQHttpService : IDisposable
     {
+        IQHttpServer_Log Log { set; get; }
         bool RegisterCacheManager();
         bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code);
         bool CloseHandler(List<string> handlers);
@@ -38,7 +39,14 @@ namespace QNetwork.Http.Server
         Create,
         Check,
         Destory,
-        
+    }
+
+    public interface IQHttpServer_Log
+    {
+        bool Log_Accept();
+        bool Log_Handler();
+        bool Log_Request();
+        bool Log_Response();
     }
 
     public interface IQHttpServer_Extension
@@ -49,40 +57,11 @@ namespace QNetwork.Http.Server
         bool CacheManger_Registered<T>(string name = "default") where T : CQCacheManager, new();
     }
 
-   
-
-    //public abstract class CQHttpService : IQHttpService
-    //{
-    //    protected List<string> m_Methods = new List<string>();
-    //    List<string> m_PushHandler = new List<string>();
-    //    virtual public bool CloseHandler(List<string> handlers) { return true; }
-    //    //protected object m_CachesLock = new object();
-    //    //protected Dictionary<string, IQCacheData> m_Caches = new Dictionary<string, IQCacheData>();
-
-    //    public IQHttpServer_Extension Extension { get; set; }
-    //    public List<string> Methods { set { } get { return this.m_Methods; } }
-
-
-    //    abstract public bool Process(CQHttpRequest req, out CQHttpResponse resp, out int process_result_code, out bool to_cache);
-    //    virtual public bool TimeOut_Cache()
-    //    {
-    //        bool result = true;
-    //        //List<string> keys = new List<string>();
-
-    //        //Monitor.Enter(this.m_CachesLock);
-    //        //for (int i = 0; i < this.m_Caches.Count; i++)
-    //        //{
-    //        //    if (this.m_Caches.ElementAt(i).Value.IsTimeOut(TimeSpan.FromMinutes(1)) == true)
-    //        //    {
-    //        //        keys.Add(this.m_Caches.ElementAt(i).Key);
-    //        //    }
-    //        //}
-    //        //foreach (string key in keys)
-    //        //{
-    //        //    this.m_Caches.Remove(key);
-    //        //}
-    //        //Monitor.Exit(this.m_CachesLock);
-    //        return result;
-    //    }
-    //}
+    public interface IQHttpServer_Operation
+    {
+        bool GetAccetpAddress(out List<string> addresslist);
+        bool Reboot();
+        bool Open();
+        bool Close();
+    }
 }

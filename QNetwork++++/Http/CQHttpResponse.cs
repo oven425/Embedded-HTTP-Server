@@ -15,6 +15,7 @@ namespace QNetwork.Http.Server
     }
     public class CQHttpResponse:IDisposable
     {
+        public IQHttpServer_Log Log { set; get; }
         public enum BuildTypes
         {
             Basic,
@@ -109,7 +110,7 @@ namespace QNetwork.Http.Server
                         {
                             strb.AppendLine(string.Format("{0}: {1}", "Content-Length", this.ContentLength));
                         }
-                        
+
                         strb.AppendLine();
                     }
                     break;

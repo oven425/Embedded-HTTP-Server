@@ -31,40 +31,60 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="200"/>
                 <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <ListView Grid.Row="1" ItemsSource="{Binding AddressList}">
-                <ListView.View>
-                    <GridView>
-                        <GridViewColumn Header="State">
-                            <GridViewColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Rectangle Width="20" Height="20" Fill="{Binding ListenState,Converter={StaticResource listenstates2brush}}"/>
-                                </DataTemplate>
-                            </GridViewColumn.CellTemplate>
-                        </GridViewColumn>
-                        <GridViewColumn Header="IP" DisplayMemberBinding="{Binding Address.IP}"/>
-                        <GridViewColumn Header="Port" DisplayMemberBinding="{Binding Address.Port}"/>
-                        <GridViewColumn>
-                            <GridViewColumn.CellTemplate>
-                                <DataTemplate>
-                                    <CheckBox x:Name="checkbox_listen_control" IsChecked="{Binding IsOpen}" Click="checkbox_listen_control_Click"/>
-                                </DataTemplate>
-                            </GridViewColumn.CellTemplate>
-                        </GridViewColumn>
-                    </GridView>
-                </ListView.View>
-            </ListView>
+            <GroupBox Header="Accept">
+                <ListView x:Name="listview_accept" Grid.Row="1" ItemsSource="{Binding AddressList}" SelectionMode="Single">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="State">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Rectangle Width="20" Height="20" Fill="{Binding ListenState,Converter={StaticResource listenstates2brush}}"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="IP" DisplayMemberBinding="{Binding Address.IP}"/>
+                            <GridViewColumn Header="Port" DisplayMemberBinding="{Binding Address.Port}"/>
+                            <GridViewColumn>
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox x:Name="checkbox_listen_control" IsChecked="{Binding IsOpen}" Click="checkbox_listen_control_Click"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </GroupBox>
+            
             <GridSplitter Grid.Column="1" HorizontalAlignment="Center" Width="3" VerticalAlignment="Stretch" ShowsPreview="True" Background="Gray"/>
-            <ListView ItemsSource="{Binding Request_Services}" Grid.Column="2">
-                <ListView.View>
-                    <GridView>
-                        <GridViewColumn Header="Time" DisplayMemberBinding="{Binding Request.CreateTime, StringFormat={}{0:yyyy/MM/dd HH:mm:ss}}"/>
-                        <GridViewColumn Header="URL" DisplayMemberBinding="{Binding Request.URL}"/>
-                        <GridViewColumn Header="Service" DisplayMemberBinding="{Binding Service,Converter={StaticResource object2name}}"/>
-                    </GridView>
-                </ListView.View>
-            </ListView>
+            <GroupBox Header="Handler" Grid.Column="2">
+                <ListView Grid.Column="2" ItemsSource="{Binding SelectedItem.Handlers, ElementName=listview_accept}" SelectionMode="Single">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="Begin" DisplayMemberBinding="{Binding Begin, StringFormat={}{0:yyyy/MM/dd HH:mm:ss.fff}}"/>
+                            <GridViewColumn Header="End" DisplayMemberBinding="{Binding End, StringFormat={}{0:yyyy/MM/dd HH:mm:ss.fff}}"/>
+                            <GridViewColumn Header="ID" DisplayMemberBinding="{Binding Handler.ID}"/>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </GroupBox>
+
+            <GridSplitter Grid.Column="3" HorizontalAlignment="Center" Width="3" VerticalAlignment="Stretch" ShowsPreview="True" Background="Gray"/>
+            <GroupBox Header="Service" Grid.Column="4">
+                <ListView ItemsSource="{Binding Request_Services}" Grid.Column="2" SelectionMode="Single">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="Time" DisplayMemberBinding="{Binding Request.CreateTime, StringFormat={}{0:yyyy/MM/dd HH:mm:ss}}"/>
+                            <GridViewColumn Header="URL" DisplayMemberBinding="{Binding Request.URL}"/>
+                            <GridViewColumn Header="Service" DisplayMemberBinding="{Binding Service,Converter={StaticResource object2name}}"/>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </GroupBox>
         </Grid>
     </Grid>
 </Window>

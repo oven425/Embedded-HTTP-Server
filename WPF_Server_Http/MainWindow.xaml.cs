@@ -26,6 +26,7 @@ using QNetwork.Http.Server.Service;
 using WPF_Server_Http.Define;
 using static QNetwork.Http.Server.CQHttpServer;
 using QNetwork.Http.Server.Cache;
+using QNetwork;
 
 namespace WPF_Server_Http
 {
@@ -39,9 +40,31 @@ namespace WPF_Server_Http
         public MainWindow()
         {
             InitializeComponent();
-            //CQCache1 bb = this.Create<CQCache1>();
+
+            //CQCircleStream<MemoryStream> mm = new CQCircleStream<MemoryStream>();
+            //byte[] bb = File.ReadAllBytes("C:\\post.txt");
+            //mm.Write(bb);
 
 
+            //byte[] recv_buf = new byte[400];
+            //int recv_len = mm.Read(recv_buf);
+
+
+            //mm.Write(bb);
+            //recv_len = mm.Read(recv_buf);
+            //recv_len = mm.Read(recv_buf);
+        }
+
+        public class CQUU<T>
+        {
+            public delegate void NewRequestDelegate(T request);
+            public event NewRequestDelegate OnNewRequest;
+        }
+
+        public class CQSocketHandler
+        {
+            dynamic dynamic_ec = new MemoryStream();
+            public CQUU<object> Parse { set; get; }
         }
 
 
@@ -78,9 +101,36 @@ namespace WPF_Server_Http
                 }
                 this.m_TestServer.OnListentStateChange += M_TestServer_OnListentStateChange;
                 this.m_TestServer.OnServiceChange += M_TestServer_OnServiceChange;
+                this.m_TestServer.OnHttpHandlerChange += M_TestServer_OnHttpHandlerChange;
                 //this.m_TestServer.Open(this.m_MainUI.AddressList.Select(x=>x.Address).ToList(), new List<IQHttpService>() { new CQHttpService_Test(), new CQHttpService_Playback(),new CQHttpService_WebSocket() } , true);
                 this.m_TestServer.Open(this.m_MainUI.AddressList.Select(x => x.Address).ToList(), new List<IQHttpService>() { new CQHttpService_Test(), new CQHttpService_Playback() }, true);
             }
+        }
+
+        private bool M_TestServer_OnHttpHandlerChange(CQHttpHandler handler, bool isadd)
+        {
+            if (isadd == true)
+            {
+                var vv = this.m_MainUI.AddressList.FirstOrDefault(x => x.Address == handler.Accept_Address);
+                if(vv!=null)
+                {
+                    this.Dispatcher.Invoke(new Action(() =>
+                    {
+                        vv.Handlers.Add(new CQHandlerData() { Handler = handler });
+                    }));
+                    
+                }
+            }
+            else
+            {
+                var vv = this.m_MainUI.AddressList.FirstOrDefault(x => x.Address == handler.Accept_Address);
+                if (vv != null)
+                {
+                    var hh = vv.Handlers.FirstOrDefault(x => x.Handler == handler);
+                    hh.End = DateTime.Now;
+                }
+            }
+            return true;
         }
 
         private bool M_TestServer_OnServiceChange(CQHttpRequest req, IQHttpService service, Request_ServiceStates isadd)
@@ -251,6 +301,9 @@ namespace WPF_Server_Http
         public IQHttpServer_Extension Extension { set; get; }
 
         public List<string> Methods => this.m_Methods;
+
+        public IQHttpServer_Log Log { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
         //static Dictionary<string, CQCacheBase> m_Caches;
         //static CQHttpService_Test()
         //{
@@ -261,7 +314,7 @@ namespace WPF_Server_Http
         {
             this.m_Thread_PushT = new BackgroundWorker();
             this.m_Thread_PushT.DoWork += new DoWorkEventHandler(m_Thread_PushT_DoWork);
-            this.m_Methods.Add("/PUSH");
+            this.m_Methods.Add("/Push");
             this.m_Methods.Add("/EVENT4");
             this.m_Methods.Add("/TEST");
             this.m_Methods.Add("/TEST1");
@@ -299,23 +352,21 @@ namespace WPF_Server_Http
                     CQHttpResponse resp = new CQHttpResponse(this.m_PushHandlers[i], "", CQHttpResponse.BuildTypes.MultiPart);
                     resp.Content = new MemoryStream();
 
-                    //string str = string.Format("PushTest {0}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss.fff", System.Globalization.DateTimeFormatInfo.InvariantInfo));
-                    //byte[] buf = Encoding.ASCII.GetBytes(str);
+                    string str = string.Format("PushTest {0}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss.fff", System.Globalization.DateTimeFormatInfo.InvariantInfo));
+                    byte[] buf = Encoding.ASCII.GetBytes(str);
 
-                    //resp.Content.Write(buf, 0, buf.Length);
-                    ////byte[] bb1 = Encoding.UTF8.GetBytes("\r\n\r\n");
-                    ////resp.Content.Write(bb1, 0, bb1.Length);
-                    //resp.ContentType = "text/plain";
-                    //resp.ContentLength = -1;
+                    resp.Content.Write(buf, 0, buf.Length);
+                    resp.ContentType = "text/plain";
+                    resp.ContentLength = buf.Length;
 
-                    resp.Content.Write(files[fileindex], 0, files[fileindex].Length);
-                    resp.ContentType = "image/jpeg";
-                    resp.ContentLength = files[fileindex].Length;
-                    fileindex = fileindex + 1;
-                    if (fileindex >= files.Count)
-                    {
-                        fileindex = 0;
-                    }
+                    //resp.Content.Write(files[fileindex], 0, files[fileindex].Length);
+                    //resp.ContentType = "image/jpeg";
+                    //resp.ContentLength = files[fileindex].Length;
+                    //fileindex = fileindex + 1;
+                    //if (fileindex >= files.Count)
+                    //{
+                    //    fileindex = 0;
+                    //}
 
 
                     resp.Content.Position = 0;
@@ -363,7 +414,7 @@ namespace WPF_Server_Http
                         resp.Set200();
                     }
                     break;
-                case "/PUSHT":
+                case "/Push":
                     {
                         this.m_NewPushHandlers.Add(req.HandlerID);
                         if (this.m_Thread_PushT.IsBusy == false)

@@ -20,7 +20,6 @@ namespace WPF_Server_Http
             
             this.m_Methods = new List<string>();
             this.m_Methods.Add("/PLAYBACK");
-            this.Methods.Add("/PLAYBACKCONTROL");
         }
 
         
@@ -28,6 +27,8 @@ namespace WPF_Server_Http
         public IQHttpServer_Extension Extension { set; get; }
 
         public List<string> Methods => this.m_Methods;
+
+        public IQHttpServer_Log Log { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public bool CloseHandler(List<string> handlers)
         {

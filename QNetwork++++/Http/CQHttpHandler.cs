@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Net;
 using System.Diagnostics;
+using QNetwork.Http.Server.Accept;
 
 namespace QNetwork.Http.Server
 {
@@ -16,7 +17,10 @@ namespace QNetwork.Http.Server
         CQTCPHandler m_SocketHandler;
         public delegate bool NewRequestDelegate(CQHttpHandler hadler, List<CQHttpRequest> requests);
         public event NewRequestDelegate OnNewRequest;
+        public delegate bool SendCompeleteResponseDelegate(CQHttpResponse resp);
+
         public string ID { get { return this.m_ID; } }
+        public CQSocketListen_Address Accept_Address { get => this.m_SocketHandler.Accept_Address; set { } }
         public CQHttpHandler(CQTCPHandler data)
         {
             this.m_SocketHandler = data;
@@ -25,6 +29,7 @@ namespace QNetwork.Http.Server
             this.m_ID = this.m_SocketHandler.ID;
         }
 
+
         private bool M_SocketHandler_OnParse(System.IO.Stream data)
         {
             this.ParseRequest(data);
@@ -32,8 +37,6 @@ namespace QNetwork.Http.Server
         }
 
 
-
-        //Queue<CQHttpResponse> m_SendResps = new Queue<CQHttpResponse>();
         public bool SendResp(CQHttpResponse resp)
         {
             bool result = true;

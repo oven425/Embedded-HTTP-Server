@@ -16,6 +16,7 @@ namespace QNetwork.Http.Server
 {
     public class CQHttpServer: IQHttpServer_Extension
     {
+        public List<IQHttpRouter> Routers { set; get; }
         List<BackgroundWorker> m_Threads = new List<BackgroundWorker>();
         Dictionary<CQSocketListen_Address, CQSocketListen> m_AcceptSockets = new Dictionary<CQSocketListen_Address, CQSocketListen>();
         BackgroundWorker m_Thread;
@@ -34,6 +35,7 @@ namespace QNetwork.Http.Server
             }
             this.m_Thread = new BackgroundWorker();
             this.m_Thread.DoWork += new DoWorkEventHandler(m_Thread_DoWork);
+            this.Routers = new List<IQHttpRouter>();
         }
 
         object m_SessionsLock = new object();
@@ -47,7 +49,12 @@ namespace QNetwork.Http.Server
                 closehandlers.Clear();
                 foreach (CQHttpHandler handler in vv)
                 {
+                    if (this.OnHttpHandlerChange != null)
+                    {
+                        this.OnHttpHandlerChange(handler, false);
+                    }
                     handler.Close();
+                    
                     Monitor.Enter(this.m_RequestsLock);
                     this.m_Requests.RemoveAll(x => x.HandlerID == handler.ID);
                     closehandlers.Add(handler.ID);
@@ -154,6 +161,8 @@ namespace QNetwork.Http.Server
             }
         }
 
+        public delegate bool HttpHandlerChangeDelegate(CQHttpHandler handler, bool isadd);
+        public event HttpHandlerChangeDelegate OnHttpHandlerChange;
         bool ProcessAccept(CQSocketListen listen, Socket client, byte[] acceptbuf, int accept_len)
         {
             bool result = true;
@@ -166,6 +175,10 @@ namespace QNetwork.Http.Server
                 System.Diagnostics.Trace.WriteLine("");
             }
             this.m_Sessions.Add(session.ID, session);
+            if(this.OnHttpHandlerChange != null)
+            {
+                this.OnHttpHandlerChange(session, true);
+            }
             Monitor.Exit(this.m_SessionsLock);
             session.Open(acceptbuf, accept_len);
             return result;
@@ -440,6 +453,8 @@ namespace QNetwork.Http.Server
             Response,
             End
         }
+
+
         public delegate bool ServiceChangeDelegate(CQHttpRequest req, IQHttpService service, Request_ServiceStates isadd);
         public event ServiceChangeDelegate OnServiceChange;
         private void ServiceChange(CQHttpRequest req, IQHttpService service, Request_ServiceStates isadd)
@@ -450,16 +465,7 @@ namespace QNetwork.Http.Server
             }
         }
 
-        //Dictionary<string, List<Type>> m_Services1 = new Dictionary<string, List<Type>>();
-        public class CQRouterData
-        {
-            public List<string> Urls { set; get; }
-            public Type Service { set; get; }
-            public CQRouterData()
-            {
-                this.Urls = new List<string>();
-            }
-        }
+       
         List<CQRouterData> m_Service = new List<CQRouterData>();
         public bool Open(List<CQSocketListen_Address> address, List<IQHttpService> services, bool adddefault=true)
         {
