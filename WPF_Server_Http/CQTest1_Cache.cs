@@ -117,7 +117,7 @@ namespace WPF_Server_Http
         {
             bool result = true;
             this.m_TCPHandler = tcp_handler;
-            this.m_TCPHandler.OnParse += M_TCPHandler_OnParse;
+            //this.m_TCPHandler.OnParse += M_TCPHandler_OnParse;
             if(this.m_Thread.IsBusy == false)
             {
                 this.m_Thread.RunWorkerAsync();

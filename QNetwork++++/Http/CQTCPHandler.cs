@@ -14,6 +14,7 @@ namespace QNetwork.Http.Server
 {
     public class CQTCPHandler
     {
+        public IQHttpServer_Log Logger { set; get; }
         public CQSocketListen_Address Accept_Address { protected set; get; }
         public MemoryStream RecvData { set; get; }
         protected ReaderWriterLockSlim m_SocketLock;
@@ -26,10 +27,9 @@ namespace QNetwork.Http.Server
         protected bool m_IsEnd;
         public string ID { get { return this.m_ID; } }
         string m_ID;
-        public delegate bool ParseDeleagte(System.IO.Stream data);
+        public delegate bool ParseDeleagte(Stream data);
         public event ParseDeleagte OnParse;
-        Queue<System.IO.Stream> m_SendDatas = new Queue<System.IO.Stream>();
-        BackgroundWorker m_Thread;
+        Queue<System.IO.Stream> m_SendDatas = new Queue<Stream>();
         public CQTCPHandler(Socket socket, CQSocketListen_Address accept_address)
         {
             this.RecvData = new MemoryStream();
@@ -65,14 +65,6 @@ namespace QNetwork.Http.Server
             this.m_SocketLock.ExitReadLock();
         }
 
-        public bool Send(byte[] data, int len)
-        {
-            bool result = true;
-            this.m_Socket.Send(data, len, SocketFlags.None);
-
-            return result;
-        }
-
         public bool AddSend(Stream data)
         {
             bool result = true;
@@ -106,6 +98,10 @@ namespace QNetwork.Http.Server
         {
             this.RecvData.Position = this.RecvData.Length;
             this.RecvData.Write(data, 0, size);
+            //if (this.ProtocolDecode != null)
+            //{
+            //    this.ProtocolDecode.Parse(this.ID, data, size);
+            //}
             if (this.OnParse != null)
             {
                 this.OnParse(this.RecvData);
@@ -145,6 +141,13 @@ namespace QNetwork.Http.Server
             });
             return result;
         }
+
+        public bool Send(byte[] data, int len)
+        {
+            this.m_Socket.Send(data, len, SocketFlags.None);
+            return true;
+        }
+
         object m_SendRespsLock = new object();
         bool m_IsSending = false;
         bool Send()
@@ -245,7 +248,7 @@ namespace QNetwork.Http.Server
                     this.m_RecvArgs = null;
                 }
                 this.m_RecvBuf = null;
-                if(this.RecvData != null)
+                if (this.RecvData != null)
                 {
                     this.RecvData.Close();
                     this.RecvData.Dispose();

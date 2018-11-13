@@ -21,6 +21,10 @@ namespace QNetwork.Http.Server
 
         public string ID { get { return this.m_ID; } }
         public CQSocketListen_Address Accept_Address { get => this.m_SocketHandler.Accept_Address; set { } }
+        public CQHttpHandler()
+        {
+
+        }
         public CQHttpHandler(CQTCPHandler data)
         {
             this.m_SocketHandler = data;
@@ -259,6 +263,11 @@ namespace QNetwork.Http.Server
                 this.m_SocketHandler = null;
             }
             return result;
+        }
+
+        public bool Parse(byte[] data, int len)
+        {
+            throw new NotImplementedException();
         }
     }
 }

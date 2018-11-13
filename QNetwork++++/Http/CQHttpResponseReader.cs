@@ -35,6 +35,15 @@ namespace QNetwork.Http.Server
         IQResponseReader_ReadStates m_ReadState;
         long m_Length = 0;
         long m_Position = 0;
+        public CQHttpResponseReader()
+        {
+
+        }
+
+        public CQHttpResponseReader(CQHttpResponse response)
+        {
+            this.Set(response);
+        }
         public bool Set(CQHttpResponse resp)
         {
             bool result = true;
@@ -51,7 +60,7 @@ namespace QNetwork.Http.Server
         }
         bool m_IsEnd = true;
 
-        public bool IsEnd => this.m_IsEnd;
+        //public bool IsEnd => this.m_IsEnd;
 
         public override bool CanRead => true;
 

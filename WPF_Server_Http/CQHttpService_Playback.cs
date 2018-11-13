@@ -28,7 +28,7 @@ namespace WPF_Server_Http
 
         public List<string> Methods => this.m_Methods;
 
-        public IQHttpServer_Log Log { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public IQHttpServer_Log Logger { set; get; }
 
         public bool CloseHandler(List<string> handlers)
         {

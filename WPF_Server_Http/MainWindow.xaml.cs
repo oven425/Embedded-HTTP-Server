@@ -40,34 +40,7 @@ namespace WPF_Server_Http
         public MainWindow()
         {
             InitializeComponent();
-
-            //CQCircleStream<MemoryStream> mm = new CQCircleStream<MemoryStream>();
-            //byte[] bb = File.ReadAllBytes("C:\\post.txt");
-            //mm.Write(bb);
-
-
-            //byte[] recv_buf = new byte[400];
-            //int recv_len = mm.Read(recv_buf);
-
-
-            //mm.Write(bb);
-            //recv_len = mm.Read(recv_buf);
-            //recv_len = mm.Read(recv_buf);
         }
-
-        public class CQUU<T>
-        {
-            public delegate void NewRequestDelegate(T request);
-            public event NewRequestDelegate OnNewRequest;
-        }
-
-        public class CQSocketHandler
-        {
-            dynamic dynamic_ec = new MemoryStream();
-            public CQUU<object> Parse { set; get; }
-        }
-
-
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
@@ -103,7 +76,7 @@ namespace WPF_Server_Http
                 this.m_TestServer.OnServiceChange += M_TestServer_OnServiceChange;
                 this.m_TestServer.OnHttpHandlerChange += M_TestServer_OnHttpHandlerChange;
                 //this.m_TestServer.Open(this.m_MainUI.AddressList.Select(x=>x.Address).ToList(), new List<IQHttpService>() { new CQHttpService_Test(), new CQHttpService_Playback(),new CQHttpService_WebSocket() } , true);
-                this.m_TestServer.Open(this.m_MainUI.AddressList.Select(x => x.Address).ToList(), new List<IQHttpService>() { new CQHttpService_Test(), new CQHttpService_Playback() }, true);
+                this.m_TestServer.Open(this.m_MainUI.AddressList.Select(x => x.Address).ToList(), new List<IQHttpService>() { new CQHttpService_Test(), new CQHttpService_Playback(), new CQHttpService_WebSocket() }, true);
             }
         }
 
@@ -205,91 +178,6 @@ namespace WPF_Server_Http
         }
     }
 
-    //public class CQHttpService_WebSocket : IQHttpService
-    //{
-    //    public IQHttpServer_Extension Extension { set; get; }
-    //    List<string> m_Methods = new List<string>();
-    //    public List<string> Methods => this.m_Methods;
-    //    public CQHttpService_WebSocket()
-    //    {
-    //        this.m_Methods.Add("/WEBSOCKET");
-    //        this.m_Methods.Add("/WEBSOCKET_TEST");
-    //    }
-    //    public bool CloseHandler(List<string> handlers)
-    //    {
-    //        return true;
-    //    }
-
-    //    public void Dispose()
-    //    {
-    //        throw new NotImplementedException();
-    //    }
-
-    //    public bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code, out CQCacheBase cache)
-    //    {
-    //        cache = null;
-    //        resp = null;
-    //        process_result_code = 0;
-    //        bool result = true;
-    //        switch (req.URL.LocalPath.ToUpperInvariant())
-    //        {
-    //            case "/WEBSOCKET":
-    //                {
-    //                    resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
-    //                    resp.Content = new FileStream("../WebTest/Websocket.html", FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
-    //                    resp.ContentLength = resp.Content.Length;
-    //                    resp.ContentType = "text/html; charset=utf-8";
-    //                    process_result_code = ServiceProcessResults.OK;
-    //                    resp.Set200();
-    //                }
-    //                break;
-    //            case "/WEBSOCKET_TEST":
-    //                {
-    //                    //[4] = {[Upgrade, websocket]}
-    //                    if ((req.Headers.ContainsKey("UPGRADE") == true) && (req.Headers["UPGRADE"] == "websocket"))
-    //                    {
-    //                        CQWebSocket websocket = new CQWebSocket();
-    //                        CQTCPHandler handler;
-    //                        this.Extension.ControlTransfer(req.HandlerID, out handler);
-    //                        websocket.Open(handler, req.HeaderRaw, req.HeaderRaw.Length);
-    //                    }
-    //                }
-    //                break;
-
-    //        }
-
-    //        return result;
-    //    }
-
-    //    public bool TimeOut_Cache()
-    //    {
-    //        return true;
-    //    }
-
-    //    public bool Process_Cache(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
-    //    {
-    //        bool result = true;
-    //        process_result_code = ServiceProcessResults.None;
-    //        resp = null;
-    //        switch(req.URL.LocalPath.ToUpperInvariant())
-    //        {
-    //            //case "/WEBSOCKET_TEST":
-    //            //    {
-    //            //        //[4] = {[Upgrade, websocket]}
-    //            //        if ((req.Headers.ContainsKey("UPGRADE") == true) && (req.Headers["UPGRADE"] == "websocket"))
-    //            //        {
-    //            //            CQWebSocket websocket = new CQWebSocket();
-    //            //            CQTCPHandler handler;
-    //            //            this.Extension.ControlTransfer(req.HandlerID, out handler);
-    //            //            websocket.Open(handler, req.HeaderRaw, req.HeaderRaw.Length);
-    //            //        }
-    //            //    }
-    //            //    break;
-    //        }
-    //        return result;
-    //    }
-    //}
-
     public class CQHttpService_Test : IQHttpService
     {
         BackgroundWorker m_Thread_PushT;
@@ -302,7 +190,7 @@ namespace WPF_Server_Http
 
         public List<string> Methods => this.m_Methods;
 
-        public IQHttpServer_Log Log { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public IQHttpServer_Log Logger { set; get; }
 
         //static Dictionary<string, CQCacheBase> m_Caches;
         //static CQHttpService_Test()

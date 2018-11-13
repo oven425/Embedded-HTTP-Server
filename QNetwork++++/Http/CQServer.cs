@@ -70,7 +70,7 @@ namespace QNetwork.Http.Server
                 //    }
                 //}
 
-                for(int i= 0; i<this.m_CacheManagers.Count; i++)
+                for (int i= 0; i<this.m_CacheManagers.Count; i++)
                 {
                     this.m_CacheManagers.ElementAt(i).Value.TimeOut();
                 }
@@ -602,6 +602,26 @@ namespace QNetwork.Http.Server
                         if(manager != null)
                         {
                             cache = manager.Get<T>(id, not_exist_build);
+                        }
+                    }
+                    break;
+                case CacheOperates.Create:
+                    {
+                        if (this.m_CacheManagers.ContainsKey(nickname) == true)
+                        {
+                            CQCacheManager manager = this.m_CacheManagers[nickname] as CQCacheManager;
+                            if(manager != null)
+                            {
+                                manager.Create<T>(id);
+                            }
+                            else
+                            {
+                                result = false;
+                            }
+                        }
+                        else
+                        {
+                            result = false;
                         }
                     }
                     break;

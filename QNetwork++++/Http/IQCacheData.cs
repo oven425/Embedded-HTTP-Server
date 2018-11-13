@@ -43,11 +43,19 @@ namespace QNetwork.Http.Server.Cache
             this.Caches = new Dictionary<string, CQCacheBase>();
         }
 
-        virtual protected T Create<T>(string id) where T : CQCacheBase, new()
+        virtual public T Create<T>(string id) where T : CQCacheBase, new()
         {
             T aa = null;
             aa = new T();
             aa.ID = id;
+            if(this.Caches.ContainsKey(id) == true)
+            {
+                this.Caches[id] = aa;
+            }
+            else
+            {
+                this.Caches.Add(id, aa);
+            }
             return aa;
         }
 

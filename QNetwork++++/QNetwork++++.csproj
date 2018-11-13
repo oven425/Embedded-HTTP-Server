@@ -38,8 +38,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CQCircleStream.cs" />
-    <Compile Include="CQRouterData.cs" />
+    <Compile Include="Http\CQCircleStream.cs" />
+    <Compile Include="Http\CQRouterData.cs" />
     <Compile Include="Http\IQCacheData.cs" />
     <Compile Include="Http\CQHttpDefaultService.cs" />
     <Compile Include="Http\CQHttpHandler.cs" />

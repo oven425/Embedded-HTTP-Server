@@ -51,6 +51,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="CQHttpService_Playback.cs" />
+    <Compile Include="CQHttpService_WebSocket.cs" />
     <Compile Include="CQTest1_Cache.cs" />
     <Compile Include="ValueConvert.cs" />
     <Page Include="MainWindow.xaml">

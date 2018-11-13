@@ -35,7 +35,7 @@ namespace QNetwork.Http.Server.Service
         public IQHttpServer_Extension Extension { set; get; }
         public List<string> Methods => this.m_Methods;
 
-        public IQHttpServer_Log Log { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public IQHttpServer_Log Logger { set; get; }
 
         public bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
         {

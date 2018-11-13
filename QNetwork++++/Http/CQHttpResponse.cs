@@ -15,7 +15,8 @@ namespace QNetwork.Http.Server
     }
     public class CQHttpResponse:IDisposable
     {
-        public IQHttpServer_Log Log { set; get; }
+
+        public IQHttpServer_Log Logger { set; get; }
         public enum BuildTypes
         {
             Basic,

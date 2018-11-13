@@ -1,6 +1,7 @@
 ﻿using QNetwork.Http.Server.Cache;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -18,7 +19,7 @@ namespace QNetwork.Http.Server.Service
     }
     public interface IQHttpService : IDisposable
     {
-        IQHttpServer_Log Log { set; get; }
+        IQHttpServer_Log Logger { set; get; }
         bool RegisterCacheManager();
         bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code);
         bool CloseHandler(List<string> handlers);
@@ -33,6 +34,12 @@ namespace QNetwork.Http.Server.Service
 }
 namespace QNetwork.Http.Server
 {
+    //public interface IQProtocolParse:IDisposable
+    //{
+    //    bool Parse(string tcphandler_id, byte[] data, int len);
+    //    bool Parse(string tcphandler_id, Stream data);
+    //}
+
     public enum CacheOperates
     {
         Get,

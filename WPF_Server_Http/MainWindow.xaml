@@ -29,9 +29,9 @@
         </Grid>
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="200"/>
+                <ColumnDefinition/>
                 <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="200"/>
+                <ColumnDefinition/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
@@ -42,7 +42,7 @@
                             <GridViewColumn Header="State">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Rectangle Width="20" Height="20" Fill="{Binding ListenState,Converter={StaticResource listenstates2brush}}"/>
+                                        <Rectangle Width="20" Height="20" Fill="{Binding ListenState,Converter={StaticResource listenstates2brush}}" RadiusX="3" RadiusY="3" Stroke="{x:Null}"/>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>

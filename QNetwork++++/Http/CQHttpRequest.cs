@@ -14,7 +14,7 @@ namespace QNetwork.Http.Server
     }
     public class CQHttpRequest : IDisposable
     {
-        public IQHttpServer_Log Log { set; get; }
+        public IQHttpServer_Log Logger { set; get; }
         public DateTime CreateTime { set; get; }
         public Dictionary<string, string> Headers { set; get; }
         public string Method { set; get; }
