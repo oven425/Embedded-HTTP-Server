@@ -76,7 +76,7 @@ namespace WPF_Server_Http
                 this.m_TestServer.OnServiceChange += M_TestServer_OnServiceChange;
                 this.m_TestServer.OnHttpHandlerChange += M_TestServer_OnHttpHandlerChange;
                 //this.m_TestServer.Open(this.m_MainUI.AddressList.Select(x=>x.Address).ToList(), new List<IQHttpService>() { new CQHttpService_Test(), new CQHttpService_Playback(),new CQHttpService_WebSocket() } , true);
-                this.m_TestServer.Open(this.m_MainUI.AddressList.Select(x => x.Address).ToList(), new List<IQHttpService>() { new CQHttpService_Test(), new CQHttpService_Playback(), new CQHttpService_WebSocket() }, true);
+                this.m_TestServer.Open(this.m_MainUI.AddressList.Select(x => x.Address).ToList(), new List<IQHttpService>() { new CQHttpService_Test(), new CQHttpService_Playback(), new CQHttpService_WebSocket(), new CQHttpService_ServerOperate() }, true);
             }
         }
 

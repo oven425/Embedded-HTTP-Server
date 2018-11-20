@@ -31,6 +31,14 @@ namespace QNetwork.Http.Server.Service
     {
         IQHttpService Process(CQHttpRequest req);
     }
+
+    public class CQQHttpRouter_Default : IQHttpRouter
+    {
+        public IQHttpService Process(CQHttpRequest req)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }
 namespace QNetwork.Http.Server
 {

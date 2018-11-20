@@ -3,3 +3,4 @@ C:\Users\QQ\Desktop\QNetwork-master\Debug\QNetwork++++.pdb
 C:\Users\QQ\Desktop\QNetwork-master\QNetwork++++\obj\Debug\QNetwork++++.csproj.CoreCompileInputs.cache
 C:\Users\QQ\Desktop\QNetwork-master\QNetwork++++\obj\Debug\QNetwork++++.dll
 C:\Users\QQ\Desktop\QNetwork-master\QNetwork++++\obj\Debug\QNetwork++++.pdb
+C:\Users\QQ\Desktop\QNetwork-master\QNetwork++++\obj\Debug\QNetwork++++.csprojAssemblyReference.cache
