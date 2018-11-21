@@ -72,14 +72,12 @@
             function myFunction()
             {
                 var ee = document.getElementById("button1");
-                ee.style.className += " active";
+                ee.className = "tablinks active";
                 document.getElementById("London").style.display = "block";
                 //openCity(ee.onclick, "London");
             }
             function openCity(evt, cityName) 
             {
-                var ee = document.getElementById("button1");
-                console.log(ee.onclick);
                 var i, tabcontent, tablinks;
                 tabcontent = document.getElementsByClassName("tabcontent");
                 for (i = 0; i < tabcontent.length; i++) 
