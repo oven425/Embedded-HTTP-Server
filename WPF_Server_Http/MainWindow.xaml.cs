@@ -44,6 +44,9 @@ namespace WPF_Server_Http
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            
+
+
             //JavaScriptSerializer js = new JavaScriptSerializer();
             //string str = js.Serialize(new CQAA());
             if (this.m_MainUI == null)
@@ -79,6 +82,8 @@ namespace WPF_Server_Http
                 this.m_TestServer.Open(this.m_MainUI.AddressList.Select(x => x.Address).ToList(), new List<IQHttpService>() { new CQHttpService_Test(), new CQHttpService_Playback(), new CQHttpService_WebSocket(), new CQHttpService_ServerOperate() }, true);
             }
         }
+
+        Dictionary<CQSocketListen_Address, List<CQHandlerData>> m_Handler = new Dictionary<CQSocketListen_Address, List<CQHandlerData>>();
 
         private bool M_TestServer_OnHttpHandlerChange(CQHttpHandler handler, bool isadd)
         {
@@ -208,10 +213,10 @@ namespace WPF_Server_Http
             this.m_Methods.Add("/TEST1");
             this.m_Methods.Add("/PostTest");
         }
-
+        
         void m_Thread_PushT_DoWork(object sender, DoWorkEventArgs e)
         {
-            int fileindex = 0;
+            //int fileindex = 0;
             List<byte[]> files = new List<byte[]>();
             files.Add(File.ReadAllBytes("../WebTest/Image/RR.jpg"));
             files.Add(File.ReadAllBytes("../WebTest/Image/GG.jpg"));

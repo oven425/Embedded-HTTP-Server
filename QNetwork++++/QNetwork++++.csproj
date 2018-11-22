@@ -39,7 +39,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CQHttpService_ServerOperate.cs" />
+    <Compile Include="Http\CQHttpService_ServerOperate.cs" />
     <Compile Include="Http\CQCircleStream.cs" />
     <Compile Include="Http\CQRouterData.cs" />
     <Compile Include="Http\IQCacheData.cs" />
@@ -54,6 +54,9 @@
     <Compile Include="Http\CQWebSocket.cs" />
     <Compile Include="Http\IQHttpService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="XmlDB\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

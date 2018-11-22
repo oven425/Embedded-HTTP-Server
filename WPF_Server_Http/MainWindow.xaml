@@ -81,6 +81,7 @@
                             <GridViewColumn Header="Time" DisplayMemberBinding="{Binding Request.CreateTime, StringFormat={}{0:yyyy/MM/dd HH:mm:ss}}"/>
                             <GridViewColumn Header="URL" DisplayMemberBinding="{Binding Request.URL}"/>
                             <GridViewColumn Header="Service" DisplayMemberBinding="{Binding Service,Converter={StaticResource object2name}}"/>
+                            <GridViewColumn Header="Service" DisplayMemberBinding="{Binding Service,Converter={StaticResource object2name}}"/>
                         </GridView>
                     </ListView.View>
                 </ListView>
