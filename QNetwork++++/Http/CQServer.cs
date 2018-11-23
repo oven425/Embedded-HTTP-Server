@@ -14,7 +14,7 @@ using QNetwork.Http.Server.Cache;
 
 namespace QNetwork.Http.Server
 {
-    public class CQHttpServer: IQHttpServer_Extension
+    public class CQHttpServer: IQHttpServer_Extension, IQHttpServer_Log
     {
         public List<IQHttpRouter> Routers { set; get; }
         List<BackgroundWorker> m_Threads = new List<BackgroundWorker>();
@@ -49,10 +49,11 @@ namespace QNetwork.Http.Server
                 closehandlers.Clear();
                 foreach (CQHttpHandler handler in vv)
                 {
-                    if (this.OnHttpHandlerChange != null)
-                    {
-                        this.OnHttpHandlerChange(handler, false);
-                    }
+                    //if (this.OnHttpHandlerChange != null)
+                    //{
+                    //    this.OnHttpHandlerChange(handler, false);
+                    //}
+                    this.LogProcess(LogStates_Process.DestoryHandler, handler.ID, "", DateTime.Now, null, null);
                     handler.Close();
                     
                     Monitor.Enter(this.m_RequestsLock);
@@ -125,11 +126,13 @@ namespace QNetwork.Http.Server
                     this.ProcessRequest(req, out resp, out process_result);
                     if ((resp != null) && (process_result == ServiceProcessResults.OK))
                     {
+                        resp.Logger = this;
                         Monitor.Enter(this.m_SessionsLock);
                         if (this.m_Sessions.ContainsKey(req.HandlerID) == true)
                         {
                             CQHttpHandler handler = this.m_Sessions[req.HandlerID];
-                            this.ServiceChange(req, null, Request_ServiceStates.Response);
+
+                            this.LogProcess(LogStates_Process.ProcessResponse, handler.ID, req.ProcessID, DateTime.Now, req, resp);
                             handler.SendResp(resp);
                         }
                         Monitor.Exit(this.m_SessionsLock);
@@ -166,8 +169,10 @@ namespace QNetwork.Http.Server
         bool ProcessAccept(CQSocketListen listen, Socket client, byte[] acceptbuf, int accept_len)
         {
             bool result = true;
+            
             CQTCPHandler tcphandler = new CQTCPHandler(client, listen.Addrss);
             CQHttpHandler session = new CQHttpHandler(tcphandler);
+            this.LogProcess(LogStates_Process.CreateHandler, session.ID, "", DateTime.Now, null, null);
             session.OnNewRequest += new CQHttpHandler.NewRequestDelegate(session_OnNewRequest);
             Monitor.Enter(this.m_SessionsLock);
             if (this.m_Sessions.ContainsKey(session.ID) == true)
@@ -188,11 +193,11 @@ namespace QNetwork.Http.Server
         {
             bool result = true;
             Monitor.Enter(this.m_RequestsLock);
-            this.m_Requests.AddRange(requests);
-            for (int i = 0; i < requests.Count; i++)
+            for(int i=0; i<requests.Count; i++)
             {
-                this.ServiceChange(requests[i], null, Request_ServiceStates.Request);
+                this.LogProcess(LogStates_Process.CreateRequest, hadler.ID, requests[i].ProcessID, DateTime.Now, requests[i], null);
             }
+            this.m_Requests.AddRange(requests);
             Monitor.Exit(this.m_RequestsLock);
             
             return result;
@@ -313,25 +318,6 @@ namespace QNetwork.Http.Server
             return md5_3str.ToString();
         }
 
-        protected virtual bool ProcessWebSocket(CQHttpRequest request, out CQHttpResponse resp, out int process_result_code)
-        {
-            bool result = true;
-            process_result_code = 0;
-            resp = null;
-            process_result_code = 3;
-            System.Diagnostics.Trace.WriteLine(request.ResourcePath);
-            if ((request.Headers.ContainsKey("Upgrade") == true) && (request.Headers["Upgrade"] == "websocket"))
-            {
-                //CQWebSocket websocket = new CQWebSocket();
-                Socket socket;
-                //this.SendControlTransfer(req.HandlerID, out socket);
-                //websocket.Open(socket, req.HeaderRaw, req.HeaderRaw.Length);
-            }
-
-
-            return result;
-        }
-
         protected virtual IQHttpService GetService(CQHttpRequest request)
         {
             IQHttpService service = null;
@@ -352,45 +338,22 @@ namespace QNetwork.Http.Server
             IQHttpService instance = this.GetService(request);
             if(instance != null)
             {
-                this.ServiceChange(request, instance, Request_ServiceStates.Service_Begin);
+                //this.ServiceChange(request, instance, Request_ServiceStates.Service_Begin);
+                this.LogProcess(LogStates_Process.ProcessRequest, request.HandlerID, request.ProcessID, DateTime.Now, request, null);
                 instance.Extension = this;
                 instance.RegisterCacheManager();
                 if (instance != null)
                 {
                     instance.Process(request, out resp, out process_result_code);
                 }
-                this.ServiceChange(request, instance, Request_ServiceStates.Service_End);
+                this.LogProcess(LogStates_Process.CreateResponse, request.HandlerID, request.ProcessID, DateTime.Now, request, resp);
+                //this.ServiceChange(request, instance, Request_ServiceStates.Service_End);
             }
             else
             {
-                resp = new CQHttpResponse(request.HandlerID, "");
+                resp = new CQHttpResponse(request.HandlerID, request.ProcessID);
                 resp.Set404();
             }
-
-            //if ((this.m_Services1.ContainsKey(request.URL.LocalPath) == true) && ((process_result_code == (int)ServiceProcessResults.None)))
-            //{
-            //    List<Type> types = this.m_Services1[request.URL.LocalPath];
-            //    if(types.Count > 0)
-            //    {
-            //        IQHttpService instance = Activator.CreateInstance(types[0]) as IQHttpService;
-            //        this.ServiceChange(request, instance, Request_ServiceStates.Service_Begin);
-            //        instance.Extension = this;
-            //        instance.RegisterCacheManager();
-            //        if (instance != null)
-            //        {
-            //            instance.Process(request, out resp, out process_result_code);
-            //        }
-            //        this.ServiceChange(request, instance, Request_ServiceStates.Service_End);
-            //    }
-            //    else
-            //    {
-
-            //    }
-            //}
-            //else
-            //{
-
-            //}
 
             return result;
         } 
@@ -470,15 +433,7 @@ namespace QNetwork.Http.Server
         public bool Open(List<CQSocketListen_Address> address, List<IQHttpService> services, bool adddefault=true)
         {
             bool result = true;
-            //for (int i = 0; i < services.Count; i++)
-            //{
-            //    services[i].Extension = this;
-            //    this.m_Services.Add(services[i]);
-            //}
-            //if(adddefault == true)
-            //{
-            //    this.m_Services.Add(new CQHttpDefaultService());
-            //}
+
             for (int i = 0; i < address.Count; i++)
             {
                 this.OpenListen(address[i]);
@@ -489,15 +444,6 @@ namespace QNetwork.Http.Server
                 rd.Urls.AddRange(services[i].Methods);
                 rd.Service = services[i].GetType();
                 this.m_Service.Add(rd);
-                //Type type = services[i].GetType();
-                //for (int j = 0; j < services[i].Methods.Count; j++)
-                //{
-                //    if(this.m_Services1.ContainsKey(services[i].Methods[j]) == false)
-                //    {
-                //        this.m_Services1.Add(services[i].Methods[j], new List<Type>());
-                //    }
-                //    this.m_Services1[services[i].Methods[j]].Add(type);
-                //}
             }
 
             if (adddefault == true)
@@ -508,14 +454,6 @@ namespace QNetwork.Http.Server
                 rd.Service = ds.GetType();
                 this.m_Service.Add(rd);
 
-                //for (int i=0; i<ds.Methods.Count; i++)
-                //{
-                //    if (this.m_Services1.ContainsKey(ds.Methods[i]) == false)
-                //    {
-                //        this.m_Services1.Add(ds.Methods[i], new List<Type>());
-                //    }
-                //    this.m_Services1[ds.Methods[i]].Add(ds.GetType());
-                //}
             }
             if (this.m_Thread.IsBusy == false)
             {
@@ -628,6 +566,21 @@ namespace QNetwork.Http.Server
             }
             Monitor.Exit(this.m_CacheManagersLock);
             return result;
+        }
+
+        public bool LogProcess(LogStates_Process state, string handler_id, string prcoess_id, DateTime time, CQHttpRequest request, CQHttpResponse response)
+        {
+            System.Diagnostics.Trace.WriteLine(string.Format("State:{0} Handler:{1} Process:{2} time:{3}"
+                , state
+                , handler_id
+                , prcoess_id
+                , time.ToString("yyyy/MM/dd HH:mm:ss.fff", System.Globalization.DateTimeFormatInfo.InvariantInfo)));
+            return true;
+        }
+
+        public bool LogAccept(LogStates_Accept state, string ip, int port)
+        {
+            return true;
         }
     }
 }

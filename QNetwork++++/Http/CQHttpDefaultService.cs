@@ -63,14 +63,14 @@ namespace QNetwork.Http.Server.Service
                             resp.Content.Position = 0;
                             resp.ContentLength = resp.Content.Length;
                             resp.ContentType = "image/x-icon";
-                            resp.Connection = Connections.Close;
+                            resp.Connection = Connections.KeepAlive;
                         }
                         else
                         {
                             resp.Content = null;
                             resp.ContentLength = 0;
                             resp.ContentType = "";
-                            resp.Connection = Connections.Close;
+                            resp.Connection = Connections.KeepAlive;
                         }
 
                     }

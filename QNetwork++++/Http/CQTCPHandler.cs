@@ -78,6 +78,11 @@ namespace QNetwork.Http.Server
             else
             {
                 this.m_CurrentResp = data;
+                CQHttpResponseReader resp_reader = this.m_CurrentResp as CQHttpResponseReader;
+                if(resp_reader != null)
+                {
+                    resp_reader.Response.Logger.LogProcess(LogStates_Process.SendResponse, this.m_ID, resp_reader.Response.ProcessID, DateTime.Now, null, resp_reader.Response);
+                }
             }
 
             Monitor.Exit(this.m_SendRespsLock);
@@ -160,16 +165,18 @@ namespace QNetwork.Http.Server
             if (this.m_CurrentResp.Length <= this.m_CurrentResp.Position)
             {
                 System.IO.Stream resp = null;
+                CQHttpResponseReader resp_reader =  this.m_CurrentResp as CQHttpResponseReader;
+                resp_reader.Response.Logger.LogProcess(LogStates_Process.SendResponse_Compelete, this.m_ID, resp_reader.Response.ProcessID, DateTime.Now, null, null);
+                //if(resp_read != null)
+                //{
+                //    resp.
+                //}
                 Monitor.Enter(this.m_SendRespsLock);
                 if (this.m_SendDatas.Count > 0)
                 {
                     resp = this.m_SendDatas.Dequeue();
                 }
                 Monitor.Exit(this.m_SendRespsLock);
-                if (resp != null)
-                {
-                    //this.m_CurrentResp.Set(resp);
-                }
             }
             if (this.m_CurrentResp.Length > this.m_CurrentResp.Position)
             {
@@ -212,13 +219,7 @@ namespace QNetwork.Http.Server
             return result;
         }
 
-        public EndPoint RemoteEndPoint
-        {
-            get
-            {
-                return this.m_Socket.RemoteEndPoint;
-            }
-        }
+        public EndPoint RemoteEndPoint { get { return this.m_Socket.RemoteEndPoint; } }
         object m_SendLock = new object();
         System.IO.Stream m_CurrentResp;
         void m_SendArgs_Completed(object sender, SocketAsyncEventArgs e)

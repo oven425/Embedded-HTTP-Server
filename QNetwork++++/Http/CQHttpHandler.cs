@@ -132,9 +132,7 @@ namespace QNetwork.Http.Server
                         }
 
                         CQHttpRequest req = new CQHttpRequest(this.m_SocketHandler.ID, address);
-                        
                         req.ParseHeader(req_, lastindex, findindex);
-
                         if ((req.Method == "POST") && (req.ContentLength > 0))
                         {
                             this.m_ParseState = ParseStates.RecvContent;
@@ -148,8 +146,6 @@ namespace QNetwork.Http.Server
                         {
                             requests.Add(req);
                         }
-
-
                     }
                     else
                     {

@@ -56,12 +56,33 @@ namespace QNetwork.Http.Server
         Destory,
     }
 
+
+    public enum LogStates_Accept
+    {
+        Stop,
+        Start,
+        Error
+    }
+
+    public enum LogStates_Process
+    {
+        CreateHandler,
+        CreateRequest,
+        ProcessRequest,
+        Service_Begin,
+        Service_End,
+        CreateResponse,
+        ProcessResponse,
+        SendResponse,
+        SendResponse_Compelete,
+        DestoryResponse,
+        DestoryRequest,
+        DestoryHandler
+    }
     public interface IQHttpServer_Log
     {
-        bool Log_Accept();
-        bool Log_Handler();
-        bool Log_Request();
-        bool Log_Response();
+        bool LogProcess(LogStates_Process state, string handler_id, string prcoess_id, DateTime time, CQHttpRequest request, CQHttpResponse response);
+        bool LogAccept(LogStates_Accept state, string ip, int port);
     }
 
     public interface IQHttpServer_Extension

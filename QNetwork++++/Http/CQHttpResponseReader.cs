@@ -31,7 +31,10 @@ namespace QNetwork.Http.Server
     {
         CQHttpResponse m_Resp;
         MemoryStream m_HeaderBuf = new MemoryStream();
-
+        public CQHttpResponse Response
+        {
+            get { return this.m_Resp; }
+        }
         IQResponseReader_ReadStates m_ReadState;
         long m_Length = 0;
         long m_Position = 0;
