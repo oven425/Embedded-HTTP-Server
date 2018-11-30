@@ -511,6 +511,7 @@ namespace QNetwork.Http.Server
             if(this.m_CacheManagers.ContainsKey(name) == false)
             {
                 this.m_CacheManagers.Add(name, new T());
+                this.LogCache(LogStates_Cache.CreateManager, DateTime.Now, name, this.m_CacheManagers[name].NickName);
             }
             Monitor.Exit(this.m_CacheManagersLock);
             return result;
@@ -580,6 +581,16 @@ namespace QNetwork.Http.Server
 
         public bool LogAccept(LogStates_Accept state, string ip, int port)
         {
+            return true;
+        }
+
+        public bool LogCache(LogStates_Cache state, DateTime time, string id, string name)
+        {
+            System.Diagnostics.Trace.WriteLine(string.Format("State:{0} Handler:{1} Process:{2} time:{3}"
+               , state
+               , id
+               , name
+               , time.ToString("yyyy/MM/dd HH:mm:ss.fff", System.Globalization.DateTimeFormatInfo.InvariantInfo)));
             return true;
         }
     }
