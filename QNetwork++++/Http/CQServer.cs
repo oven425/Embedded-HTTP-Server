@@ -11,6 +11,7 @@ using System.Security.Cryptography;
 using QNetwork.Http.Server.Accept;
 using QNetwork.Http.Server.Service;
 using QNetwork.Http.Server.Cache;
+using QNetwork.Http.Server.Log;
 
 namespace QNetwork.Http.Server
 {
@@ -147,6 +148,7 @@ namespace QNetwork.Http.Server
                         if (this.m_Sessions.ContainsKey(req.HandlerID) == true)
                         {
                             resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+                            resp.Logger = this;
                             resp.Set403();
                             CQHttpHandler handler = this.m_Sessions[req.HandlerID];
                             handler.SendResp(resp);

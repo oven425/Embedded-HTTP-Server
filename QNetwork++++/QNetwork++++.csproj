@@ -53,6 +53,7 @@
     <Compile Include="Http\CQTCPHandler.cs" />
     <Compile Include="Http\CQWebSocket.cs" />
     <Compile Include="Http\IQHttpService.cs" />
+    <Compile Include="IQHttpServer_Log.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

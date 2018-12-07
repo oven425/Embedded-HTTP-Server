@@ -27,6 +27,7 @@ using WPF_Server_Http.Define;
 using static QNetwork.Http.Server.CQHttpServer;
 using QNetwork.Http.Server.Cache;
 using QNetwork;
+using QNetwork.Http.Server.Log;
 
 namespace WPF_Server_Http
 {
@@ -79,7 +80,15 @@ namespace WPF_Server_Http
                 this.m_TestServer.OnServiceChange += M_TestServer_OnServiceChange;
                 this.m_TestServer.OnHttpHandlerChange += M_TestServer_OnHttpHandlerChange;
                 //this.m_TestServer.Open(this.m_MainUI.AddressList.Select(x=>x.Address).ToList(), new List<IQHttpService>() { new CQHttpService_Test(), new CQHttpService_Playback(),new CQHttpService_WebSocket() } , true);
-                this.m_TestServer.Open(this.m_MainUI.AddressList.Select(x => x.Address).ToList(), new List<IQHttpService>() { new CQHttpService_Test(), new CQHttpService_Playback(), new CQHttpService_WebSocket(), new CQHttpService_ServerOperate() }, true);
+
+                List<IQHttpService> services = new List<IQHttpService>();
+                services.Add(new CQHttpService_Test());
+                services.Add(new CQHttpService_Playback());
+                services.Add(new CQHttpService_WebSocket());
+                services.Add(new CQHttpService_ServerOperate());
+                services.Add(new CQHttpService_WebMediaPlayer());
+                services.Add(new CQHttpService_Test());
+                this.m_TestServer.Open(this.m_MainUI.AddressList.Select(x => x.Address).ToList(), services, true);
             }
         }
 

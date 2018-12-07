@@ -53,6 +53,7 @@
     <Compile Include="CQHttpService_Playback.cs" />
     <Compile Include="CQHttpService_WebSocket.cs" />
     <Compile Include="CQTest1_Cache.cs" />
+    <Compile Include="CQWeb_MediaPlayer.cs" />
     <Compile Include="ValueConvert.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

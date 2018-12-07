@@ -1,4 +1,5 @@
 ﻿using QNetwork.Http.Server.Cache;
+using QNetwork.Http.Server.Log;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -86,12 +87,7 @@ namespace QNetwork.Http.Server
         DestoryCache,
         DestoryManager
     }
-    public interface IQHttpServer_Log
-    {
-        bool LogProcess(LogStates_Process state, string handler_id, string prcoess_id, DateTime time, CQHttpRequest request, CQHttpResponse response);
-        bool LogAccept(LogStates_Accept state, string ip, int port);
-        bool LogCache(LogStates_Cache state, DateTime time, string id, string name);
-    }
+    
 
     public interface IQHttpServer_Extension
     {
