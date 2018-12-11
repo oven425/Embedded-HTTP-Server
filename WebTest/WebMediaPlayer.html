@@ -8,34 +8,44 @@
             
         </style>
         <script type="text/javascript">
-            (function(window, document)
-            {
-                var video = document.getElementsByTagName('video')[0], 
-                videoControls = document.getElementById('videoControls'),	 
-                play = document.getElementById('play'), 
-                
-                progressContainer = document.getElementById("progress"), 
-                progressHolder = document.getElementById("progress_box"), 
-                playProgressBar = document.getElementById("play_progress"), 
-                
-                fullScreenToggleButton = document.getElementById("fullScreen");
+        
+                        /* videoControls = document.getElementById('videoControls'),
+                        play = document.getElementById('play'),
+                        
+                        progressContainer = document.getElementById("progress"),
+                        progressHolder = document.getElementById("progress_box"),
+                        playProgressBar = document.getElementById("play_progress"),
+                        
+                        fullScreenToggleButton = document.getElementById("fullScreen"); */
+            (function(window, document){
+                // var video = document.getElementsByTagName("video");
+                //         console.log(video.length);
                 var videoPlayer={
-                    init:function(){
-
+                   
+                    init:function()
+                    {
+                        video.removeAttribute('controls');
                     }
                 };
                 videoPlayer.init();
+                
             }(this, document))
+            function AA()
+        {
+            var video = document.getElementsByTagName("video");
+                        console.log(video.length);
+        }
         </script>
+        
     </head>
     
-    <body>
+    <body onload="AA()">
         <div id="video_container">
             <video controls preload id="video_" poster="C:\\kkt.jpg" width="320" height="240">
                 <source src="http://nettuts.s3.amazonaws.com/763_sammyJSIntro/trailer_test.mp4" type="video/mp4">
             </video>
             <div id="videoControls">
-                <button id="play">& #x25BA;</button>
+                <button id="play" onclick="myFunction()">& #x25BA;</button>
                 <div id="progress">
                     <div id="progress_box">
                         <span id="play_progress"></span>
