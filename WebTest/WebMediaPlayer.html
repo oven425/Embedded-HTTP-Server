@@ -2,58 +2,57 @@
     <head>
         <title>Media player test</title>
         <style>
-            *{
+            /* *{
+                box-sizing: border-box;
+            } */
+            .progress
+            {
+                height: 50;
+                background-color: red;
+                border: 1px solid black;
                 box-sizing: border-box;
             }
-            
+            .progress_box
+            {
+                margin: 5px;
+                height: 30;
+                background-color: green;
+                box-sizing: border-box;
+            }
+            .play_progress
+            {
+                margin: 5px;
+
+                height: 20;
+                background-color: blue;
+                display:block;
+                box-sizing: border-box;
+            }
         </style>
-        <script type="text/javascript">
-        
-                        /* videoControls = document.getElementById('videoControls'),
-                        play = document.getElementById('play'),
-                        
-                        progressContainer = document.getElementById("progress"),
-                        progressHolder = document.getElementById("progress_box"),
-                        playProgressBar = document.getElementById("play_progress"),
-                        
-                        fullScreenToggleButton = document.getElementById("fullScreen"); */
-            (function(window, document){
-                // var video = document.getElementsByTagName("video");
-                //         console.log(video.length);
-                var videoPlayer={
-                   
-                    init:function()
-                    {
-                        video.removeAttribute('controls');
-                    }
-                };
-                videoPlayer.init();
-                
-            }(this, document))
-            function AA()
-        {
-            var video = document.getElementsByTagName("video");
-                        console.log(video.length);
-        }
-        </script>
-        
+         <script type="text/javascript" defer="defer" src="VideoPlayer.js"></script>
     </head>
-    
-    <body onload="AA()">
+    <body>
+        <!-- <button id="play">&#x25BA;</button>
+        <div id="progress" class="progress">
+            <div id="progress_box" class="progress_box">
+                <span id="play_progress" class="play_progress"></span>
+            </div>
+        </div>
+        <button id="fullScreen" title="FullScreen Toggle"> FS </button> -->
         <div id="video_container">
-            <video controls preload id="video_" poster="C:\\kkt.jpg" width="320" height="240">
+            <video muted controls preload poster="C:\\kkt.jpg" width="320" height="240">
                 <source src="http://nettuts.s3.amazonaws.com/763_sammyJSIntro/trailer_test.mp4" type="video/mp4">
             </video>
-            <div id="videoControls">
-                <button id="play" onclick="myFunction()">& #x25BA;</button>
-                <div id="progress">
-                    <div id="progress_box">
-                        <span id="play_progress"></span>
+            <div id="videoControls" class="videoControls">
+                <button id="play">&#x25BA;</button>
+                <div id="progress" class="progress">
+                    <div id="progress_box" class="progress_box">
+                        <span id="play_progress" class="play_progress"></span>
                     </div>
                 </div>
+                
                 <button id="fullScreen" title="FullScreen Toggle"> FS </button>
             </div>
         </div>
-        
     </body>
 </html>
