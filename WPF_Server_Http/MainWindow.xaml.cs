@@ -34,7 +34,7 @@ namespace WPF_Server_Http
     /// <summary>
     /// MainWindow.xaml 的互動邏輯
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, IQHttpServer_Log
     {
         CQHttpServer m_TestServer = new CQHttpServer();
         CQMainUI m_MainUI;
@@ -76,10 +76,8 @@ namespace WPF_Server_Http
                     CQSocketListen_Address net_address = new CQSocketListen_Address() { IP = "127.0.0.1", Port = 3333 };
                     this.m_MainUI.AddressList.Add(new CQListenAddress() { Address = net_address });
                 }
-                this.m_TestServer.OnListentStateChange += M_TestServer_OnListentStateChange;
                 this.m_TestServer.OnServiceChange += M_TestServer_OnServiceChange;
                 this.m_TestServer.OnHttpHandlerChange += M_TestServer_OnHttpHandlerChange;
-                //this.m_TestServer.Open(this.m_MainUI.AddressList.Select(x=>x.Address).ToList(), new List<IQHttpService>() { new CQHttpService_Test(), new CQHttpService_Playback(),new CQHttpService_WebSocket() } , true);
 
                 List<IQHttpService> services = new List<IQHttpService>();
                 services.Add(new CQHttpService_Test());
@@ -88,6 +86,7 @@ namespace WPF_Server_Http
                 services.Add(new CQHttpService_ServerOperate());
                 services.Add(new CQHttpService_WebMediaPlayer());
                 services.Add(new CQHttpService_Test());
+                this.m_TestServer.Logger = this;
                 this.m_TestServer.Open(this.m_MainUI.AddressList.Select(x => x.Address).ToList(), services, true);
             }
         }
@@ -156,15 +155,15 @@ namespace WPF_Server_Http
             return true;
         }
 
-        private bool M_TestServer_OnListentStateChange(CQSocketListen_Address listen_addres, ListenStates state)
-        {
-            var vv = this.m_MainUI.AddressList.Where(x => x.Address == listen_addres);
-            foreach (var oo in vv)
-            {
-                oo.ListenState = state;
-            }
-            return true;
-        }
+        //private bool M_TestServer_OnListentStateChange(CQSocketListen_Address listen_addres, ListenStates state)
+        //{
+        //    var vv = this.m_MainUI.AddressList.Where(x => x.Address == listen_addres);
+        //    foreach (var oo in vv)
+        //    {
+        //        oo.ListenState = state;
+        //    }
+        //    return true;
+        //}
 
         private void button_add_listen_Click(object sender, RoutedEventArgs e)
         {
@@ -189,6 +188,34 @@ namespace WPF_Server_Http
 
                 }
             }
+        }
+
+        public bool LogProcess(LogStates_Process state, string handler_id, string process_id, DateTime time, CQHttpRequest request, CQHttpResponse response)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool LogAccept(LogStates_Accept state, string ip, int port, CQSocketListen obj)
+        {
+            if(state == LogStates_Accept.Create)
+            {
+
+            }
+            else
+            {
+
+            }
+            var vv = this.m_MainUI.AddressList.Where(x => x.Address == obj.Addrss);
+            foreach (var oo in vv)
+            {
+                oo.ListenState = state;
+            }
+            return true;
+        }
+
+        public bool LogCache(LogStates_Cache state, DateTime time, string id, string name)
+        {
+            throw new NotImplementedException();
         }
     }
 

@@ -20,7 +20,7 @@
         },
         initializeControls:function()
         {
-            videoPlayer.showHideControls();
+            // videoPlayer.showHideControls();
         },
         showHideControls:function()
         {

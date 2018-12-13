@@ -15,7 +15,7 @@ using QNetwork.Http.Server.Log;
 
 namespace QNetwork.Http.Server
 {
-    public class CQHttpServer: IQHttpServer_Extension, IQHttpServer_Log
+    public class CQHttpServer: IQHttpServer_Extension,IQHttpServer_Log
     {
         public List<IQHttpRouter> Routers { set; get; }
         List<BackgroundWorker> m_Threads = new List<BackgroundWorker>();
@@ -26,8 +26,10 @@ namespace QNetwork.Http.Server
         object m_RequestsLock = new object();
         object m_CacheManagersLock = new object();
         Dictionary<string, CQCacheManager> m_CacheManagers = new Dictionary<string, CQCacheManager>();
+        public IQHttpServer_Log Logger { set; get; }
         public CQHttpServer()
         {
+            this.Logger = new CQDefault_Log();
             for (int i = 0; i < 8; i++)
             {
                 BackgroundWorker thread = new BackgroundWorker();
@@ -64,13 +66,6 @@ namespace QNetwork.Http.Server
                     this.m_Sessions.Remove(handler.ID);
                 }
                 Monitor.Exit(this.m_SessionsLock);
-                //if (closehandlers.Count > 0)
-                //{
-                //    for (int i = 0; i < this.m_Services.Count; i++)
-                //    {
-                //        this.m_Services[i].CloseHandler(closehandlers);
-                //    }
-                //}
 
                 for (int i= 0; i<this.m_CacheManagers.Count; i++)
                 {
@@ -391,24 +386,28 @@ namespace QNetwork.Http.Server
         public bool OpenListen(CQSocketListen_Address data)
         {
             bool result = true;
-            CQSocketListen listen = new CQSocketListen(data);
-            listen.OnListenState += Listen_OnListenState;
+            string id = Guid.NewGuid().ToString();
+            
+            CQSocketListen listen = new CQSocketListen(data, id);
+            //listen.OnListenState += Listen_OnListenState;
+            listen.Logger = this;
             listen.OnNewClient += Listen_OnNewClient;
+            this.LogAccept(LogStates_Accept.Create, "", 0, listen);
             listen.Open();
             this.m_AcceptSockets.Add(data, listen);
             return result;
         }
 
-        public delegate bool ListentStateChangeDelegate(CQSocketListen_Address listen_addres, ListenStates state);
-        public event ListentStateChangeDelegate OnListentStateChange;
-        private bool Listen_OnListenState(CQSocketListen listen)
-        {
-            if(this.OnListentStateChange != null)
-            {
-                this.OnListentStateChange(listen.Addrss, listen.ListenState);
-            }
-            return true;
-        }
+        //public delegate bool ListentStateChangeDelegate(CQSocketListen_Address listen_addres, ListenStates state);
+        //public event ListentStateChangeDelegate OnListentStateChange;
+        //private bool Listen_OnListenState(CQSocketListen listen)
+        //{
+        //    if(this.OnListentStateChange != null)
+        //    {
+        //        this.OnListentStateChange(listen.Addrss, listen.ListenState);
+        //    }
+        //    return true;
+        //}
 
         public enum Request_ServiceStates
         {
@@ -571,28 +570,39 @@ namespace QNetwork.Http.Server
             return result;
         }
 
-        public bool LogProcess(LogStates_Process state, string handler_id, string prcoess_id, DateTime time, CQHttpRequest request, CQHttpResponse response)
+        public bool LogProcess(LogStates_Process state, string handler_id, string process_id, DateTime time, CQHttpRequest request, CQHttpResponse response)
         {
-            System.Diagnostics.Trace.WriteLine(string.Format("State:{0} Handler:{1} Process:{2} time:{3}"
-                , state
-                , handler_id
-                , prcoess_id
-                , time.ToString("yyyy/MM/dd HH:mm:ss.fff", System.Globalization.DateTimeFormatInfo.InvariantInfo)));
-            return true;
-        }
-
-        public bool LogAccept(LogStates_Accept state, string ip, int port)
-        {
+            if(this.Logger != null)
+            {
+                this.Logger.LogProcess(state, handler_id, process_id, time, request, response);
+            }
+            //System.Diagnostics.Trace.WriteLine(string.Format("State:{0} Handler:{1} Process:{2} time:{3}"
+            //    , state
+            //    , handler_id
+            //    , process_id
+            //    , time.ToString("yyyy/MM/dd HH:mm:ss.fff", System.Globalization.DateTimeFormatInfo.InvariantInfo)));
             return true;
         }
 
         public bool LogCache(LogStates_Cache state, DateTime time, string id, string name)
         {
-            System.Diagnostics.Trace.WriteLine(string.Format("State:{0} Handler:{1} Process:{2} time:{3}"
-               , state
-               , id
-               , name
-               , time.ToString("yyyy/MM/dd HH:mm:ss.fff", System.Globalization.DateTimeFormatInfo.InvariantInfo)));
+            if (this.Logger != null)
+            {
+                this.Logger.LogCache(state, time, id, name);
+            }
+            //System.Diagnostics.Trace.WriteLine(string.Format("State:{0} Handler:{1} Process:{2} time:{3}"
+            //   , state
+            //   , id
+            //   , name
+            //   , time.ToString("yyyy/MM/dd HH:mm:ss.fff", System.Globalization.DateTimeFormatInfo.InvariantInfo)));
+            return true;
+        }
+        public bool LogAccept(LogStates_Accept state, string ip, int port, CQSocketListen obj)
+        {
+            if (this.Logger != null)
+            {
+                this.Logger.LogAccept(state, ip, port, obj);
+            }
             return true;
         }
     }

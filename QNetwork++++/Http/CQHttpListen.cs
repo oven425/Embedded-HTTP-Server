@@ -1,4 +1,5 @@
 ﻿//#define Accept_Sync
+using QNetwork.Http.Server.Log;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -9,13 +10,6 @@ using System.Text;
 
 namespace QNetwork.Http.Server.Accept
 {
-    public enum ListenStates
-    {
-        Closed,
-        Opening,
-        Fail,
-        Normal,
-    }
     public class CQSocketListen_Address
     {
         public string IP { set; get; }
@@ -35,8 +29,8 @@ namespace QNetwork.Http.Server.Accept
     }
     public class CQSocketListen
     {
-        ListenStates m_ListenState;
-        public ListenStates ListenState
+        LogStates_Accept m_ListenState;
+        public LogStates_Accept ListenState
         {
             get
             {
@@ -50,12 +44,15 @@ namespace QNetwork.Http.Server.Accept
         public CQSocketListen_Address Addrss { get { return this.m_Address; } }
         public delegate bool NewClientDelegate(CQSocketListen listen, Socket socket, byte[] data, int len);
         public event NewClientDelegate OnNewClient;
-        public delegate bool ListenStateDelegate(CQSocketListen listen);
-        public event ListenStateDelegate OnListenState;
-        public CQSocketListen(CQSocketListen_Address address)
+        //public delegate bool ListenStateDelegate(CQSocketListen listen);
+        //public event ListenStateDelegate OnListenState;
+        public IQHttpServer_Log Logger { set; get; }
+        public CQSocketListen(CQSocketListen_Address address, string id)
         {
             this.m_Address = address;
         }
+        string m_ID;
+        public string ID { get { return this.m_ID; } }
 #if Accept_Sync
         BackgroundWorker m_Thread_Accept;
 #endif
@@ -78,19 +75,23 @@ namespace QNetwork.Http.Server.Accept
             }
             if(result == false)
             {
-                this.m_ListenState = ListenStates.Fail;
-                if(this.OnListenState != null)
+                this.m_ListenState = LogStates_Accept.Fail;
+                if(this.Logger != null)
                 {
-                    this.OnListenState(this);
+                    this.Logger.LogAccept(this.m_ListenState, "", 0, this);
                 }
                 return result;
             }
             else
             {
-                this.m_ListenState = ListenStates.Normal;
-                if (this.OnListenState != null)
+                this.m_ListenState = LogStates_Accept.Normal;
+                //if (this.OnListenState != null)
+                //{
+                //    this.OnListenState(this);
+                //}
+                if (this.Logger != null)
                 {
-                    this.OnListenState(this);
+                    this.Logger.LogAccept(this.m_ListenState, "", 0, this);
                 }
             }
             
@@ -163,9 +164,16 @@ namespace QNetwork.Http.Server.Accept
             }
             else
             {
-                if(this.m_ListenState != ListenStates.Closed)
+                if(this.m_ListenState != LogStates_Accept.Closed)
                 {
 
+                }
+                else
+                {
+                    if(this.Logger != null)
+                    {
+                        this.Logger.LogAccept(this.m_ListenState, "", 0, this);
+                    }
                 }
             }
         }
@@ -173,7 +181,7 @@ namespace QNetwork.Http.Server.Accept
         public bool Close()
         {
             bool result = true;
-            this.m_ListenState = ListenStates.Closed;
+            this.m_ListenState = LogStates_Accept.Closed;
             if (this.m_Socket != null)
             {
                 this.m_Socket.Close();

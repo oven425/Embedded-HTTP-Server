@@ -1,4 +1,5 @@
 ﻿using QNetwork.Http.Server.Accept;
+using QNetwork.Http.Server.Log;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -24,21 +25,21 @@ namespace WPF_Server_Http.ValueConvert
         }
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            ListenStates state = (ListenStates)value;
+            LogStates_Accept state = (LogStates_Accept)value;
             Brush br = this.Closed;
             switch (state)
             {
-                case ListenStates.Fail:
+                case LogStates_Accept.Fail:
                     {
                         br = this.Fail;
                     }
                     break;
-                case ListenStates.Normal:
+                case LogStates_Accept.Normal:
                     {
                         br = this.Normal;
                     }
                     break;
-                case ListenStates.Opening:
+                case LogStates_Accept.Opening:
                     {
                         br = this.Opening;
                     }

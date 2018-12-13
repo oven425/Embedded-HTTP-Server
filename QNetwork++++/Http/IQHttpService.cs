@@ -58,35 +58,7 @@ namespace QNetwork.Http.Server
     }
 
 
-    public enum LogStates_Accept
-    {
-        Stop,
-        Start,
-        Error
-    }
-
-    public enum LogStates_Process
-    {
-        CreateHandler,
-        CreateRequest,
-        ProcessRequest,
-        Service_Begin,
-        Service_End,
-        CreateResponse,
-        ProcessResponse,
-        SendResponse,
-        SendResponse_Compelete,
-        DestoryResponse,
-        DestoryRequest,
-        DestoryHandler
-    }
-    public enum LogStates_Cache
-    {
-        CreateManager,
-        CreateCahce,
-        DestoryCache,
-        DestoryManager
-    }
+   
     
 
     public interface IQHttpServer_Extension
