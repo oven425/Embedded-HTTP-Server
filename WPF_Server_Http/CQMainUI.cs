@@ -12,13 +12,15 @@ namespace WPF_Server_Http.UIData
 {
     public class CQMainUI : INotifyPropertyChanged
     {
+        public ObservableCollection<CQCache> Caches { set; get; }
         public ObservableCollection<CQListenAddress> AddressList { set; get; }
-        public ObservableCollection<CQRequest_Service> Request_Services { set; get; }
+        //public ObservableCollection<CQRequest_Service> Request_Services { set; get; }
         string m_Listen_IP;
         int m_Listen_Port;
         public CQMainUI()
         {
-            this.Request_Services = new ObservableCollection<CQRequest_Service>();
+            this.Caches = new ObservableCollection<CQCache>();
+            //this.Request_Services = new ObservableCollection<CQRequest_Service>();
             this.AddressList = new ObservableCollection<CQListenAddress>();
             this.m_Listen_IP = "127.0.01";
             this.m_Listen_Port = 3333;

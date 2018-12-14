@@ -42,7 +42,7 @@ namespace QNetwork.Http.Server.Log
     {
         bool LogProcess(LogStates_Process state, string handler_id, string process_id, DateTime time, CQHttpRequest request, CQHttpResponse response);
         bool LogAccept(LogStates_Accept state, string ip, int port, CQSocketListen obj);
-        bool LogCache(LogStates_Cache state, DateTime time, string id, string name);
+        bool LogCache(LogStates_Cache state, DateTime time, string manager_id, string cache_id, string name);
     }
 
     public class CQDefault_Log : IQHttpServer_Log
@@ -57,13 +57,14 @@ namespace QNetwork.Http.Server.Log
             return true;
         }
 
-        public bool LogCache(LogStates_Cache state, DateTime time, string id, string name)
+        public bool LogCache(LogStates_Cache state, DateTime time, string manager_id, string cache_id, string name)
         {
-            System.Diagnostics.Trace.WriteLine(string.Format("State:{0} Handler:{1} Process:{2} time:{3}"
+            System.Diagnostics.Trace.WriteLine(string.Format("State:{0} Time:{1} Manager:{2} Cahce:{3} Name:{4}"
                , state
-               , id
-               , name
-               , time.ToString("yyyy/MM/dd HH:mm:ss.fff", System.Globalization.DateTimeFormatInfo.InvariantInfo)));
+               , time.ToString("yyyy/MM/dd HH:mm:ss.fff", System.Globalization.DateTimeFormatInfo.InvariantInfo)
+               , manager_id
+               , cache_id
+               , name));
             return true;
         }
 

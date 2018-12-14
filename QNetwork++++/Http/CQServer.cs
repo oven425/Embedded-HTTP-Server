@@ -512,7 +512,7 @@ namespace QNetwork.Http.Server
             if(this.m_CacheManagers.ContainsKey(name) == false)
             {
                 this.m_CacheManagers.Add(name, new T());
-                this.LogCache(LogStates_Cache.CreateManager, DateTime.Now, name, this.m_CacheManagers[name].NickName);
+                this.LogCache(LogStates_Cache.CreateManager, DateTime.Now, name, "", this.m_CacheManagers[name].NickName);
             }
             Monitor.Exit(this.m_CacheManagersLock);
             return result;
@@ -533,6 +533,7 @@ namespace QNetwork.Http.Server
                             {
                                 manager = new CQCacheManager();
                                 this.m_CacheManagers.Add(nickname, manager);
+
                             }
                         }
                         else
@@ -584,11 +585,11 @@ namespace QNetwork.Http.Server
             return true;
         }
 
-        public bool LogCache(LogStates_Cache state, DateTime time, string id, string name)
+        public bool LogCache(LogStates_Cache state, DateTime time, string manager_id, string cache_id, string name)
         {
             if (this.Logger != null)
             {
-                this.Logger.LogCache(state, time, id, name);
+                this.Logger.LogCache(state, time,manager_id, cache_id, name);
             }
             //System.Diagnostics.Trace.WriteLine(string.Format("State:{0} Handler:{1} Process:{2} time:{3}"
             //   , state
