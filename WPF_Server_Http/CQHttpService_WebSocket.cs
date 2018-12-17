@@ -59,7 +59,7 @@ namespace WPF_Server_Http
                             CQTCPHandler handler;
                             this.Extension.ControlTransfer(req.HandlerID, out handler);
                             websocket.Open(handler, req.HeaderRaw, req.HeaderRaw.Length);
-                            this.Extension.CacheControl<CQWebSocket>(CacheOperates.Create, websocket.ID, ref websocket, false, "websocket");
+                            this.Extension.CacheControl<CQWebSocket>(CacheOperates.Create, websocket.ID, ref websocket, "websocket");
                             process_result_code = ServiceProcessResults.WebSocket;
                         }
                     }

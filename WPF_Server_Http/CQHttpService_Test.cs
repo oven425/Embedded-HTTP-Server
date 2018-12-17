@@ -162,11 +162,11 @@ namespace WPF_Server_Http
                         CQHttpRequest.Parse(req.URL.Query, out param);
                         if (param.ContainsKey("ID") == true)
                         {
-                            this.Extension.CacheControl(CacheOperates.Get, param["ID"], ref cc, false, "Test1");
+                            this.Extension.CacheControl(CacheOperates.Get, param["ID"], ref cc, "Test1");
                         }
                         else
                         {
-                            this.Extension.CacheControl(CacheOperates.Get, "", ref cc, true, "Test1");
+                            this.Extension.CacheControl(CacheOperates.Get, "", ref cc, "Test1");
                         }
                         if (cc == null)
                         {
@@ -200,11 +200,11 @@ namespace WPF_Server_Http
                         CQHttpRequest.Parse(req.URL.Query, out param);
                         if (param.ContainsKey("ID") == true)
                         {
-                            this.Extension.CacheControl(CacheOperates.Get, param["ID"], ref cc, false);
+                            this.Extension.CacheControl(CacheOperates.Get, param["ID"], ref cc, "Test1");
                         }
                         else
                         {
-                            this.Extension.CacheControl(CacheOperates.Get, "", ref cc);
+                            this.Extension.CacheControl(CacheOperates.Create, "", ref cc, "Test1");
                         }
 
                         if (cc == null)

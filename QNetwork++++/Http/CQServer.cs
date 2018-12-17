@@ -511,14 +511,16 @@ namespace QNetwork.Http.Server
             Monitor.Enter(this.m_CacheManagersLock);
             if(this.m_CacheManagers.ContainsKey(name) == false)
             {
-                this.m_CacheManagers.Add(name, new T());
-                this.LogCache(LogStates_Cache.CreateManager, DateTime.Now, name, "", this.m_CacheManagers[name].NickName);
+                T aa = new T();
+                aa.Logger = this;
+                this.m_CacheManagers.Add(name, aa);
+                this.LogCache(LogStates_Cache.CreateManager, DateTime.Now, name, "", "");
             }
             Monitor.Exit(this.m_CacheManagersLock);
             return result;
         }
 
-        virtual public bool CacheControl<T>(CacheOperates op, string id, ref T cache, bool not_exist_build, string nickname = "default") where T : CQCacheBase, new()
+        virtual public bool CacheControl<T>(CacheOperates op, string id, ref T cache, string manager_id = "default") where T : CQCacheBase, new()
         {
             bool result = true;
             Monitor.Enter(this.m_CacheManagersLock);
@@ -527,33 +529,25 @@ namespace QNetwork.Http.Server
                 case CacheOperates.Get:
                     {
                         CQCacheManager manager = null;
-                        if (this.m_CacheManagers.ContainsKey(nickname) == false)
+                        if (this.m_CacheManagers.ContainsKey(manager_id) == true)
                         {
-                            if(not_exist_build == true)
-                            {
-                                manager = new CQCacheManager();
-                                this.m_CacheManagers.Add(nickname, manager);
-
-                            }
-                        }
-                        else
-                        {
-                            manager = this.m_CacheManagers[nickname];
+                            manager = this.m_CacheManagers[manager_id];
                         }
                         if(manager != null)
                         {
-                            cache = manager.Get<T>(id, not_exist_build);
+                            cache = manager.Get<T>(id, true);
                         }
                     }
                     break;
                 case CacheOperates.Create:
                     {
-                        if (this.m_CacheManagers.ContainsKey(nickname) == true)
+                        if (this.m_CacheManagers.ContainsKey(manager_id) == true)
                         {
-                            CQCacheManager manager = this.m_CacheManagers[nickname] as CQCacheManager;
+                            CQCacheManager manager = this.m_CacheManagers[manager_id];
                             if(manager != null)
                             {
-                                manager.Create<T>(id);
+                                cache = manager.Create<T>(id);
+                                this.LogCache(LogStates_Cache.CreateCahce, DateTime.Now, manager_id, cache.ID, "");
                             }
                             else
                             {

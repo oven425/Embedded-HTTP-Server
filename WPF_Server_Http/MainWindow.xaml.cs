@@ -91,80 +91,6 @@ namespace WPF_Server_Http
             }
         }
 
-        //Dictionary<CQSocketListen_Address, List<CQHandlerData>> m_Handler = new Dictionary<CQSocketListen_Address, List<CQHandlerData>>();
-
-        //private bool M_TestServer_OnHttpHandlerChange(CQHttpHandler handler, bool isadd)
-        //{
-        //    if (isadd == true)
-        //    {
-        //        var vv = this.m_MainUI.AddressList.FirstOrDefault(x => x.Address == handler.Accept_Address);
-        //        if(vv!=null)
-        //        {
-        //            this.Dispatcher.Invoke(new Action(() =>
-        //            {
-        //                vv.Handlers.Add(new CQHandlerData() { Handler = handler });
-        //            }));
-                    
-        //        }
-        //    }
-        //    else
-        //    {
-        //        var vv = this.m_MainUI.AddressList.FirstOrDefault(x => x.Address == handler.Accept_Address);
-        //        if (vv != null)
-        //        {
-        //            var hh = vv.Handlers.FirstOrDefault(x => x.Handler == handler);
-        //            hh.End = DateTime.Now;
-        //        }
-        //    }
-        //    return true;
-        //}
-
-        //private bool M_TestServer_OnServiceChange(CQHttpRequest req, IQHttpService service, Request_ServiceStates isadd)
-        //{
-        //    this.Dispatcher.Invoke(new Action(() =>
-        //    {
-        //        switch (isadd)
-        //        {
-        //            case Request_ServiceStates.Request:
-        //                {
-        //                    this.m_MainUI.Request_Services.Add(new CQRequest_Service() { Request = req });
-        //                }
-        //                break;
-        //            case Request_ServiceStates.Service_Begin:
-        //                {
-        //                    var vv = this.m_MainUI.Request_Services.FirstOrDefault(x => x.Request == req);
-        //                    if (vv != null)
-        //                    {
-        //                        vv.Service = service;
-        //                    }
-        //                }
-        //                break;
-        //            case Request_ServiceStates.Response:
-        //                {
-
-        //                }
-        //                break;
-        //            case Request_ServiceStates.End:
-        //                {
-
-        //                }
-        //                break;
-        //        }
-
-        //    }));
-        //    return true;
-        //}
-
-        //private bool M_TestServer_OnListentStateChange(CQSocketListen_Address listen_addres, ListenStates state)
-        //{
-        //    var vv = this.m_MainUI.AddressList.Where(x => x.Address == listen_addres);
-        //    foreach (var oo in vv)
-        //    {
-        //        oo.ListenState = state;
-        //    }
-        //    return true;
-        //}
-
         private void button_add_listen_Click(object sender, RoutedEventArgs e)
         {
             CQSocketListen_Address ssd = new CQSocketListen_Address() { IP = this.m_MainUI.Listen_IP, Port = this.m_MainUI.Listen_Port };
@@ -192,8 +118,30 @@ namespace WPF_Server_Http
 
         public bool LogProcess(LogStates_Process state, string handler_id, string process_id, DateTime time, CQHttpRequest request, CQHttpResponse response)
         {
+            switch(state)
+            {
+                case LogStates_Process.CreateHandler:
+                    {
+
+                    }
+                    break;
+                case LogStates_Process.CreateRequest:
+                    {
+
+                    }
+                    break;
+                case LogStates_Process.ProcessRequest:
+                    {
+
+                    }
+                    break;
+                case LogStates_Process.CreateResponse:
+                    {
+
+                    }
+                    break;
+            }
             return true;
-            //throw new NotImplementedException();
         }
 
         public bool LogAccept(LogStates_Accept state, string ip, int port, CQSocketListen obj)
@@ -220,22 +168,47 @@ namespace WPF_Server_Http
             {
                 case LogStates_Cache.CreateManager:
                     {
-                        System.Diagnostics.Trace.WriteLine("");
+                        CQCache cache = new CQCache();
+                        cache.ManagerID = manager_id;
+                        cache.Name = name;
+                        cache.Begin = time;
+                        cache.End = DateTime.MaxValue;
+                        this.Dispatcher.Invoke(new Action(() =>
+                        {
+                            this.m_MainUI.Caches.Add(cache);
+                        }));
                     }
                     break;
                 case LogStates_Cache.CreateCahce:
                     {
-                        System.Diagnostics.Trace.WriteLine("");
+                        CQCache cache = new CQCache();
+                        cache.ManagerID = manager_id;
+                        cache.CacheID = cache_id;
+                        cache.Name = name;
+                        cache.Begin = time;
+                        cache.End = DateTime.MaxValue;
+                        this.Dispatcher.Invoke(new Action(() =>
+                        {
+                            this.m_MainUI.Caches.Add(cache);
+                        }));
                     }
                     break;
                 case LogStates_Cache.DestoryCache:
                     {
-                        System.Diagnostics.Trace.WriteLine("");
+                        var vv = this.m_MainUI.Caches.Where(x => x.CacheID == cache_id);
+                        foreach (var oo in vv)
+                        {
+                            oo.End = time;
+                        }
                     }
                     break;
                 case LogStates_Cache.DestoryManager:
                     {
-                        System.Diagnostics.Trace.WriteLine("");
+                        var vv = this.m_MainUI.Caches.Where(x => x.ManagerID == manager_id);
+                        foreach(var oo in vv)
+                        {
+                            oo.End = time;
+                        }
                     }
                     break;
             }

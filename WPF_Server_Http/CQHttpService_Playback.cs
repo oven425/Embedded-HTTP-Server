@@ -62,7 +62,7 @@ namespace WPF_Server_Http
                         CQTCPHandler tcp;
                         this.Extension.ControlTransfer(req.HandlerID, out tcp);
 
-                        this.Extension.CacheControl<CQCache_Playback>(CacheOperates.Get, "", ref cache, true, "playback");
+                        this.Extension.CacheControl<CQCache_Playback>(CacheOperates.Get, "", ref cache, "playback");
                         cache.Open(tcp, req);
                     }
                     break;

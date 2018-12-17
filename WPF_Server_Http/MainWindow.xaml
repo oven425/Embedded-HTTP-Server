@@ -63,9 +63,11 @@
                 <ListView Grid.Column="2" ItemsSource="{Binding Caches}">
                     <ListView.View>
                         <GridView>
+                            <GridViewColumn Header="Manager ID" DisplayMemberBinding="{Binding ManagerID}"/>
+                            <GridViewColumn Header="Cache ID" DisplayMemberBinding="{Binding CacheID}"/>
                             <GridViewColumn Header="Begin" DisplayMemberBinding="{Binding Begin, StringFormat={}{0:yyyy/MM/dd HH:mm:ss.fff}}"/>
                             <GridViewColumn Header="End" DisplayMemberBinding="{Binding End, StringFormat={}{0:yyyy/MM/dd HH:mm:ss.fff}}"/>
-                            <GridViewColumn Header="ID" DisplayMemberBinding="{Binding Handler.ID}"/>
+                            
                         </GridView>
                     </ListView.View>
                 </ListView>

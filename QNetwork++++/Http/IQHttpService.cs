@@ -65,7 +65,7 @@ namespace QNetwork.Http.Server
     {
         bool SendMultiPart(List<CQHttpResponse> datas);
         bool ControlTransfer(string handlerid, out CQTCPHandler tcphandler);
-        bool CacheControl<T>(CacheOperates op, string id,  ref T cache, bool not_exist_build=true, string nickname = "default") where T : CQCacheBase, new();
+        bool CacheControl<T>(CacheOperates op, string id,  ref T cache, string manager_id = "default") where T : CQCacheBase, new();
         bool CacheManger_Registered<T>(string name = "default") where T : CQCacheManager, new();
     }
 

@@ -58,7 +58,8 @@ namespace WPF_Server_Http
 
         public override bool IsTimeOut(TimeSpan timeout)
         {
-            return base.IsTimeOut(timeout);
+            TimeSpan ts = DateTime.Now - this.m_BeginTime;
+            return ts > timeout;
         }
     }
 

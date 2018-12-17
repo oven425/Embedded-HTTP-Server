@@ -28,18 +28,30 @@ namespace WPF_Server_Http.Define
         void Update(string name) { if (this.PropertyChanged != null) { this.PropertyChanged(this, new PropertyChangedEventArgs(name)); } }
     }
 
+    public class CQProcess : INotifyPropertyChanged
+    {
+        public event PropertyChangedEventHandler PropertyChanged;
+        void Update(string name) { if (this.PropertyChanged != null) { this.PropertyChanged(this, new PropertyChangedEventArgs(name)); } }
+    }
+
     public class CQCache : INotifyPropertyChanged
     {
+        LogStates_Cache m_State { set; get; }
         DateTime m_Begin;
         DateTime m_End;
-        string m_ID;
+        string m_ManagerID;
+        string m_CacheID;
+        string m_Name;
         public CQCache()
         {
 
         }
+        public LogStates_Cache State { set { this.m_State = value; this.Update("State"); } get { return this.m_State; } }
         public DateTime Begin { set { this.m_Begin = value; this.Update("Begin"); } get { return this.m_Begin; } }
         public DateTime End { set { this.m_End = value; this.Update("End"); } get { return this.m_End; } }
-        public string ID { set { this.m_ID = value; this.Update("ID"); } get { return this.m_ID; } }
+        public string ManagerID { set { this.m_ManagerID = value; this.Update("ManagerID"); } get { return this.m_ManagerID; } }
+        public string CacheID { set { this.m_CacheID = value; this.Update("CacheID"); } get { return this.m_CacheID; } }
+        public string Name { set { this.m_Name = value; this.Update("Name"); } get { return this.m_Name; } }
         public event PropertyChangedEventHandler PropertyChanged;
         void Update(string name) { if (this.PropertyChanged != null) { this.PropertyChanged(this, new PropertyChangedEventArgs(name)); } }
     }
