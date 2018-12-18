@@ -15,7 +15,6 @@ namespace WPF_Server_Http
         List<string> m_Methods;
         
         
-        bool m_IsEnd = false;
         public CQHttpService_Playback()
         {
             

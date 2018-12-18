@@ -52,10 +52,6 @@ namespace QNetwork.Http.Server
                 closehandlers.Clear();
                 foreach (CQHttpHandler handler in vv)
                 {
-                    //if (this.OnHttpHandlerChange != null)
-                    //{
-                    //    this.OnHttpHandlerChange(handler, false);
-                    //}
                     this.LogProcess(LogStates_Process.DestoryHandler, handler.ID, "", DateTime.Now, null, null);
                     handler.Close();
                     

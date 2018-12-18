@@ -74,11 +74,32 @@
             </GroupBox>
         </Grid>
         <GroupBox Header="Process" Grid.Row="2">
-            <ListView>
+            <ListView ItemsSource="{Binding ProcessList}">
                 <ListView.View>
                     <GridView>
-                        <GridViewColumn Header="ID"/>
-                        <GridViewColumn Header="Create"/>
+                        <GridViewColumn Header="Handler ID" Width="80">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding HandlerID}" TextTrimming="CharacterEllipsis"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Header="Process ID" Width="80">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding ProcessID}" TextTrimming="CharacterEllipsis"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Header="Request" DisplayMemberBinding="{Binding Request}"/>
+                        <GridViewColumn Header="CreateHandler" DisplayMemberBinding="{Binding CreateHandler, StringFormat={}{0:HH:mm:ss.fff}}"/>
+                        <GridViewColumn Header="CreateRequest" DisplayMemberBinding="{Binding CreateRequest, StringFormat={}{0:HH:mm:ss.fff}}"/>
+                        <GridViewColumn Header="ProcessRequest" DisplayMemberBinding="{Binding ProcessRequest, StringFormat={}{0:HH:mm:ss.fff}}"/>
+                        <GridViewColumn Header="CreateResponse" DisplayMemberBinding="{Binding CreateResponse, StringFormat={}{0:HH:mm:ss.fff}}"/>
+                        <GridViewColumn Header="ProcessResponse" DisplayMemberBinding="{Binding ProcessResponse, StringFormat={}{0:HH:mm:ss.fff}}"/>
+                        <GridViewColumn Header="SendResponse" DisplayMemberBinding="{Binding SendResponse, StringFormat={}{0:HH:mm:ss.fff}}"/>
+                        <GridViewColumn Header="SendResponse_Compelete" DisplayMemberBinding="{Binding SendResponse_Compelete, StringFormat={}{0:HH:mm:ss.fff}}"/>
+                        <GridViewColumn Header="DestoryHandler" DisplayMemberBinding="{Binding DestoryHandler, StringFormat={}{0:HH:mm:ss.fff}}"/>
                     </GridView>
                 </ListView.View>
             </ListView>

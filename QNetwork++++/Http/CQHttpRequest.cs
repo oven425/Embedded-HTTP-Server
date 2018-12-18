@@ -34,7 +34,8 @@ namespace QNetwork.Http.Server
             this.m_Address = address;
             this.CreateTime = DateTime.Now;
             this.m_HandlerID = handlerid;
-            this.m_ProcessID = string.Format("{0}_{1}", this.m_HandlerID, this.CreateTime.Ticks);
+            this.m_ProcessID = Guid.NewGuid().ToString();
+            //this.m_ProcessID = string.Format("{0}_{1}", this.m_HandlerID, this.CreateTime.Ticks);
             this.Headers = new Dictionary<string, string>();
         }
 

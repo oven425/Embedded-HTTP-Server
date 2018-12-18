@@ -122,22 +122,90 @@ namespace WPF_Server_Http
             {
                 case LogStates_Process.CreateHandler:
                     {
-
+                        CQProcess process = new CQProcess();
+                        process.HandlerID = handler_id;
+                        process.CreateHandler = time;
+                        this.Dispatcher.Invoke(new Action(()=>
+                        {
+                            this.m_MainUI.ProcessList.Add(process);
+                        }));
                     }
                     break;
                 case LogStates_Process.CreateRequest:
                     {
-
+                        CQProcess process = new CQProcess();
+                        process.HandlerID = handler_id;
+                        process.ProcessID = process_id;
+                        process.Request = request.URL.LocalPath;
+                        process.CreateRequest = time;
+                        this.Dispatcher.Invoke(new Action(() =>
+                        {
+                            this.m_MainUI.ProcessList.Add(process);
+                        }));
                     }
                     break;
                 case LogStates_Process.ProcessRequest:
                     {
-
+                        var vv = this.m_MainUI.ProcessList.Where(x => x.ProcessID == process_id);
+                        foreach (var oo in vv)
+                        {
+                            oo.ProcessRequest = time;
+                        }
                     }
                     break;
                 case LogStates_Process.CreateResponse:
                     {
+                        var vv = this.m_MainUI.ProcessList.Where(x => x.ProcessID == process_id);
+                        foreach (var oo in vv)
+                        {
+                            oo.CreateResponse = time;
+                        }
+                    }
+                    break;
+                case LogStates_Process.ProcessResponse:
+                    {
+                        var vv = this.m_MainUI.ProcessList.Where(x => x.ProcessID == process_id);
+                        foreach (var oo in vv)
+                        {
+                            oo.ProcessResponse = time;
+                        }
+                    }
+                    break;
+                case LogStates_Process.SendResponse:
+                    {
+                        var vv = this.m_MainUI.ProcessList.Where(x => x.ProcessID == process_id);
+                        foreach (var oo in vv)
+                        {
+                            oo.SendResponse = time;
+                        }
+                    }
+                    break;
+                case LogStates_Process.SendResponse_Compelete:
+                    {
+                        var vv = this.m_MainUI.ProcessList.Where(x => x.ProcessID == process_id);
+                        foreach (var oo in vv)
+                        {
+                            oo.SendResponse_Compelete = time;
+                        }
+                    }
+                    break;
+                case LogStates_Process.DestoryRequest:
+                    {
 
+                    }
+                    break;
+                case LogStates_Process.DestoryResponse:
+                    {
+
+                    }
+                    break;
+                case LogStates_Process.DestoryHandler:
+                    {
+                        var vv = this.m_MainUI.ProcessList.Where(x => x.HandlerID == handler_id);
+                        foreach (var oo in vv)
+                        {
+                            oo.DestoryHandler = time;
+                        }
                     }
                     break;
             }
