@@ -10,24 +10,14 @@ using System.Text;
 
 namespace WPF_Server_Http
 {
+    [CQServiceSetting(Methods = new string[] { "/PLAYBACK", "/PLAYBACKCONTROL" })]
     public class CQHttpService_Playback : IQHttpService
     {
-        List<string> m_Methods;
-        
-        
         public CQHttpService_Playback()
         {
-            
-            this.m_Methods = new List<string>();
-            this.m_Methods.Add("/PLAYBACK");
         }
 
-        
-
         public IQHttpServer_Extension Extension { set; get; }
-
-        public List<string> Methods => this.m_Methods;
-
         public IQHttpServer_Log Logger { set; get; }
 
         public bool CloseHandler(List<string> handlers)
@@ -61,7 +51,7 @@ namespace WPF_Server_Http
                         CQTCPHandler tcp;
                         this.Extension.ControlTransfer(req.HandlerID, out tcp);
 
-                        this.Extension.CacheControl<CQCache_Playback>(CacheOperates.Get, "", ref cache, "playback");
+                        this.Extension.CacheControl<CQCache_Playback>(CacheOperates.Create, "", ref cache, "playback");
                         cache.Open(tcp, req);
                     }
                     break;
@@ -69,8 +59,6 @@ namespace WPF_Server_Http
 
             return result;
         }
-
-        
 
         public bool RegisterCacheManager()
         {

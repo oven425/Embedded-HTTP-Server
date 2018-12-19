@@ -429,6 +429,8 @@ namespace QNetwork.Http.Server
         List<CQRouterData> m_Service = new List<CQRouterData>();
         public bool Open(List<CQSocketListen_Address> address, List<IQHttpService> services, bool adddefault=true)
         {
+            
+
             bool result = true;
 
             for (int i = 0; i < address.Count; i++)
@@ -438,19 +440,31 @@ namespace QNetwork.Http.Server
             for (int i = 0; i < services.Count; i++)
             {
                 CQRouterData rd = new CQRouterData();
-                rd.Urls.AddRange(services[i].Methods);
-                rd.Service = services[i].GetType();
-                this.m_Service.Add(rd);
+                var dnAttribute = services[i].GetType().GetCustomAttributes(typeof(CQServiceSetting), true).FirstOrDefault();
+                if(dnAttribute != null)
+                {
+                    CQServiceSetting setting = dnAttribute as CQServiceSetting;
+                    rd.Urls.AddRange(setting.Methods);
+                    rd.Service = services[i].GetType();
+                    this.m_Service.Add(rd);
+                }
+                
             }
 
             if (adddefault == true)
             {
                 CQHttpDefaultService ds = new CQHttpDefaultService();
-                CQRouterData rd = new CQRouterData();
-                rd.Urls.AddRange(ds.Methods);
-                rd.Service = ds.GetType();
-                this.m_Service.Add(rd);
+                var dnAttribute = ds.GetType().GetCustomAttributes(typeof(CQServiceSetting), true).FirstOrDefault();
+                if (dnAttribute != null)
+                {
+                    CQServiceSetting setting = dnAttribute as CQServiceSetting;
+                    CQRouterData rd = new CQRouterData();
+                    rd.Urls.AddRange(setting.Methods);
+                    rd.Service = ds.GetType();
+                    this.m_Service.Add(rd);
 
+
+                }
             }
             if (this.m_Thread.IsBusy == false)
             {

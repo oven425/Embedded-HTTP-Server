@@ -10,23 +10,21 @@ using System.Threading;
 
 namespace QNetwork.Http.Server.Service
 {
+    [CQServiceSetting(Methods = new string[] { "/PostTes", "/favicon.ico", "/Test","" })]
     public class CQHttpDefaultService : IQHttpService
     {
         List<string> m_Icons = new List<string>();
-        List<string> m_Methods = new List<string>();
         public CQHttpDefaultService()
         {
             string str = System.AppDomain.CurrentDomain.SetupInformation.ApplicationBase;
             string[] files = Directory.GetFiles(str, "*.ico");
             this.m_Icons.AddRange(files);
-            this.m_Methods.Add("/");
-            this.m_Methods.Add("/favicon.ico");
         }
 
         void CoppyStream(System.IO.Stream src, System.IO.Stream dst)
         {
             byte[] buf = new byte[8192];
-            while(src.Position < src.Length)
+            while (src.Position < src.Length)
             {
                 int read_len = src.Read(buf, 0, buf.Length);
                 dst.Write(buf, 0, read_len);
@@ -34,10 +32,9 @@ namespace QNetwork.Http.Server.Service
         }
 
         public IQHttpServer_Extension Extension { set; get; }
-        public List<string> Methods => this.m_Methods;
 
         public IQHttpServer_Log Logger { set; get; }
-
+        
         public bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
         {
             process_result_code = ServiceProcessResults.OK;
@@ -64,14 +61,14 @@ namespace QNetwork.Http.Server.Service
                             resp.Content.Position = 0;
                             resp.ContentLength = resp.Content.Length;
                             resp.ContentType = "image/x-icon";
-                            resp.Connection = Connections.KeepAlive;
+                            resp.Connection = Connections.Close;
                         }
                         else
                         {
                             resp.Content = null;
                             resp.ContentLength = 0;
                             resp.ContentType = "";
-                            resp.Connection = Connections.KeepAlive;
+                            resp.Connection = Connections.Close;
                         }
 
                     }
@@ -98,31 +95,6 @@ namespace QNetwork.Http.Server.Service
             resp.Set200();
 
             return true;
-        }
-
-        public bool TimeOut_Cache()
-        {
-            return true;
-            //return base.TimeOut_Cache();
-            //bool result = true;
-            //Monitor.Enter(this.m_CachesLock);
-            //try
-            //{
-            //    Monitor.Enter(this.m_CachesLock);
-
-            //}
-            //catch (Exception ee)
-            //{
-            //    System.Diagnostics.Trace.WriteLine(ee.Message);
-            //    System.Diagnostics.Trace.WriteLine(ee.StackTrace);
-            //    result = false;
-            //}
-            //finally
-            //{
-            //    Monitor.Exit(this.m_CachesLock);
-            //}
-            //Monitor.Exit(this.m_CachesLock);
-            //return result;
         }
 
         public bool CloseHandler(List<string> handlers)

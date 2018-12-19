@@ -25,7 +25,7 @@ namespace QNetwork.Http.Server.Service
         bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code);
         bool CloseHandler(List<string> handlers);
         IQHttpServer_Extension Extension { set; get; }
-        List<string> Methods { get; }
+        //List<string> Methods { get; }
     }
 
     public interface IQHttpRouter

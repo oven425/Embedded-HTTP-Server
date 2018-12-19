@@ -8,19 +8,20 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace WPF_Server_Http
+namespace WPF_Server_Http.Service
 {
+    [CQServiceSetting(Methods = new string[] { "/Push", "/EVENT4", "/TEST", "/TEST1", "/PostTest" })]
     public class CQHttpService_Test : IQHttpService
     {
         BackgroundWorker m_Thread_PushT;
         //int m_ID = 1;
         List<string> m_PushHandlers = new List<string>();
         List<string> m_NewPushHandlers = new List<string>();
-        List<string> m_Methods = new List<string>();
+        //List<string> m_Methods = new List<string>();
 
         public IQHttpServer_Extension Extension { set; get; }
 
-        public List<string> Methods => this.m_Methods;
+        //public List<string> Methods => this.m_Methods;
 
         public IQHttpServer_Log Logger { set; get; }
 
@@ -34,11 +35,11 @@ namespace WPF_Server_Http
         {
             this.m_Thread_PushT = new BackgroundWorker();
             this.m_Thread_PushT.DoWork += new DoWorkEventHandler(m_Thread_PushT_DoWork);
-            this.m_Methods.Add("/Push");
-            this.m_Methods.Add("/EVENT4");
-            this.m_Methods.Add("/TEST");
-            this.m_Methods.Add("/TEST1");
-            this.m_Methods.Add("/PostTest");
+            //this.m_Methods.Add("/Push");
+            //this.m_Methods.Add("/EVENT4");
+            //this.m_Methods.Add("/TEST");
+            //this.m_Methods.Add("/TEST1");
+            //this.m_Methods.Add("/PostTest");
         }
 
         void m_Thread_PushT_DoWork(object sender, DoWorkEventArgs e)
@@ -232,26 +233,6 @@ namespace WPF_Server_Http
                     }
                     break;
             }
-            return result;
-        }
-
-        public bool TimeOut_Cache()
-        {
-            bool result = true;
-            //Monitor.Enter(this.m_CachesLock);
-            //List<string> keys = new List<string>();
-            //for (int i = 0; i < this.m_Caches.Count; i++)
-            //{
-            //    if (this.m_Caches.ElementAt(i).Value.IsTimeOut(TimeSpan.FromSeconds(20)) == true)
-            //    {
-            //        keys.Add(this.m_Caches.ElementAt(i).Key);
-            //    }
-            //}
-            //foreach (string key in keys)
-            //{
-            //    this.m_Caches.Remove(key);
-            //}
-            //Monitor.Exit(this.m_CachesLock);
             return result;
         }
 

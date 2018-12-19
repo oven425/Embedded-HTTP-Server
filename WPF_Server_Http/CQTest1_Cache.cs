@@ -33,7 +33,7 @@ namespace WPF_Server_Http
         }
     }
 
-    public class CQCache_Test:CQCacheBase
+    public class CQCache_Test : CQCacheBase
     {
         public CQCache_Test()
         {

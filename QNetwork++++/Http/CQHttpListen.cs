@@ -157,6 +157,7 @@ namespace QNetwork.Http.Server.Accept
                 //System.Diagnostics.Trace.WriteLine(str);
                 this.NewClient(e.AcceptSocket, this.m_AcceptBuf, e.BytesTransferred);
                 this.m_AcceptArgs.AcceptSocket = null;
+                //Array.Clear(this.m_AcceptBuf, 0, this.m_AcceptBuf.Length);
                 if (this.m_Socket.AcceptAsync(this.m_AcceptArgs) == false)
                 {
                     this.m_AcceptArgs_Completed(this.m_Socket, this.m_AcceptArgs);

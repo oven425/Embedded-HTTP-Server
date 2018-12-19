@@ -42,6 +42,7 @@
     <Compile Include="Http\CQHttpService_ServerOperate.cs" />
     <Compile Include="Http\CQCircleStream.cs" />
     <Compile Include="Http\CQRouterData.cs" />
+    <Compile Include="Http\CQServiceSetting.cs" />
     <Compile Include="Http\IQCacheData.cs" />
     <Compile Include="Http\CQHttpDefaultService.cs" />
     <Compile Include="Http\CQHttpHandler.cs" />

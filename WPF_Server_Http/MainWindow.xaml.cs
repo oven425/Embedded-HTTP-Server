@@ -28,6 +28,7 @@ using static QNetwork.Http.Server.CQHttpServer;
 using QNetwork.Http.Server.Cache;
 using QNetwork;
 using QNetwork.Http.Server.Log;
+using WPF_Server_Http.Service;
 
 namespace WPF_Server_Http
 {
@@ -85,7 +86,6 @@ namespace WPF_Server_Http
                 services.Add(new CQHttpService_WebSocket());
                 services.Add(new CQHttpService_ServerOperate());
                 services.Add(new CQHttpService_WebMediaPlayer());
-                services.Add(new CQHttpService_Test());
                 this.m_TestServer.Logger = this;
                 this.m_TestServer.Open(this.m_MainUI.AddressList.Select(x => x.Address).ToList(), services, true);
             }
