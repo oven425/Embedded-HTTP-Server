@@ -12,6 +12,7 @@ using QNetwork.Http.Server.Accept;
 using QNetwork.Http.Server.Service;
 using QNetwork.Http.Server.Cache;
 using QNetwork.Http.Server.Log;
+using System.Reflection;
 
 namespace QNetwork.Http.Server
 {
@@ -429,10 +430,34 @@ namespace QNetwork.Http.Server
         List<CQRouterData> m_Service = new List<CQRouterData>();
         public bool Open(List<CQSocketListen_Address> address, List<IQHttpService> services, bool adddefault=true)
         {
-            
-
             bool result = true;
+            var vv = typeof(CQHttpDefaultService).GetCustomAttributes(typeof(CQServiceMethod), true);
+            //MethodBase method = MethodBase.GetCurrentMethod();
+            //CQServiceMethod attr = (CQServiceMethod)method.GetCustomAttributes(typeof(CQServiceMethod), true)[0];
 
+            var vv1  = typeof(CQHttpDefaultService).GetMethods();
+            foreach(var oo in vv1)
+            {
+                ParameterInfo[] param = oo.GetParameters();
+                MethodBase method = MethodBase.GetMethodFromHandle(oo.MethodHandle);
+                
+                CQServiceMethod attr = (CQServiceMethod)method.GetCustomAttributes(typeof(CQServiceMethod), true).FirstOrDefault();
+                if(attr != null)
+                {
+                    CQHttpResponse resp = null;
+                    ServiceProcessResults hr = ServiceProcessResults.None;
+                    object[] pp = new object[3];
+                    pp[0] = new CQHttpRequest("", "");
+                    pp[1] = resp;
+                    pp[2] = hr;
+                    using (CQHttpDefaultService ino = new CQHttpDefaultService())
+                    {
+                        oo.Invoke(ino, pp);
+                    }
+                        
+                    System.Diagnostics.Trace.WriteLine("");
+                }
+            }
             for (int i = 0; i < address.Count; i++)
             {
                 this.OpenListen(address[i]);
