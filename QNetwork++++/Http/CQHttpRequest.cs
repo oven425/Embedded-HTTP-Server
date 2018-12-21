@@ -59,11 +59,12 @@ namespace QNetwork.Http.Server
                         {
                             if (dst.ContainsKey(sl_2[0]) == true)
                             {
-                                dst[sl_2[0]] = sl_2[1];
+                               
+                                dst[sl_2[0]] = Uri.UnescapeDataString(sl_2[1]);
                             }
                             else
                             {
-                                dst.Add(sl_2[0], sl_2[1]);
+                                dst.Add(sl_2[0], Uri.UnescapeDataString(sl_2[1]));
                             }
                         }
                     }

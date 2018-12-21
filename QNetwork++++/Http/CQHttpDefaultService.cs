@@ -112,7 +112,6 @@ namespace QNetwork.Http.Server.Service
             return true;
         }
 
-
         public bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
         {
             process_result_code = ServiceProcessResults.OK;
