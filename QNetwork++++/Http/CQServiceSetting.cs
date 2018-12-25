@@ -18,7 +18,12 @@ namespace QNetwork.Http.Server.Service
     [AttributeUsage(AttributeTargets.Class)]
     public class CQServiceRoot : Attribute
     {
+        public CQServiceRoot()
+        {
+            this.LifeType = LifeTypes.Singleton;
+        }
         public CQServiceRoot(string root)
+            : this()
         {
             this.Root = root;
         }
@@ -27,6 +32,12 @@ namespace QNetwork.Http.Server.Service
             return this.Root;
         }
         public string Root { set; get; }
+        public enum LifeTypes
+        {
+            Singleton,
+            Transient
+        }
+        public LifeTypes LifeType { set; get; }
     }
 
     [AttributeUsage(AttributeTargets.Method)]
