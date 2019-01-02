@@ -21,7 +21,7 @@ namespace QNetwork.Http.Server.Service
     public interface IQHttpService : IDisposable
     {
         IQHttpServer_Log Logger { set; get; }
-        bool RegisterCacheManager();
+        //bool RegisterCacheManager();
         bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code);
         bool CloseHandler(List<string> handlers);
         IQHttpServer_Extension Extension { set; get; }

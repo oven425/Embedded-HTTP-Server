@@ -11,7 +11,8 @@ using System.Threading;
 
 namespace QNetwork.Http.Server.Service
 {
-    [CQServiceSetting(Methods = new string[] { "/PostTes", "/favicon.ico", "/Test","" })]
+    //[CQServiceSetting(Methods = new string[] { "/PostTes", "/favicon.ico", "/Test","" })]
+    [CQServiceRoot()]
     public class CQHttpDefaultService : IQHttpService
     {
         List<string> m_Icons = new List<string>();
@@ -96,7 +97,7 @@ namespace QNetwork.Http.Server.Service
             return true;
         }
 
-        [CQServiceMethod("")]
+        [CQServiceMethod("/")]
         public bool Default(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
         {
             process_result_code = ServiceProcessResults.OK;

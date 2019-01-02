@@ -15,6 +15,12 @@ namespace QNetwork.Http.Server.Service
         //public string Method { set; get; }
     }
 
+    public enum LifeTypes
+    {
+        Transient,
+        Singleton
+    }
+
     [AttributeUsage(AttributeTargets.Class)]
     public class CQServiceRoot : Attribute
     {
@@ -32,17 +38,17 @@ namespace QNetwork.Http.Server.Service
             return this.Root;
         }
         public string Root { set; get; }
-        public enum LifeTypes
-        {
-            Singleton,
-            Transient
-        }
+        
         public LifeTypes LifeType { set; get; }
     }
 
     [AttributeUsage(AttributeTargets.Method)]
     public class CQServiceMethod : Attribute
     {
+        public CQServiceMethod()
+        {
+            this.LocalPath = "/";
+        }
         public CQServiceMethod(string local_path)
         {
             this.LocalPath = local_path;

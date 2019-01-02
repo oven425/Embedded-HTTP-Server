@@ -70,6 +70,8 @@ namespace QNetwork.Http.Server.Cache
         #endregion
     }
 
+    
+
     public class CQCacheManager
     {
         public string NickName { set; get; }

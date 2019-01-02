@@ -40,6 +40,10 @@ namespace QNetwork.Http.Server
             this.m_Thread = new BackgroundWorker();
             this.m_Thread.DoWork += new DoWorkEventHandler(m_Thread_DoWork);
             this.Routers = new List<IQHttpRouter>();
+
+            
+            CQCacheID_Default<byte> aa = new CQCacheID_Default<byte>();
+            aa.NewID();
         }
 
         object m_SessionsLock = new object();
@@ -315,10 +319,12 @@ namespace QNetwork.Http.Server
         protected virtual IQHttpService GetService(CQHttpRequest request)
         {
             IQHttpService service = null;
-            var vv = this.m_Service.FirstOrDefault(x => x.Urls.Any(y => y == request.URL.LocalPath) == true);
+            //var vv = this.m_Service.FirstOrDefault(x => x.Urls.Any(y => y == request.URL.LocalPath) == true);
+            var vv = this.m_Service.FirstOrDefault(x => x.Url == request.URL.LocalPath);
             if (vv != null)
             {
                 service = Activator.CreateInstance(vv.Service) as IQHttpService;
+                
             }
             return service;
         }
@@ -335,7 +341,7 @@ namespace QNetwork.Http.Server
                 //this.ServiceChange(request, instance, Request_ServiceStates.Service_Begin);
                 this.LogProcess(LogStates_Process.ProcessRequest, request.HandlerID, request.ProcessID, DateTime.Now, request, null);
                 instance.Extension = this;
-                instance.RegisterCacheManager();
+                //instance.RegisterCacheManager();
                 if (instance != null)
                 {
                     instance.Process(request, out resp, out process_result_code);
@@ -432,64 +438,69 @@ namespace QNetwork.Http.Server
         {
             bool result = true;
             var vv = typeof(CQHttpDefaultService).GetCustomAttributes(typeof(CQServiceMethod), true);
-            //MethodBase method = MethodBase.GetCurrentMethod();
-            //CQServiceMethod attr = (CQServiceMethod)method.GetCustomAttributes(typeof(CQServiceMethod), true)[0];
+            ////MethodBase method = MethodBase.GetCurrentMethod();
+            ////CQServiceMethod attr = (CQServiceMethod)method.GetCustomAttributes(typeof(CQServiceMethod), true)[0];
 
-            var vv1  = typeof(CQHttpDefaultService).GetMethods();
-            foreach(var oo in vv1)
-            {
-                ParameterInfo[] param = oo.GetParameters();
-                MethodBase method = MethodBase.GetMethodFromHandle(oo.MethodHandle);
+            //var vv1  = typeof(CQHttpDefaultService).GetMethods();
+            //foreach(var oo in vv1)
+            //{
+            //    ParameterInfo[] param = oo.GetParameters();
+            //    MethodBase method = MethodBase.GetMethodFromHandle(oo.MethodHandle);
                 
-                CQServiceMethod attr = (CQServiceMethod)method.GetCustomAttributes(typeof(CQServiceMethod), true).FirstOrDefault();
-                if(attr != null)
-                {
-                    CQHttpResponse resp = null;
-                    ServiceProcessResults hr = ServiceProcessResults.None;
-                    object[] pp = new object[3];
-                    pp[0] = new CQHttpRequest("", "");
-                    pp[1] = resp;
-                    pp[2] = hr;
-                    using (CQHttpDefaultService ino = new CQHttpDefaultService())
-                    {
-                        oo.Invoke(ino, pp);
-                    }
+            //    CQServiceMethod attr = (CQServiceMethod)method.GetCustomAttributes(typeof(CQServiceMethod), true).FirstOrDefault();
+            //    if(attr != null)
+            //    {
+            //        CQHttpResponse resp = null;
+            //        ServiceProcessResults hr = ServiceProcessResults.None;
+            //        object[] pp = new object[3];
+            //        pp[0] = new CQHttpRequest("", "");
+            //        pp[1] = resp;
+            //        pp[2] = hr;
+            //        using (CQHttpDefaultService ino = new CQHttpDefaultService())
+            //        {
+            //            oo.Invoke(ino, pp);
+            //        }
                         
-                    System.Diagnostics.Trace.WriteLine("");
-                }
-            }
+            //        System.Diagnostics.Trace.WriteLine("");
+            //    }
+            //}
             for (int i = 0; i < address.Count; i++)
             {
                 this.OpenListen(address[i]);
             }
-            for (int i = 0; i < services.Count; i++)
-            {
-                CQRouterData rd = new CQRouterData();
-                var dnAttribute = services[i].GetType().GetCustomAttributes(typeof(CQServiceSetting), true).FirstOrDefault();
-                if(dnAttribute != null)
-                {
-                    CQServiceSetting setting = dnAttribute as CQServiceSetting;
-                    rd.Urls.AddRange(setting.Methods);
-                    rd.Service = services[i].GetType();
-                    this.m_Service.Add(rd);
-                }
+            //for (int i = 0; i < services.Count; i++)
+            //{
+            //    CQRouterData rd = new CQRouterData();
+            //    var dnAttribute = services[i].GetType().GetCustomAttributes(typeof(CQServiceSetting), true).FirstOrDefault();
+            //    if(dnAttribute != null)
+            //    {
+            //        CQServiceSetting setting = dnAttribute as CQServiceSetting;
+            //        rd.Urls.AddRange(setting.Methods);
+            //        rd.Service = services[i].GetType();
+            //        this.m_Service.Add(rd);
+            //    }
                 
-            }
+            //}
 
             if (adddefault == true)
             {
                 CQHttpDefaultService ds = new CQHttpDefaultService();
-                var dnAttribute = ds.GetType().GetCustomAttributes(typeof(CQServiceSetting), true).FirstOrDefault();
-                if (dnAttribute != null)
+                List<CQRouterData> rrs = CQRouterData.CreateRouterData(ds);
+                if(rrs.Count > 0)
                 {
-                    CQServiceSetting setting = dnAttribute as CQServiceSetting;
-                    CQRouterData rd = new CQRouterData();
-                    rd.Urls.AddRange(setting.Methods);
-                    rd.Service = ds.GetType();
-                    this.m_Service.Add(rd);
-
-
+                    this.m_Service.AddRange(rrs);
                 }
+                //var dnAttribute = ds.GetType().GetCustomAttributes(typeof(CQServiceSetting), true).FirstOrDefault();
+                //if (dnAttribute != null)
+                //{
+                //    CQServiceSetting setting = dnAttribute as CQServiceSetting;
+                //    CQRouterData rd = new CQRouterData();
+                //    rd.Urls.AddRange(setting.Methods);
+                //    rd.Service = ds.GetType();
+                //    this.m_Service.Add(rd);
+
+
+                //}
             }
             if (this.m_Thread.IsBusy == false)
             {
