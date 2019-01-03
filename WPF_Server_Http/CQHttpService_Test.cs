@@ -14,22 +14,13 @@ namespace WPF_Server_Http.Service
     public class CQHttpService_Test : IQHttpService
     {
         BackgroundWorker m_Thread_PushT;
-        //int m_ID = 1;
         List<string> m_PushHandlers = new List<string>();
         List<string> m_NewPushHandlers = new List<string>();
-        //List<string> m_Methods = new List<string>();
 
         public IQHttpServer_Extension Extension { set; get; }
 
-        //public List<string> Methods => this.m_Methods;
 
         public IQHttpServer_Log Logger { set; get; }
-
-        //static Dictionary<string, CQCacheBase> m_Caches;
-        //static CQHttpService_Test()
-        //{
-        //    m_Caches = new Dictionary<string, CQCacheBase>();
-        //}
 
         public CQHttpService_Test()
         {
@@ -106,135 +97,265 @@ namespace WPF_Server_Http.Service
             }
         }
 
-        public bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
+        [CQServiceMethod("/PostTest")]
+        public bool PostTest(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
         {
             process_result_code = 0;
             resp = null;
             bool result = true;
-            switch (req.URL.LocalPath)
+
+            process_result_code = ServiceProcessResults.OK;
+            resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+            resp.Content = new MemoryStream();
+            byte[] bb = new byte[8192];
+            while (true)
             {
-                case "/PostTest":
-                    {
-                        process_result_code = ServiceProcessResults.OK;
-                        resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
-                        resp.Content = new MemoryStream();
-                        byte[] bb = new byte[8192];
-                        while (true)
-                        {
-                            int read_len = req.Content.Read(bb, 0, bb.Length);
+                int read_len = req.Content.Read(bb, 0, bb.Length);
 
-                            resp.Content.Write(bb, 0, read_len);
-                            if (read_len != bb.Length)
-                            {
-                                break;
-                            }
-                        }
-                        resp.ContentLength = resp.Content.Length;
-                        resp.Content.Position = 0;
-                        resp.Connection = Connections.KeepAlive;
-                        resp.Set200();
-                    }
+                resp.Content.Write(bb, 0, read_len);
+                if (read_len != bb.Length)
+                {
                     break;
-                case "/Push":
-                    {
-                        this.m_NewPushHandlers.Add(req.HandlerID);
-                        if (this.m_Thread_PushT.IsBusy == false)
-                        {
-                            this.m_Thread_PushT.RunWorkerAsync();
-                        }
-
-                        process_result_code = ServiceProcessResults.PassToPushService;
-
-                    }
-                    break;
-                case "/EVENT4":
-                    {
-                        process_result_code = ServiceProcessResults.OK;
-                        resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
-                        resp.Set200();
-                        resp.Connection = Connections.Close;
-                    }
-                    break;
-                case "/TEST1":
-                    {
-                        process_result_code = ServiceProcessResults.OK;
-                        CQCache1 cc = null;
-                        Dictionary<string, string> param;
-                        CQHttpRequest.Parse(req.URL.Query, out param);
-                        if (param.ContainsKey("ID") == true)
-                        {
-                            this.Extension.CacheControl(CacheOperates.Get, param["ID"], ref cc, "Test1");
-                        }
-                        else
-                        {
-                            this.Extension.CacheControl(CacheOperates.Get, "", ref cc, "Test1");
-                        }
-                        if (cc == null)
-                        {
-                            resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
-                            resp.Set200();
-                            resp.Connection = Connections.KeepAlive;
-                            string str = string.Format("Time:{0}\r\nID:{1} not exist"
-                                , DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss", System.Globalization.DateTimeFormatInfo.InvariantInfo)
-                                , param["ID"]);
-                            resp.BuildContentFromString(str);
-                        }
-                        else
-                        {
-                            cc.Count++;
-                            resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
-                            resp.Set200();
-                            resp.Connection = Connections.KeepAlive;
-                            string str = string.Format("Time:{0}\r\nID:{1}\r\nCount:{2}"
-                                , DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss", System.Globalization.DateTimeFormatInfo.InvariantInfo)
-                                , cc.ID
-                                , cc.Count);
-                            resp.BuildContentFromString(str);
-                        }
-                    }
-                    break;
-                case "/TEST":
-                    {
-                        process_result_code = ServiceProcessResults.OK;
-                        CQCache1 cc = null;
-                        Dictionary<string, string> param;
-                        CQHttpRequest.Parse(req.URL.Query, out param);
-                        if (param.ContainsKey("ID") == true)
-                        {
-                            this.Extension.CacheControl(CacheOperates.Get, param["ID"], ref cc, "Test1");
-                        }
-                        else
-                        {
-                            this.Extension.CacheControl(CacheOperates.Create, "", ref cc, "Test1");
-                        }
-
-                        if (cc == null)
-                        {
-                            resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
-                            resp.Set200();
-                            resp.Connection = Connections.KeepAlive;
-                            string str = string.Format("Time:{0}\r\nID:{1} not exist"
-                                , DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss", System.Globalization.DateTimeFormatInfo.InvariantInfo)
-                                , param["ID"]);
-                            resp.BuildContentFromString(str);
-                        }
-                        else
-                        {
-                            cc.Count++;
-                            resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
-                            resp.Set200();
-                            resp.Connection = Connections.KeepAlive;
-                            string str = string.Format("Time:{0}\r\nID:{1}\r\nCount:{2}"
-                                , DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss", System.Globalization.DateTimeFormatInfo.InvariantInfo)
-                                , cc.ID
-                                , cc.Count);
-                            resp.BuildContentFromString(str);
-                        }
-                    }
-                    break;
+                }
             }
+            resp.ContentLength = resp.Content.Length;
+            resp.Content.Position = 0;
+            resp.Connection = Connections.KeepAlive;
+            resp.Set200();
+
             return result;
         }
+
+        [CQServiceMethod("/Push")]
+        public bool Push(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
+        {
+            process_result_code = 0;
+            resp = null;
+            bool result = true;
+
+            this.m_NewPushHandlers.Add(req.HandlerID);
+            if (this.m_Thread_PushT.IsBusy == false)
+            {
+                this.m_Thread_PushT.RunWorkerAsync();
+            }
+
+            process_result_code = ServiceProcessResults.PassToPushService;
+
+            return result;
+        }
+
+        [CQServiceMethod("/TEST1")]
+        public bool TEST1(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
+        {
+            process_result_code = 0;
+            resp = null;
+            bool result = true;
+
+            process_result_code = ServiceProcessResults.OK;
+            CQCache1 cc = null;
+            Dictionary<string, string> param;
+            CQHttpRequest.Parse(req.URL.Query, out param);
+            if (param.ContainsKey("ID") == true)
+            {
+                this.Extension.CacheControl(CacheOperates.Get, param["ID"], ref cc, "Test1");
+            }
+            else
+            {
+                this.Extension.CacheControl(CacheOperates.Get, "", ref cc, "Test1");
+            }
+            if (cc == null)
+            {
+                resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+                resp.Set200();
+                resp.Connection = Connections.KeepAlive;
+                string str = string.Format("Time:{0}\r\nID:{1} not exist"
+                    , DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss", System.Globalization.DateTimeFormatInfo.InvariantInfo)
+                    , param["ID"]);
+                resp.BuildContentFromString(str);
+            }
+            else
+            {
+                cc.Count++;
+                resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+                resp.Set200();
+                resp.Connection = Connections.KeepAlive;
+                string str = string.Format("Time:{0}\r\nID:{1}\r\nCount:{2}"
+                    , DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss", System.Globalization.DateTimeFormatInfo.InvariantInfo)
+                    , cc.ID
+                    , cc.Count);
+                resp.BuildContentFromString(str);
+            }
+
+            return result;
+        }
+
+        [CQServiceMethod("/TEST")]
+        public bool TEST(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
+        {
+            process_result_code = 0;
+            resp = null;
+            bool result = true;
+
+            process_result_code = ServiceProcessResults.OK;
+            CQCache1 cc = null;
+            Dictionary<string, string> param;
+            CQHttpRequest.Parse(req.URL.Query, out param);
+            if (param.ContainsKey("ID") == true)
+            {
+                this.Extension.CacheControl(CacheOperates.Get, param["ID"], ref cc, "Test1");
+            }
+            else
+            {
+                this.Extension.CacheControl(CacheOperates.Create, "", ref cc, "Test1");
+            }
+
+            if (cc == null)
+            {
+                resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+                resp.Set200();
+                resp.Connection = Connections.KeepAlive;
+                string str = string.Format("Time:{0}\r\nID:{1} not exist"
+                    , DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss", System.Globalization.DateTimeFormatInfo.InvariantInfo)
+                    , param["ID"]);
+                resp.BuildContentFromString(str);
+            }
+            else
+            {
+                cc.Count++;
+                resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+                resp.Set200();
+                resp.Connection = Connections.KeepAlive;
+                string str = string.Format("Time:{0}\r\nID:{1}\r\nCount:{2}"
+                    , DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss", System.Globalization.DateTimeFormatInfo.InvariantInfo)
+                    , cc.ID
+                    , cc.Count);
+                resp.BuildContentFromString(str);
+            }
+
+            return result;
+        }
+
+        //public bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
+        //{
+        //    process_result_code = 0;
+        //    resp = null;
+        //    bool result = true;
+        //    switch (req.URL.LocalPath)
+        //    {
+        //        case "/PostTest":
+        //            {
+        //                process_result_code = ServiceProcessResults.OK;
+        //                resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+        //                resp.Content = new MemoryStream();
+        //                byte[] bb = new byte[8192];
+        //                while (true)
+        //                {
+        //                    int read_len = req.Content.Read(bb, 0, bb.Length);
+
+        //                    resp.Content.Write(bb, 0, read_len);
+        //                    if (read_len != bb.Length)
+        //                    {
+        //                        break;
+        //                    }
+        //                }
+        //                resp.ContentLength = resp.Content.Length;
+        //                resp.Content.Position = 0;
+        //                resp.Connection = Connections.KeepAlive;
+        //                resp.Set200();
+        //            }
+        //            break;
+        //        case "/Push":
+        //            {
+        //                this.m_NewPushHandlers.Add(req.HandlerID);
+        //                if (this.m_Thread_PushT.IsBusy == false)
+        //                {
+        //                    this.m_Thread_PushT.RunWorkerAsync();
+        //                }
+
+        //                process_result_code = ServiceProcessResults.PassToPushService;
+
+        //            }
+        //            break;
+        //        case "/TEST1":
+        //            {
+        //                process_result_code = ServiceProcessResults.OK;
+        //                CQCache1 cc = null;
+        //                Dictionary<string, string> param;
+        //                CQHttpRequest.Parse(req.URL.Query, out param);
+        //                if (param.ContainsKey("ID") == true)
+        //                {
+        //                    this.Extension.CacheControl(CacheOperates.Get, param["ID"], ref cc, "Test1");
+        //                }
+        //                else
+        //                {
+        //                    this.Extension.CacheControl(CacheOperates.Get, "", ref cc, "Test1");
+        //                }
+        //                if (cc == null)
+        //                {
+        //                    resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+        //                    resp.Set200();
+        //                    resp.Connection = Connections.KeepAlive;
+        //                    string str = string.Format("Time:{0}\r\nID:{1} not exist"
+        //                        , DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss", System.Globalization.DateTimeFormatInfo.InvariantInfo)
+        //                        , param["ID"]);
+        //                    resp.BuildContentFromString(str);
+        //                }
+        //                else
+        //                {
+        //                    cc.Count++;
+        //                    resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+        //                    resp.Set200();
+        //                    resp.Connection = Connections.KeepAlive;
+        //                    string str = string.Format("Time:{0}\r\nID:{1}\r\nCount:{2}"
+        //                        , DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss", System.Globalization.DateTimeFormatInfo.InvariantInfo)
+        //                        , cc.ID
+        //                        , cc.Count);
+        //                    resp.BuildContentFromString(str);
+        //                }
+        //            }
+        //            break;
+        //        case "/TEST":
+        //            {
+        //                process_result_code = ServiceProcessResults.OK;
+        //                CQCache1 cc = null;
+        //                Dictionary<string, string> param;
+        //                CQHttpRequest.Parse(req.URL.Query, out param);
+        //                if (param.ContainsKey("ID") == true)
+        //                {
+        //                    this.Extension.CacheControl(CacheOperates.Get, param["ID"], ref cc, "Test1");
+        //                }
+        //                else
+        //                {
+        //                    this.Extension.CacheControl(CacheOperates.Create, "", ref cc, "Test1");
+        //                }
+
+        //                if (cc == null)
+        //                {
+        //                    resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+        //                    resp.Set200();
+        //                    resp.Connection = Connections.KeepAlive;
+        //                    string str = string.Format("Time:{0}\r\nID:{1} not exist"
+        //                        , DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss", System.Globalization.DateTimeFormatInfo.InvariantInfo)
+        //                        , param["ID"]);
+        //                    resp.BuildContentFromString(str);
+        //                }
+        //                else
+        //                {
+        //                    cc.Count++;
+        //                    resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+        //                    resp.Set200();
+        //                    resp.Connection = Connections.KeepAlive;
+        //                    string str = string.Format("Time:{0}\r\nID:{1}\r\nCount:{2}"
+        //                        , DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss", System.Globalization.DateTimeFormatInfo.InvariantInfo)
+        //                        , cc.ID
+        //                        , cc.Count);
+        //                    resp.BuildContentFromString(str);
+        //                }
+        //            }
+        //            break;
+        //    }
+        //    return result;
+        //}
 
         public bool CloseHandler(List<string> handlers)
         {

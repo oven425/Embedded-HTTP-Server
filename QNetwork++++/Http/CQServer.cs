@@ -27,6 +27,7 @@ namespace QNetwork.Http.Server
         object m_RequestsLock = new object();
         object m_CacheManagersLock = new object();
         Dictionary<string, CQCacheManager> m_CacheManagers = new Dictionary<string, CQCacheManager>();
+        //Dictionary<string, IQCacheIDProvider> m_CacheID_Provider = new Dictionary<string, IQCacheIDProvider>();
         public IQHttpServer_Log Logger { set; get; }
         public CQHttpServer()
         {
@@ -42,8 +43,8 @@ namespace QNetwork.Http.Server
             this.Routers = new List<IQHttpRouter>();
 
             
-            CQCacheID_Default<byte> aa = new CQCacheID_Default<byte>();
-            aa.NewID();
+            //CQCacheID_Default<byte> aa = new CQCacheID_Default<byte>();
+            //aa.NewID();
         }
 
         object m_SessionsLock = new object();
@@ -316,38 +317,40 @@ namespace QNetwork.Http.Server
             return md5_3str.ToString();
         }
 
-        protected virtual IQHttpService GetService(CQHttpRequest request)
+        protected virtual CQRouterData GetService(CQHttpRequest request)
         {
-            IQHttpService service = null;
             //var vv = this.m_Service.FirstOrDefault(x => x.Urls.Any(y => y == request.URL.LocalPath) == true);
             var vv = this.m_Service.FirstOrDefault(x => x.Url == request.URL.LocalPath);
-            if (vv != null)
-            {
-                service = Activator.CreateInstance(vv.Service) as IQHttpService;
-                
-            }
-            return service;
+           
+            return vv;
         }
 
         protected bool ProcessRequest(CQHttpRequest request, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
         {
             bool result = true;
             process_result_code = ServiceProcessResults.None;
-            //cache = null;
             resp = null;
-            IQHttpService instance = this.GetService(request);
-            if(instance != null)
+            
+
+            var vv = this.m_Service.FirstOrDefault(x => x.Url == request.URL.LocalPath);
+            if (vv != null)
             {
-                //this.ServiceChange(request, instance, Request_ServiceStates.Service_Begin);
+                IQHttpService instance = null;
+                instance = Activator.CreateInstance(vv.Service) as IQHttpService;
                 this.LogProcess(LogStates_Process.ProcessRequest, request.HandlerID, request.ProcessID, DateTime.Now, request, null);
                 instance.Extension = this;
-                //instance.RegisterCacheManager();
+                instance.RegisterCacheManager();
                 if (instance != null)
                 {
-                    instance.Process(request, out resp, out process_result_code);
+                    object[] oos = new object[3];
+                    oos[0] = request;
+                    oos[1] = resp;
+                    oos[2] = process_result_code;
+                    vv.Method.Invoke(instance, oos);
+                    resp = oos[1] as CQHttpResponse;
+                    process_result_code = (ServiceProcessResults)oos[2];
                 }
                 this.LogProcess(LogStates_Process.CreateResponse, request.HandlerID, request.ProcessID, DateTime.Now, request, resp);
-                //this.ServiceChange(request, instance, Request_ServiceStates.Service_End);
             }
             else
             {
@@ -468,19 +471,23 @@ namespace QNetwork.Http.Server
             {
                 this.OpenListen(address[i]);
             }
-            //for (int i = 0; i < services.Count; i++)
-            //{
-            //    CQRouterData rd = new CQRouterData();
-            //    var dnAttribute = services[i].GetType().GetCustomAttributes(typeof(CQServiceSetting), true).FirstOrDefault();
-            //    if(dnAttribute != null)
-            //    {
-            //        CQServiceSetting setting = dnAttribute as CQServiceSetting;
-            //        rd.Urls.AddRange(setting.Methods);
-            //        rd.Service = services[i].GetType();
-            //        this.m_Service.Add(rd);
-            //    }
-                
-            //}
+            for (int i = 0; i < services.Count; i++)
+            {
+                //CQRouterData rd = new CQRouterData();
+                //var dnAttribute = services[i].GetType().GetCustomAttributes(typeof(CQServiceSetting), true).FirstOrDefault();
+                //if (dnAttribute != null)
+                //{
+                //    CQServiceSetting setting = dnAttribute as CQServiceSetting;
+                //    rd.Urls.AddRange(setting.Methods);
+                //    rd.Service = services[i].GetType();
+                //    this.m_Service.Add(rd);
+                //}
+                List<CQRouterData> rrs = CQRouterData.CreateRouterData(services[i]);
+                if (rrs.Count > 0)
+                {
+                    this.m_Service.AddRange(rrs);
+                }
+            }
 
             if (adddefault == true)
             {
@@ -645,6 +652,51 @@ namespace QNetwork.Http.Server
                 this.Logger.LogAccept(state, ip, port, obj);
             }
             return true;
+        }
+
+        Dictionary<string, IQCacheIDProvider> m_CacheIDProviders = new Dictionary<string, IQCacheIDProvider>();
+        public bool CacheIDControl(CacheIDProviderTypes op, string nickname, out string id, IQCacheIDProvider provider)
+        {
+            bool result = true;
+            id = "";
+            switch(op)
+            {
+                case CacheIDProviderTypes.Reg_Provider:
+                    {
+                        if(this.m_CacheIDProviders.ContainsKey(nickname) == false)
+                        {
+                            this.m_CacheIDProviders[nickname] = provider;
+                        }
+                        else
+                        {
+                            this.m_CacheIDProviders.Add(nickname, provider);
+                        }
+                    }
+                    break;
+                case CacheIDProviderTypes.GetID:
+                    {
+                        if (this.m_CacheIDProviders.ContainsKey(nickname) == true)
+                        {
+                            id = this.m_CacheIDProviders[nickname].GetID();
+                        }
+                    }
+                    break;
+                case CacheIDProviderTypes.ResetID:
+                    {
+                        if (this.m_CacheIDProviders.ContainsKey(nickname) == true)
+                        {
+                            this.m_CacheIDProviders[nickname].ResetID(id);
+                        }
+                    }
+                    break;
+                case CacheIDProviderTypes.UnReg_Provider:
+                    {
+
+                    }
+                    break;
+            }
+
+            return result;
         }
     }
 }

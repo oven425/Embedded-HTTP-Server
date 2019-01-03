@@ -10,13 +10,11 @@ namespace QNetwork.Http.Server
     public class CQRouterData
     {
         public LifeTypes LifeType { set; get; }
-        public List<string> Urls { set; get; }
         public string Url { set; get; }
         public Type Service { set; get; }
         public MethodInfo Method { set; get; }
         public CQRouterData()
         {
-            this.Urls = new List<string>();
             this.LifeType = LifeTypes.Transient;
         }
 

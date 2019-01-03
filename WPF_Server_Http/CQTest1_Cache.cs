@@ -25,7 +25,14 @@ namespace WPF_Server_Http
                 if(not_exist_build == true)
                 {
                     aa = this.Create<T>((this.m_ID++).ToString());
-                    this.Caches.Add(aa.ID, aa);
+                    if(this.Caches.ContainsKey(aa.ID) == false)
+                    {
+                        this.Caches.Add(aa.ID, aa);
+                    }
+                    else
+                    {
+                        this.Caches[aa.ID] = aa;
+                    }
                 }
             }
             Monitor.Exit(this.m_CachesLock);
