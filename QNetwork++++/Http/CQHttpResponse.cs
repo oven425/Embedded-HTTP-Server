@@ -179,6 +179,30 @@ namespace QNetwork.Http.Server
             return result;
         }
 
+        public void SetContent(string data, string type="text/plain")
+        {
+            if(this.Content == null)
+            {
+                this.Content = new MemoryStream();
+            }
+            else if(!(this.Content is MemoryStream))
+            {
+                this.Content.Close();
+                this.Content.Dispose();
+                this.Content = null;
+                this.Content = new MemoryStream();
+            }
+            else
+            {
+                this.Content.SetLength(0);
+            }
+            byte[] bb = Encoding.UTF8.GetBytes(data);
+            this.Content.Write(bb, 0, bb.Length);
+            this.Content.Position = 0;
+            this.ContentLength = this.Content.Length;
+            this.ContentType = type;
+        }
+
         public void Dispose()
         {
             if (this.Content != null)

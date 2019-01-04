@@ -18,7 +18,6 @@ namespace QNetwork.Http.Server
 {
     public class CQHttpServer: IQHttpServer_Extension,IQHttpServer_Log
     {
-        public List<IQHttpRouter> Routers { set; get; }
         List<BackgroundWorker> m_Threads = new List<BackgroundWorker>();
         Dictionary<CQSocketListen_Address, CQSocketListen> m_AcceptSockets = new Dictionary<CQSocketListen_Address, CQSocketListen>();
         BackgroundWorker m_Thread;
@@ -40,7 +39,6 @@ namespace QNetwork.Http.Server
             }
             this.m_Thread = new BackgroundWorker();
             this.m_Thread.DoWork += new DoWorkEventHandler(m_Thread_DoWork);
-            this.Routers = new List<IQHttpRouter>();
 
             
             //CQCacheID_Default<byte> aa = new CQCacheID_Default<byte>();
@@ -655,6 +653,7 @@ namespace QNetwork.Http.Server
         }
 
         Dictionary<string, IQCacheIDProvider> m_CacheIDProviders = new Dictionary<string, IQCacheIDProvider>();
+        Dictionary<string, List<IQCache>> m_Caches = new Dictionary<string, List<IQCache>>();
         public bool CacheIDControl(CacheIDProviderTypes op, string nickname, out string id, IQCacheIDProvider provider)
         {
             bool result = true;

@@ -27,19 +27,6 @@ namespace QNetwork.Http.Server.Service
         IQHttpServer_Extension Extension { set; get; }
         //List<string> Methods { get; }
     }
-
-    public interface IQHttpRouter
-    {
-        IQHttpService Process(CQHttpRequest req);
-    }
-
-    public class CQQHttpRouter_Default : IQHttpRouter
-    {
-        public IQHttpService Process(CQHttpRequest req)
-        {
-            throw new NotImplementedException();
-        }
-    }
 }
 namespace QNetwork.Http.Server
 {

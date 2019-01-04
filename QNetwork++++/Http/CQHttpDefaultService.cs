@@ -103,11 +103,11 @@ namespace QNetwork.Http.Server.Service
             resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
 
             string content_str = string.Format("Hello world\r\n{0}\r\nQEmbedded Http server\r\n", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss.fff", System.Globalization.DateTimeFormatInfo.InvariantInfo));
-            resp.Content = new MemoryStream(Encoding.UTF8.GetBytes(content_str));
-            resp.ContentLength = resp.Content.Length;
-            resp.ContentType = "text/plain";
+            //resp.Content = new MemoryStream(Encoding.UTF8.GetBytes(content_str));
+            //resp.ContentLength = resp.Content.Length;
+            //resp.ContentType = "text/plain";
             resp.Connection = Connections.KeepAlive;
-
+            resp.SetContent(content_str);
             resp.Set200();
             return true;
         }
