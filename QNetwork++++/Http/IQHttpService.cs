@@ -40,27 +40,22 @@ namespace QNetwork.Http.Server
     {
         Get,
         Create,
-        Check,
-        Destory,
+        Destory
     }
 
 
    public enum CacheIDProviderTypes
     {
-        Reg_Provider,
         GetID,
         ResetID,
-        UnReg_Provider
     }
     
-
     public interface IQHttpServer_Extension
     {
         bool SendMultiPart(List<CQHttpResponse> datas);
         bool ControlTransfer(string handlerid, out CQTCPHandler tcphandler);
+        
         bool CacheControl<T>(CacheOperates op, string id,  ref T cache, string manager_id = "default") where T : CQCacheBase, new();
-        bool CacheManger_Registered<T>(string name = "default") where T : CQCacheManager, new();
-        bool CacheIDControl(CacheIDProviderTypes op, string nickname, out string id, IQCacheIDProvider provider);
     }
 
     public interface IQHttpServer_Operation

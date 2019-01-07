@@ -8,7 +8,7 @@ namespace QNetwork.Http.Server.Cache
     public interface IQCacheIDProvider
     {
         string NickName { get; }
-        string GetID();
+        string NextID();
         void ResetID(string id);
     }
 
@@ -19,57 +19,78 @@ namespace QNetwork.Http.Server.Cache
         protected List<T> m_Resue = new List<T>();
         protected string m_NickName;
         public string NickName { get { return this.m_NickName; } }
-        public abstract T NewID();
-        public abstract void Reset(T data);
 
         public abstract void ResetID(string id);
 
-        public abstract string GetID();
+        public abstract string NextID();
     }
 
-    public class CQCacheID_Default : CQCacheIDProvider<int>
+    public class CQCacheID_GUID : IQCacheIDProvider
     {
-        public CQCacheID_Default(string nickname = "default")
+        protected string m_NickName;
+        public string NickName => this.m_NickName;
+        public CQCacheID_GUID(string nickname)
+        {
+            this.m_NickName = nickname;
+        }
+        public string NextID()
+        {
+            return Guid.NewGuid().ToString();
+        }
+
+        public void ResetID(string id)
+        {
+        }
+    }
+
+    public class CQCacheID_Default : IQCacheIDProvider
+    {
+        protected string m_NickName;
+        List<byte> m_Resuses = new List<byte>();
+
+        public CQCacheID_Default(string nickname = "")
         {
             this.m_NickName = nickname;
         }
 
-        public override string GetID()
+        public string NickName => this.m_NickName;
+        byte m_Current = byte.MinValue;
+        public string NextID()
         {
-            throw new NotImplementedException();
+            byte bb = this.m_Current;
+            bb = (byte)(bb + 1);
+            return bb.ToString();
         }
 
-        public override int NewID()
+        //public override int NewID()
+        //{
+        //    this.m_TempID = this.m_ID;
+        //    if(this.m_Resue.Count > 0)
+        //    {
+        //        if(this.m_TempID > this.m_Resue.Max())
+        //        {
+        //            this.m_TempID = this.m_Resue.Min();
+        //        }
+        //        else
+        //        {
+        //            this.m_TempID = this.m_TempID + 1;
+        //            this.m_ID = this.m_TempID;
+        //        }
+        //    }
+        //    else
+        //    {
+        //        this.m_ID = this.m_ID + 1;
+        //    }
+        //    return this.m_ID;
+        //}
+
+        public void ResetID(string id)
         {
-            this.m_TempID = this.m_ID;
-            if(this.m_Resue.Count > 0)
+            byte bb = 0;
+            if(byte.TryParse(id, out bb) == true)
             {
-                if(this.m_TempID > this.m_Resue.Max())
-                {
-                    this.m_TempID = this.m_Resue.Min();
-                }
-                else
-                {
-                    this.m_TempID = this.m_TempID + 1;
-                    this.m_ID = this.m_TempID;
-                }
-            }
-            else
-            {
-                this.m_ID = this.m_ID + 1;
-            }
-            return this.m_ID;
-        }
 
-        public override void Reset(int data)
-        {
-            this.m_Resue.Add(data);
-            this.m_Resue.Sort();
-        }
-
-        public override void ResetID(string id)
-        {
-            throw new NotImplementedException();
+            }
         }
     }
 }

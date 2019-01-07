@@ -139,5 +139,10 @@ namespace WPF_Server_Http.Service
         {
             this.Files = new List<CQMediaFile>();
         }
+
+        public override void Dispose()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

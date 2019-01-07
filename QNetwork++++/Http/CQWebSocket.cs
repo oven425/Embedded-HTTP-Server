@@ -19,6 +19,10 @@ namespace QNetwork.Http.Server
         {
         }
 
+        public override void Dispose()
+        {
+            throw new NotImplementedException();
+        }
 
         public bool Open(CQTCPHandler handler, byte[] data, int len)
         {

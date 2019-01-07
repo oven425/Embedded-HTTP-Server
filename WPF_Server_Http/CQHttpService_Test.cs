@@ -202,11 +202,11 @@ namespace WPF_Server_Http.Service
             CQHttpRequest.Parse(req.URL.Query, out param);
             if (param.ContainsKey("ID") == true)
             {
-                this.Extension.CacheControl(CacheOperates.Get, param["ID"], ref cc, "Test1");
+                this.Extension.CacheControl(CacheOperates.Get, param["ID"], ref cc, "");
             }
             else
             {
-                this.Extension.CacheControl(CacheOperates.Create, "", ref cc, "Test1");
+                this.Extension.CacheControl(CacheOperates.Create, "", ref cc, "");
             }
 
             if (cc == null)
@@ -375,7 +375,7 @@ namespace WPF_Server_Http.Service
         public bool RegisterCacheManager()
         {
             bool result = true;
-            this.Extension.CacheManger_Registered<CQCacheManager_Test1>("Test1");
+            //this.Extension.CacheManger_Registered<CQCacheManager_Test1>("Test1");
             return result;
         }
     }

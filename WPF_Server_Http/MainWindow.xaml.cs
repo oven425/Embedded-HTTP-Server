@@ -87,7 +87,10 @@ namespace WPF_Server_Http
                 services.Add(new CQHttpService_ServerOperate());
                 services.Add(new CQHttpService_WebMediaPlayer());
                 this.m_TestServer.Logger = this;
-                this.m_TestServer.Open(this.m_MainUI.AddressList.Select(x => x.Address).ToList(), services, true);
+
+                List<IQCacheIDProvider> cache_providers = new List<IQCacheIDProvider>();
+                cache_providers.Add(new CQCacheID_Default());
+                this.m_TestServer.Open(this.m_MainUI.AddressList.Select(x => x.Address).ToList(), services, cache_providers, true);
             }
         }
 
@@ -201,7 +204,7 @@ namespace WPF_Server_Http
                     break;
                 case LogStates_Process.DestoryHandler:
                     {
-                        var vv = this.m_MainUI.ProcessList.Where(x => x.HandlerID == handler_id);
+                        var vv = this.m_MainUI.ProcessList.Where(x => x.HandlerID == handler_id).ToList();
                         foreach (var oo in vv)
                         {
                             oo.DestoryHandler = time;

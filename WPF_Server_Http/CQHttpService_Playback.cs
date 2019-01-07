@@ -93,7 +93,7 @@ namespace WPF_Server_Http.Service
         public bool RegisterCacheManager()
         {
             bool result = true;
-            this.Extension.CacheManger_Registered<CQCacheManager>("playback");
+            //this.Extension.CacheManger_Registered<CQCacheManager>("playback");
 
             return result;
         }

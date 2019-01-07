@@ -25,7 +25,7 @@ namespace QNetwork.Http.Server
         List<CQHttpRequest> m_Requests = new List<CQHttpRequest>();
         object m_RequestsLock = new object();
         object m_CacheManagersLock = new object();
-        Dictionary<string, CQCacheManager> m_CacheManagers = new Dictionary<string, CQCacheManager>();
+        //Dictionary<string, CQCacheManager> m_CacheManagers = new Dictionary<string, CQCacheManager>();
         //Dictionary<string, IQCacheIDProvider> m_CacheID_Provider = new Dictionary<string, IQCacheIDProvider>();
         public IQHttpServer_Log Logger { set; get; }
         public CQHttpServer()
@@ -67,9 +67,20 @@ namespace QNetwork.Http.Server
                 }
                 Monitor.Exit(this.m_SessionsLock);
 
-                for (int i= 0; i<this.m_CacheManagers.Count; i++)
+                //for (int i= 0; i<this.m_CacheManagers.Count; i++)
+                //{
+                //    this.m_CacheManagers.ElementAt(i).Value.TimeOut();
+                //}
+
+                for(int i=0; i<this.m_Caches.Count; i++)
                 {
-                    this.m_CacheManagers.ElementAt(i).Value.TimeOut();
+                    Dictionary<string, IQCache> caches = this.m_Caches.ElementAt(i).Value;
+                    List<IQCache> ccs = caches.Values.Where(x => x.IsTimeOut(TimeSpan.FromSeconds(30)) == true).ToList();
+                    for(int j= 0; j<ccs.Count; j++)
+                    {
+                        ccs[j].Dispose();
+                        caches.Remove(ccs[j].ID);
+                    }
                 }
                 var threads_nobusy = this.m_Threads.Where(x=>x.IsBusy == false);
                 if (threads_nobusy.Count() > 0)
@@ -114,7 +125,7 @@ namespace QNetwork.Http.Server
             while (req != null)
             {
                 ServiceProcessResults process_result;
-                CQCacheBase cache;
+                //CQCacheBase cache;
                 CQHttpResponse resp;
                 //this.ProcessWebSocket(req, out resp, out process_result);
                 //if(process_result == 0)
@@ -318,7 +329,7 @@ namespace QNetwork.Http.Server
         protected virtual CQRouterData GetService(CQHttpRequest request)
         {
             //var vv = this.m_Service.FirstOrDefault(x => x.Urls.Any(y => y == request.URL.LocalPath) == true);
-            var vv = this.m_Service.FirstOrDefault(x => x.Url == request.URL.LocalPath);
+            var vv = this.m_Services.FirstOrDefault(x => x.Url == request.URL.LocalPath);
            
             return vv;
         }
@@ -330,7 +341,7 @@ namespace QNetwork.Http.Server
             resp = null;
             
 
-            var vv = this.m_Service.FirstOrDefault(x => x.Url == request.URL.LocalPath);
+            var vv = this.m_Services.FirstOrDefault(x => x.Url == request.URL.LocalPath);
             if (vv != null)
             {
                 IQHttpService instance = null;
@@ -434,11 +445,11 @@ namespace QNetwork.Http.Server
         }
 
        
-        List<CQRouterData> m_Service = new List<CQRouterData>();
-        public bool Open(List<CQSocketListen_Address> address, List<IQHttpService> services, bool adddefault=true)
+        List<CQRouterData> m_Services = new List<CQRouterData>();
+        public bool Open(List<CQSocketListen_Address> address, List<IQHttpService> services, List<IQCacheIDProvider> cacheproviders, bool adddefault=true)
         {
             bool result = true;
-            var vv = typeof(CQHttpDefaultService).GetCustomAttributes(typeof(CQServiceMethod), true);
+            //var vv = typeof(CQHttpDefaultService).GetCustomAttributes(typeof(CQServiceMethod), true);
             ////MethodBase method = MethodBase.GetCurrentMethod();
             ////CQServiceMethod attr = (CQServiceMethod)method.GetCustomAttributes(typeof(CQServiceMethod), true)[0];
 
@@ -483,7 +494,7 @@ namespace QNetwork.Http.Server
                 List<CQRouterData> rrs = CQRouterData.CreateRouterData(services[i]);
                 if (rrs.Count > 0)
                 {
-                    this.m_Service.AddRange(rrs);
+                    this.m_Services.AddRange(rrs);
                 }
             }
 
@@ -493,7 +504,7 @@ namespace QNetwork.Http.Server
                 List<CQRouterData> rrs = CQRouterData.CreateRouterData(ds);
                 if(rrs.Count > 0)
                 {
-                    this.m_Service.AddRange(rrs);
+                    this.m_Services.AddRange(rrs);
                 }
                 //var dnAttribute = ds.GetType().GetCustomAttributes(typeof(CQServiceSetting), true).FirstOrDefault();
                 //if (dnAttribute != null)
@@ -507,6 +518,21 @@ namespace QNetwork.Http.Server
 
                 //}
             }
+            if(cacheproviders.Count == 0)
+            {
+                this.m_CacheIDProviders.Add("", new CQCacheID_Default());
+                this.m_Caches.Add("", new Dictionary<string, IQCache>());
+            }
+            else
+            {
+                for (int i = 0; i < cacheproviders.Count; i++)
+                {
+                    this.m_CacheIDProviders.Add(cacheproviders[i].NickName, cacheproviders[i]);
+                    this.m_Caches.Add(cacheproviders[i].NickName, new Dictionary<string, IQCache>());
+                }
+            }
+            
+
             if (this.m_Thread.IsBusy == false)
             {
                 this.m_Thread.RunWorkerAsync();
@@ -556,21 +582,6 @@ namespace QNetwork.Http.Server
             return true;
         }
 
-        virtual public bool CacheManger_Registered<T>(string name = "default") where T:CQCacheManager, new()
-        {
-            bool result = true;
-            Monitor.Enter(this.m_CacheManagersLock);
-            if(this.m_CacheManagers.ContainsKey(name) == false)
-            {
-                T aa = new T();
-                aa.Logger = this;
-                this.m_CacheManagers.Add(name, aa);
-                this.LogCache(LogStates_Cache.CreateManager, DateTime.Now, name, "", "");
-            }
-            Monitor.Exit(this.m_CacheManagersLock);
-            return result;
-        }
-
         virtual public bool CacheControl<T>(CacheOperates op, string id, ref T cache, string manager_id = "default") where T : CQCacheBase, new()
         {
             bool result = true;
@@ -579,36 +590,52 @@ namespace QNetwork.Http.Server
             {
                 case CacheOperates.Get:
                     {
-                        CQCacheManager manager = null;
-                        if (this.m_CacheManagers.ContainsKey(manager_id) == true)
+                        //CQCacheManager manager = null;
+                        if((this.m_Caches.ContainsKey(manager_id) == true) && (this.m_Caches[manager_id].ContainsKey(id)==true))
                         {
-                            manager = this.m_CacheManagers[manager_id];
-                        }
-                        if(manager != null)
-                        {
-                            cache = manager.Get<T>(id, true);
-                        }
-                    }
-                    break;
-                case CacheOperates.Create:
-                    {
-                        if (this.m_CacheManagers.ContainsKey(manager_id) == true)
-                        {
-                            CQCacheManager manager = this.m_CacheManagers[manager_id];
-                            if(manager != null)
-                            {
-                                cache = manager.Create<T>(id);
-                                this.LogCache(LogStates_Cache.CreateCahce, DateTime.Now, manager_id, cache.ID, "");
-                            }
-                            else
-                            {
-                                result = false;
-                            }
+                            cache = this.m_Caches[manager_id][id] as T;
                         }
                         else
                         {
                             result = false;
                         }
+                        //if (this.m_CacheManagers.ContainsKey(manager_id) == true)
+                        //{
+                        //    manager = this.m_CacheManagers[manager_id];
+                        //}
+                        //if(manager != null)
+                        //{
+                        //    cache = manager.Get<T>(id, true);
+                        //}
+                    }
+                    break;
+                case CacheOperates.Create:
+                    {
+                        if (this.m_CacheIDProviders.ContainsKey(manager_id) == true)
+                        {
+                            cache = new T();
+                            cache.ID = this.m_CacheIDProviders[manager_id].NextID();
+                            this.m_Caches[manager_id].Add(cache.ID, cache);
+                            //CQCacheManager manager = this.m_CacheManagers[manager_id];
+                            //if(manager != null)
+                            //{
+                            //    cache = manager.Create<T>(id);
+                            //    this.LogCache(LogStates_Cache.CreateCahce, DateTime.Now, manager_id, cache.ID, "");
+                            //}
+                            //else
+                            //{
+                            //    result = false;
+                            //}
+                        }
+                        else
+                        {
+                            result = false;
+                        }
+                    }
+                    break;
+                case CacheOperates.Destory:
+                    {
+
                     }
                     break;
             }
@@ -653,49 +680,57 @@ namespace QNetwork.Http.Server
         }
 
         Dictionary<string, IQCacheIDProvider> m_CacheIDProviders = new Dictionary<string, IQCacheIDProvider>();
-        Dictionary<string, List<IQCache>> m_Caches = new Dictionary<string, List<IQCache>>();
-        public bool CacheIDControl(CacheIDProviderTypes op, string nickname, out string id, IQCacheIDProvider provider)
-        {
-            bool result = true;
-            id = "";
-            switch(op)
-            {
-                case CacheIDProviderTypes.Reg_Provider:
-                    {
-                        if(this.m_CacheIDProviders.ContainsKey(nickname) == false)
-                        {
-                            this.m_CacheIDProviders[nickname] = provider;
-                        }
-                        else
-                        {
-                            this.m_CacheIDProviders.Add(nickname, provider);
-                        }
-                    }
-                    break;
-                case CacheIDProviderTypes.GetID:
-                    {
-                        if (this.m_CacheIDProviders.ContainsKey(nickname) == true)
-                        {
-                            id = this.m_CacheIDProviders[nickname].GetID();
-                        }
-                    }
-                    break;
-                case CacheIDProviderTypes.ResetID:
-                    {
-                        if (this.m_CacheIDProviders.ContainsKey(nickname) == true)
-                        {
-                            this.m_CacheIDProviders[nickname].ResetID(id);
-                        }
-                    }
-                    break;
-                case CacheIDProviderTypes.UnReg_Provider:
-                    {
+        //public bool CacheIDControl(CacheIDProviderTypes op, string nickname, out string id, IQCacheIDProvider provider)
+        //{
+        //    bool result = true;
+        //    id = "";
+        //    switch(op)
+        //    {
+        //        case CacheIDProviderTypes.GetID:
+        //            {
+        //                if (this.m_CacheIDProviders.ContainsKey(nickname) == true)
+        //                {
+        //                    id = this.m_CacheIDProviders[nickname].NextID();
+        //                }
+        //            }
+        //            break;
+        //        case CacheIDProviderTypes.ResetID:
+        //            {
+        //                if (this.m_CacheIDProviders.ContainsKey(nickname) == true)
+        //                {
+        //                    this.m_CacheIDProviders[nickname].ResetID(id);
+        //                }
+        //            }
+        //            break;
+        //    }
 
-                    }
-                    break;
-            }
+        //    return result;
+        //}
 
-            return result;
-        }
+        //virtual public bool CacheManger_Registered<T>(string name = "default") where T : CQCacheManager, new()
+        //{
+        //    bool result = true;
+        //    //Monitor.Enter(this.m_CacheManagersLock);
+        //    //if (this.m_CacheManagers.ContainsKey(name) == false)
+        //    //{
+        //    //    T aa = new T();
+        //    //    aa.Logger = this;
+        //    //    this.m_CacheManagers.Add(name, aa);
+        //    //    this.LogCache(LogStates_Cache.CreateManager, DateTime.Now, name, "", "");
+        //    //}
+        //    //Monitor.Exit(this.m_CacheManagersLock);
+        //    return result;
+        //}
+
+        Dictionary<string, Dictionary<string, IQCache>> m_Caches = new Dictionary<string, Dictionary<string, IQCache>>();
+        //public bool CacheManger_Registered(string name = "default")
+        //{
+        //    if(this.m_Caches.ContainsKey(name) == false)
+        //    {
+        //        this.m_Caches.Add(name, new Dictionary<string, IQCache>());
+        //    }
+            
+        //    return true;
+        //}
     }
 }

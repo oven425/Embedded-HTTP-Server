@@ -116,7 +116,7 @@ namespace WPF_Server_Http.Service
 
         public bool RegisterCacheManager()
         {
-            this.Extension.CacheManger_Registered<CQCacheManager>("websocket");
+            //this.Extension.CacheManger_Registered<CQCacheManager>("websocket");
             return true;
         }
 
