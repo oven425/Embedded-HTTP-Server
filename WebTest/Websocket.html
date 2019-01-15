@@ -8,11 +8,6 @@
     </head>
     <body>
         <div>
-            <button onclick="ontablechange()">Sumbit</button>
-            <button>AJAX</button>
-            <button>WebSocket</button>
-        </div>
-        <div>
             <strong>Location:</strong>
             <br></br>
             <!-- <input id="input_url" value="ws://echo.websocket.org"></input> -->
@@ -64,7 +59,7 @@
 
             function onping()
             {
-                //websocket.ping();
+                websocket.ping('', false, true);
             }
 
             function onsend()

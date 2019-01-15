@@ -80,7 +80,7 @@ namespace QNetwork.Http.Server
             {
                 this.m_CurrentResp = data;
                 CQHttpResponseReader resp_reader = this.m_CurrentResp as CQHttpResponseReader;
-                if(resp_reader != null)
+                if(resp_reader != null && resp_reader.Response.Logger !=null)
                 {
                     resp_reader.Response.Logger.LogProcess(LogStates_Process.SendResponse, this.m_ID, resp_reader.Response.ProcessID, DateTime.Now, null, resp_reader.Response);
                 }
@@ -167,7 +167,11 @@ namespace QNetwork.Http.Server
             {
                 System.IO.Stream resp = null;
                 CQHttpResponseReader resp_reader =  this.m_CurrentResp as CQHttpResponseReader;
-                resp_reader.Response.Logger.LogProcess(LogStates_Process.SendResponse_Compelete, this.m_ID, resp_reader.Response.ProcessID, DateTime.Now, null, null);
+                if(resp_reader !=null && resp_reader.Response.Logger!=null)
+                {
+                    resp_reader.Response.Logger.LogProcess(LogStates_Process.SendResponse_Compelete, this.m_ID, resp_reader.Response.ProcessID, DateTime.Now, null, null);
+                }
+                
                 //if(resp_read != null)
                 //{
                 //    resp.

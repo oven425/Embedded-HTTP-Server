@@ -7,7 +7,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.ComponentModel;
 using QNetwork.Http.Server.Cache;
-using static QNetwork.Http.Server.CQWebSocketResponseReader;
 
 namespace QNetwork.Http.Server
 {
@@ -21,7 +20,6 @@ namespace QNetwork.Http.Server
 
         public override void Dispose()
         {
-            throw new NotImplementedException();
         }
 
         public bool Open(CQTCPHandler handler, byte[] data, int len)
@@ -50,19 +48,6 @@ namespace QNetwork.Http.Server
             resp.Headers.Add("Sec-WebSocket-Accept", base64_str);
             resp.Headers.Add("Sec-WebSocket-Version", "13");
 
-            //resp.Headers.Add("Access-Control-Allow-Credentials", "true");
-            //resp.AccessControlAllowHeaders.Add("content-type");
-            //resp.AccessControlAllowHeaders.Add("authorization");
-            //resp.AccessControlAllowHeaders.Add("x-websocket-extensions");
-            //resp.AccessControlAllowHeaders.Add("x-websocket-version");
-            //resp.AccessControlAllowHeaders.Add("x-websocket-protocol");
-            //resp.Headers.Add("Access-Control-Allow-Headers", "content-type");
-            //resp.Headers.Add("Access-Control-Allow-Headers", "authorization");
-            //resp.Headers.Add("Access-Control-Allow-Headers", "x-websocket-extensions");
-            //resp.Headers.Add("Access-Control-Allow-Headers", "x-websocket-version");
-            //resp.Headers.Add("Access-Control-Allow-Headers", "x-websocket-protocol");
-            //resp.Headers.Add("Access-Control-Allow-Origin", "*");
-            //System.Diagnostics.Trace.WriteLine(resp);
             CQHttpResponseReader resp_reader = new CQHttpResponseReader();
             resp_reader.Set(resp);
             this.m_TcpHandler.AddSend(resp_reader);
@@ -111,13 +96,6 @@ namespace QNetwork.Http.Server
 
         private void M_Thread_DoWork(object sender, DoWorkEventArgs e)
         {
-            //Stream data = e.Argument as Stream;
-            //data.Position = 0;
-            //CQWebSocketResponseReader cc = new CQWebSocketResponseReader();
-            //byte[] nn = new byte[8192];
-            //int read_len = data.Read(nn, 0, nn.Length);
-            //byte[] bbb1 = new byte[read_len];
-            //Array.Copy(nn, bbb1, read_len);
             string str = e.Argument as string;
             byte[] bbbbb = new byte[] { 0x81, 0x06, 0x73, 0x65, 0x6e, 0x64, 0x7e, 0x7e };
             CQWebSokcetData wsd = new CQWebSokcetData();
@@ -128,145 +106,142 @@ namespace QNetwork.Http.Server
         }
     }
 
-    public class CQWebSocketResponseReader : Stream
+    public class CQWebSokcetData
     {
-        bool m_IsEnd;
-        public bool IsEnd => this.m_IsEnd;
+        /// <summary>
+        /// 1 bit
+        /// </summary>
+        public byte FIN { set; get; }
+        /// <summary>
+        /// 4 bit
+        /// </summary>
+        public byte Opcode { set; get; }
+        /// <summary>
+        /// 1 bit
+        /// </summary>
 
-        public override bool CanRead => throw new NotImplementedException();
-
-        public override bool CanSeek => throw new NotImplementedException();
-
-        public override bool CanWrite => throw new NotImplementedException();
-
-        public override long Length => throw new NotImplementedException();
-
-        public override long Position { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-        MemoryStream m_Data;
-        public CQWebSocketResponseReader()
+        public bool EnableMask { set; get; }
+        /// <summary>
+        /// 0 or 4 bytes
+        /// </summary>
+        public int MaskKey { set; get; }
+        public CQWebSokcetData()
         {
-            this.m_IsEnd = false;
+            this.FIN = 1;
+            this.Opcode = 0x01;
+            this.EnableMask = false;
         }
-
-        public CQWebSocketResponseReader(byte[] data)
+        public bool Parse(System.IO.Stream data)
         {
-            this.m_IsEnd = false;
-            this.m_Data = new MemoryStream(data);
-        }
-        public void Dispose()
-        {
+            bool result = true;
+            data.Position = 0;
+            byte bb = (byte)data.ReadByte();
+            this.FIN = (byte)((bb & 0x80) >> 7);
+            this.Opcode = (byte)(bb & 0x0F);
+            bb = (byte)data.ReadByte();
 
-        }
+            int mask = (bb & 0x80) >> 7;
+            this.EnableMask = mask == 1;
+            int payload_len = (bb & 0x7F);
 
-        override public int Read(byte[] buffer, int offset, int count)
-        {
-            int read_len = 0;
-            if (this.m_IsEnd == false)
+
+            byte[] bb1 = new byte[4];
+
+            data.Read(bb1, 0, bb1.Length);
+            this.MaskKey = BitConverter.ToInt32(bb1, 0);
+
+            byte[] bb2 = new byte[payload_len];
+            data.Read(bb2, 0, bb2.Length);
+            for (var i = 0; i < payload_len; i++)
             {
-                read_len = this.m_Data.Read(buffer, offset, count);
-                if (this.m_Data.Position == this.m_Data.Length)
-                {
-                    this.m_IsEnd = true;
-                }
+                var j = i % 4;
+                bb2[i] = (byte)(bb2[i] ^ bb1[j]);
             }
-
-            return read_len;
+            string str = Encoding.UTF8.GetString(bb2);
+            System.Diagnostics.Trace.WriteLine(str);
+            return result;
         }
 
-        public override void Flush()
+        public bool Build(System.IO.Stream data, byte[] payload)
         {
-            throw new NotImplementedException();
+            bool result = true;
+            BinaryWriter bw = new BinaryWriter(data);
+            byte b1 = (byte)(this.FIN << 7);
+            b1 = (byte)(b1 | this.Opcode);
+            bw.Write(b1);
+
+            b1 = (byte)(this.EnableMask == true ? 0x80 : 0x00);
+            b1 = (byte)(b1 | payload.Length);
+            bw.Write(b1);
+            bw.Write(payload);
+            return result;
         }
-
-        public override long Seek(long offset, SeekOrigin origin)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void SetLength(long value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            throw new NotImplementedException();
-        }
-
-        //}
-
-        public class CQWebSokcetData
-        {
-            /// <summary>
-            /// 1 bit
-            /// </summary>
-            public byte FIN { set; get; }
-            /// <summary>
-            /// 4 bit
-            /// </summary>
-            public byte Opcode { set; get; }
-            /// <summary>
-            /// 1 bit
-            /// </summary>
-
-            public bool EnableMask { set; get; }
-            /// <summary>
-            /// 0 or 4 bytes
-            /// </summary>
-            public int MaskKey { set; get; }
-            public CQWebSokcetData()
-            {
-                this.FIN = 1;
-                this.Opcode = 0x01;
-                this.EnableMask = false;
-            }
-            public bool Parse(System.IO.Stream data)
-            {
-                bool result = true;
-                data.Position = 0;
-                byte bb = (byte)data.ReadByte();
-                this.FIN = (byte)((bb & 0x80) >> 7);
-                this.Opcode = (byte)(bb & 0x0F);
-                bb = (byte)data.ReadByte();
-
-                int mask = (bb & 0x80) >> 7;
-                this.EnableMask = mask == 1;
-                int payload_len = (bb & 0x7F);
-
-
-                byte[] bb1 = new byte[4];
-
-                data.Read(bb1, 0, bb1.Length);
-                this.MaskKey = BitConverter.ToInt32(bb1, 0);
-
-                byte[] bb2 = new byte[payload_len];
-                data.Read(bb2, 0, bb2.Length);
-                for (var i = 0; i < payload_len; i++)
-                {
-                    var j = i % 4;
-                    bb2[i] = (byte)(bb2[i] ^ bb1[j]);
-                }
-                string str = Encoding.UTF8.GetString(bb2);
-                System.Diagnostics.Trace.WriteLine(str);
-                return result;
-            }
-
-            public bool Build(System.IO.Stream data, byte[] payload)
-            {
-                bool result = true;
-                BinaryWriter bw = new BinaryWriter(data);
-                byte b1 = (byte)(this.FIN << 7);
-                b1 = (byte)(b1 | this.Opcode);
-                bw.Write(b1);
-
-                b1 = (byte)(this.EnableMask == true ? 0x80 : 0x00);
-                b1 = (byte)(b1 | payload.Length);
-                bw.Write(b1);
-                bw.Write(payload);
-                return result;
-            }
-        }
-
     }
+
+    //public class CQWebSocketResponseReader : Stream
+    //{
+    //    bool m_IsEnd;
+    //    public bool IsEnd => this.m_IsEnd;
+
+    //    public override bool CanRead => throw new NotImplementedException();
+
+    //    public override bool CanSeek => throw new NotImplementedException();
+
+    //    public override bool CanWrite => throw new NotImplementedException();
+
+    //    public override long Length => throw new NotImplementedException();
+
+    //    public override long Position { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+    //    MemoryStream m_Data;
+    //    public CQWebSocketResponseReader()
+    //    {
+    //        this.m_IsEnd = false;
+    //    }
+
+    //    public CQWebSocketResponseReader(byte[] data)
+    //    {
+    //        this.m_IsEnd = false;
+    //        this.m_Data = new MemoryStream(data);
+    //    }
+    //    public void Dispose()
+    //    {
+
+    //    }
+
+    //    override public int Read(byte[] buffer, int offset, int count)
+    //    {
+    //        int read_len = 0;
+    //        if (this.m_IsEnd == false)
+    //        {
+    //            read_len = this.m_Data.Read(buffer, offset, count);
+    //            if (this.m_Data.Position == this.m_Data.Length)
+    //            {
+    //                this.m_IsEnd = true;
+    //            }
+    //        }
+
+    //        return read_len;
+    //    }
+
+    //    public override void Flush()
+    //    {
+    //        throw new NotImplementedException();
+    //    }
+
+    //    public override long Seek(long offset, SeekOrigin origin)
+    //    {
+    //        throw new NotImplementedException();
+    //    }
+
+    //    public override void SetLength(long value)
+    //    {
+    //        throw new NotImplementedException();
+    //    }
+
+    //    public override void Write(byte[] buffer, int offset, int count)
+    //    {
+    //        throw new NotImplementedException();
+    //    }
+    //}
 }
