@@ -29,6 +29,7 @@ using QNetwork.Http.Server.Cache;
 using QNetwork;
 using QNetwork.Http.Server.Log;
 using WPF_Server_Http.Service;
+using QNetwork.Http.Server.Protocol;
 
 namespace WPF_Server_Http
 {

@@ -7,8 +7,10 @@ using System.Security.Cryptography;
 using System.Text;
 using System.ComponentModel;
 using QNetwork.Http.Server.Cache;
+using QNetwork.Http.Server.Handler;
+using QNetwork.Http.Server.Protocol;
 
-namespace QNetwork.Http.Server
+namespace QNetwork.Http.Server.Cache
 {
     public class CQWebSocket : CQCacheBase
     {

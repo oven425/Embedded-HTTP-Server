@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace QNetwork.Http.Server
+namespace QNetwork.Http.Server.Router
 {
     public class CQRouterData
     {
@@ -13,6 +13,7 @@ namespace QNetwork.Http.Server
         public string Url { set; get; }
         public Type Service { set; get; }
         public MethodInfo Method { set; get; }
+        public bool IsUse { set; get; }
         public CQRouterData()
         {
             this.LifeType = LifeTypes.Transient;

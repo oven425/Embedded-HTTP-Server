@@ -11,8 +11,45 @@ using System.ComponentModel;
 using QNetwork.Http.Server.Accept;
 using QNetwork.Http.Server.Log;
 
-namespace QNetwork.Http.Server
+namespace QNetwork.Http.Server.Handler
 {
+    //public class CQTCPHandler1 : IQHandler
+    //{
+    //    string m_ID;
+    //    bool m_IsEnd;
+    //    public CQTCPHandler1()
+    //    {
+    //        this.m_ID = Guid.NewGuid().ToString();
+    //        this.m_IsEnd = false;
+    //    }
+    //    public string ID => throw new NotImplementedException();
+
+    //    public IQHandlerResponse Parser { set; get; }
+
+    //    bool IQHandler.IsEnd => this.m_IsEnd;
+
+    //    public bool Close()
+    //    {
+    //        throw new NotImplementedException();
+    //    }
+
+    //    public bool IsEnd()
+    //    {
+    //        throw new NotImplementedException();
+    //    }
+
+    //    public bool Open()
+    //    {
+    //        throw new NotImplementedException();
+    //    }
+
+    //    public bool Send(Stream stream)
+    //    {
+    //        throw new NotImplementedException();
+    //    }
+    //}
+
+
     public class CQTCPHandler
     {
         public IQHttpServer_Log Logger { set; get; }
@@ -225,6 +262,9 @@ namespace QNetwork.Http.Server
         }
 
         public EndPoint RemoteEndPoint { get { return this.m_Socket.RemoteEndPoint; } }
+
+        public IQHandlerResponse Parser { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
         object m_SendLock = new object();
         System.IO.Stream m_CurrentResp;
         void m_SendArgs_Completed(object sender, SocketAsyncEventArgs e)

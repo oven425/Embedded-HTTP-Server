@@ -13,6 +13,9 @@ using QNetwork.Http.Server.Service;
 using QNetwork.Http.Server.Cache;
 using QNetwork.Http.Server.Log;
 using System.Reflection;
+using QNetwork.Http.Server.Handler;
+using QNetwork.Http.Server.Router;
+using QNetwork.Http.Server.Protocol;
 
 namespace QNetwork.Http.Server
 {
@@ -101,11 +104,26 @@ namespace QNetwork.Http.Server
             try
             {
                 Monitor.Enter(this.m_RequestsLock);
-                if (this.m_Requests.Count > 0)
+                for(int i=0; i<this.m_Requests.Count; i++)
                 {
-                    req = this.m_Requests[0];
-                    this.m_Requests.RemoveAt(0);
+                    CQRouterData rd = this.GetService(this.m_Requests[i]);
+                    if(rd.LifeType == LifeTypes.Singleton)
+                    {
+                        if(rd.IsUse == false)
+                        {
+                            req = this.m_Requests[i];
+                        }
+                    }
+                    else
+                    {
+                        req = this.m_Requests[i];
+                    }
                 }
+                //if (this.m_Requests.Count > 0)
+                //{
+                //    req = this.m_Requests[0];
+                //    this.m_Requests.RemoveAt(0);
+                //}
             }
             catch (Exception ee)
             {
@@ -172,8 +190,8 @@ namespace QNetwork.Http.Server
             }
         }
 
-        public delegate bool HttpHandlerChangeDelegate(CQHttpHandler handler, bool isadd);
-        public event HttpHandlerChangeDelegate OnHttpHandlerChange;
+        //public delegate bool HttpHandlerChangeDelegate(CQHttpHandler handler, bool isadd);
+        //public event HttpHandlerChangeDelegate OnHttpHandlerChange;
         bool ProcessAccept(CQSocketListen listen, Socket client, byte[] acceptbuf, int accept_len)
         {
             bool result = true;
@@ -188,10 +206,10 @@ namespace QNetwork.Http.Server
                 System.Diagnostics.Trace.WriteLine("");
             }
             this.m_Sessions.Add(session.ID, session);
-            if(this.OnHttpHandlerChange != null)
-            {
-                this.OnHttpHandlerChange(session, true);
-            }
+            //if(this.OnHttpHandlerChange != null)
+            //{
+            //    this.OnHttpHandlerChange(session, true);
+            //}
             Monitor.Exit(this.m_SessionsLock);
             session.Open(acceptbuf, accept_len);
             return result;
@@ -339,9 +357,8 @@ namespace QNetwork.Http.Server
             bool result = true;
             process_result_code = ServiceProcessResults.None;
             resp = null;
-            
 
-            var vv = this.m_Services.FirstOrDefault(x => x.Url == request.URL.LocalPath);
+            var vv = this.GetService(request);            
             if (vv != null)
             {
                 IQHttpService instance = null;
@@ -434,15 +451,15 @@ namespace QNetwork.Http.Server
         }
 
 
-        public delegate bool ServiceChangeDelegate(CQHttpRequest req, IQHttpService service, Request_ServiceStates isadd);
-        public event ServiceChangeDelegate OnServiceChange;
-        private void ServiceChange(CQHttpRequest req, IQHttpService service, Request_ServiceStates isadd)
-        {
-            if (this.OnServiceChange != null)
-            {
-                this.OnServiceChange(req, service, isadd);
-            }
-        }
+        //public delegate bool ServiceChangeDelegate(CQHttpRequest req, IQHttpService service, Request_ServiceStates isadd);
+        //public event ServiceChangeDelegate OnServiceChange;
+        //private void ServiceChange(CQHttpRequest req, IQHttpService service, Request_ServiceStates isadd)
+        //{
+        //    if (this.OnServiceChange != null)
+        //    {
+        //        this.OnServiceChange(req, service, isadd);
+        //    }
+        //}
 
        
         List<CQRouterData> m_Services = new List<CQRouterData>();

@@ -9,9 +9,25 @@ using System.IO;
 using System.Net;
 using System.Diagnostics;
 using QNetwork.Http.Server.Accept;
+using QNetwork.Http.Server.Protocol;
 
-namespace QNetwork.Http.Server
+namespace QNetwork.Http.Server.Handler
 {
+    public interface IQHandlerResponse
+    {
+        bool Parse(Stream data);
+    }
+    public interface IQHandler
+    {
+        string ID { get; }
+        bool Open();
+        bool Close();
+        bool Send(Stream stream);
+        IQHandlerResponse Parser { set; get; }
+        bool IsEnd { get; }
+    }
+
+
     public class CQHttpHandler
     {
         CQTCPHandler m_SocketHandler;

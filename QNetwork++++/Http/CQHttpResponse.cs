@@ -5,7 +5,7 @@ using System.Text;
 using System.IO;
 using QNetwork.Http.Server.Log;
 
-namespace QNetwork.Http.Server
+namespace QNetwork.Http.Server.Protocol
 {
     public enum Connections
     {

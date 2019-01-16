@@ -1,4 +1,5 @@
 ﻿using QNetwork.Http.Server.Log;
+using QNetwork.Http.Server.Protocol;
 using System;
 using System.Collections.Generic;
 using System.IO;
