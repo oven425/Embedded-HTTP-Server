@@ -209,10 +209,6 @@ namespace QNetwork.Http.Server.Handler
                     resp_reader.Response.Logger.LogProcess(LogStates_Process.SendResponse_Compelete, this.m_ID, resp_reader.Response.ProcessID, DateTime.Now, null, null);
                 }
                 
-                //if(resp_read != null)
-                //{
-                //    resp.
-                //}
                 Monitor.Enter(this.m_SendRespsLock);
                 if (this.m_SendDatas.Count > 0)
                 {
@@ -223,7 +219,6 @@ namespace QNetwork.Http.Server.Handler
             if (this.m_CurrentResp.Length > this.m_CurrentResp.Position)
             {
                 int send_len = this.m_CurrentResp.Read(this.m_SendBuf, 0, this.m_SendBuf.Length);
-                //System.Diagnostics.Trace.Write(Encoding.UTF8.GetString(m_SendBuf, 0, send_len));
                 try
                 {
                     this.m_SocketLock.EnterReadLock();

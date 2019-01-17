@@ -11,7 +11,6 @@ using System.Text;
 
 namespace WPF_Server_Http.Service
 {
-    [CQServiceSetting(Methods = new string[] { "/Push", "/EVENT4", "/TEST", "/TEST1", "/PostTest" })]
     public class CQHttpService_Test : IQHttpService
     {
         BackgroundWorker m_Thread_PushT;

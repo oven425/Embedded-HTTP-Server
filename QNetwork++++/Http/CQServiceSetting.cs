@@ -5,15 +5,15 @@ using System.Text;
 
 namespace QNetwork.Http.Server.Service
 {
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-    public class CQServiceSetting : Attribute
-    {
-        public CQServiceSetting()
-        {
-        }
-        public string[] Methods { set; get; }
-        //public string Method { set; get; }
-    }
+    //[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
+    //public class CQServiceSetting : Attribute
+    //{
+    //    public CQServiceSetting()
+    //    {
+    //    }
+    //    public string[] Methods { set; get; }
+    //    //public string Method { set; get; }
+    //}
 
     public enum LifeTypes
     {
@@ -48,6 +48,7 @@ namespace QNetwork.Http.Server.Service
         public CQServiceMethod()
         {
             this.LocalPath = "/";
+            this.UseLimit = 1;
         }
         public CQServiceMethod(string local_path)
         {
@@ -58,5 +59,6 @@ namespace QNetwork.Http.Server.Service
             return this.LocalPath;
         }
         public string LocalPath { set; get; }
+        public int UseLimit { set; get; }
     }
 }

@@ -36,10 +36,16 @@ namespace WPF_Server_Http
     /// <summary>
     /// MainWindow.xaml 的互動邏輯
     /// </summary>
-    public partial class MainWindow : Window, IQHttpServer_Log
+    /// 
+    [CQServiceRoot(LifeType = LifeTypes.Singleton)]
+    public partial class MainWindow : Window, IQHttpServer_Log,IQHttpService
     {
         CQHttpServer m_TestServer = new CQHttpServer();
         CQMainUI m_MainUI;
+
+        public IQHttpServer_Log Logger { set; get; }
+        public IQHttpServer_Extension Extension { set; get; }
+
         public MainWindow()
         {
             InitializeComponent();
@@ -87,6 +93,7 @@ namespace WPF_Server_Http
                 services.Add(new CQHttpService_WebSocket());
                 services.Add(new CQHttpService_ServerOperate());
                 services.Add(new CQHttpService_WebMediaPlayer());
+                services.Add(this);
                 this.m_TestServer.Logger = this;
 
                 List<IQCacheIDProvider> cache_providers = new List<IQCacheIDProvider>();
@@ -285,6 +292,44 @@ namespace WPF_Server_Http
                     break;
             }
             return true;
+        }
+
+        int m_Count = 0;
+        [CQServiceMethod("/Count")]
+        public bool TEST(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
+        {
+            process_result_code = 0;
+            resp = null;
+            bool result = true;
+            System.Threading.Thread.Sleep(5000);
+            process_result_code = ServiceProcessResults.OK;
+            this.m_Count++;
+            resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+            resp.Set200();
+            resp.Connection = Connections.KeepAlive;
+            string str = string.Format("Time:{0}\r\nCount:{1}"
+                , DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss", System.Globalization.DateTimeFormatInfo.InvariantInfo)
+                , this.m_Count);
+            resp.BuildContentFromString(str);
+
+            return result;
+        }
+
+        public bool RegisterCacheManager()
+        {
+            return true;
+            //throw new NotImplementedException();
+        }
+
+        public bool CloseHandler(List<string> handlers)
+        {
+            return true;
+            //throw new NotImplementedException();
+        }
+
+        public void Dispose()
+        {
+            //throw new NotImplementedException();
         }
     }
 
