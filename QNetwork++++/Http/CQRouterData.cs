@@ -14,8 +14,9 @@ namespace QNetwork.Http.Server.Router
         //public Type Service { set; get; }
         public IQHttpService Service{set;get;}
         public MethodInfo Method { set; get; }
-        public bool IsUse { set; get; }
+        //public bool IsUse { set; get; }
         public int UseLimit { set; get; }
+        public int CurrentUse { set; get; }
         public CQRouterData()
         {
             this.LifeType = LifeTypes.Transient;

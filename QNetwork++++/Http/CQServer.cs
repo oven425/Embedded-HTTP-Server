@@ -110,10 +110,10 @@ namespace QNetwork.Http.Server
                     CQRouterData rd = this.GetService(this.m_Requests[i]);
                     if(rd.LifeType == LifeTypes.Singleton)
                     {
-                        if(rd.IsUse == false)
+                        if(rd.CurrentUse < rd.UseLimit)
                         {
                             req = this.m_Requests[i];
-                            rd.IsUse = true;
+                            rd.CurrentUse = rd.CurrentUse + 1;
                         }
                     }
                     else
@@ -409,7 +409,7 @@ namespace QNetwork.Http.Server
                     oos[2] = process_result_code;
                                         
                     router.Method.Invoke(instance, oos);
-                    router.IsUse = false;
+                    router.CurrentUse = router.CurrentUse - 1;
                     resp = oos[1] as CQHttpResponse;
                     process_result_code = (ServiceProcessResults)oos[2];
                 }
