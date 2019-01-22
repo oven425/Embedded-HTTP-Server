@@ -43,6 +43,51 @@ namespace QNetwork.Http.Server.Cache
         }
     }
 
+    public interface IQCacheID_Range<T>
+    {
+        T Min { get; }
+        T Max { get; }
+        bool Has(T data);
+        bool Enter(T data);
+    }
+
+    public class CQCacheID_Range<T>: IQCacheID_Range<T>
+    {
+        T m_Min;
+        T m_Max;
+        public T Min { get { return this.m_Min; } }
+        public T Max { get { return this.m_Max; } }
+        public CQCacheID_Range(T min, T max)
+        {
+            this.m_Min = min;
+            this.m_Max = max;
+        }
+
+        virtual public bool Has(T data)
+        {
+            bool result = false;
+            switch(data.GetType().Name)
+            {
+                case "Int32":
+                    {
+                        //int vv = data as int;
+                    }
+                    break;
+            }
+            //if(data >= m_Min && m_Max<=data)
+            //{
+            //    result = true;
+            //}
+            return result;
+        }
+        public bool Enter(T data)
+        {
+            bool result = true;
+
+            return result;
+        }
+    }
+
     public class CQCacheID_Default : IQCacheIDProvider
     {
         protected string m_NickName;
@@ -61,28 +106,6 @@ namespace QNetwork.Http.Server.Cache
             bb = (byte)(bb + 1);
             return bb.ToString();
         }
-
-        //public override int NewID()
-        //{
-        //    this.m_TempID = this.m_ID;
-        //    if(this.m_Resue.Count > 0)
-        //    {
-        //        if(this.m_TempID > this.m_Resue.Max())
-        //        {
-        //            this.m_TempID = this.m_Resue.Min();
-        //        }
-        //        else
-        //        {
-        //            this.m_TempID = this.m_TempID + 1;
-        //            this.m_ID = this.m_TempID;
-        //        }
-        //    }
-        //    else
-        //    {
-        //        this.m_ID = this.m_ID + 1;
-        //    }
-        //    return this.m_ID;
-        //}
 
         public void ResetID(string id)
         {

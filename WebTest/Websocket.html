@@ -4,33 +4,79 @@
             <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         <title>WebSocket Test</title>
         <style>
+            th,td{
+                border: 1px solid #ddd;
+            }
+            tr:nth-child(even) {background-color: #f2f2f2;}
         </style>
     </head>
     <body>
         <div>
-            <strong>Location:</strong>
-            <br></br>
-            <!-- <input id="input_url" value="ws://echo.websocket.org"></input> -->
-            <input id="input_url" value="ws://10.1.1.246:3333/WEBSOCKET_TEST"></input>
-            <br></br>
-            <button id="button_connect" onclick="onconnect()">Connect</button>
-            <button id="button_disconnect" onclick="ondisconnect()">Disconnect</button>
-            <button id="button_ping" onclick="onping()">Ping</button>
-            <br></br>
-            <strong>Message:</strong>
-            <br></br>
-            <input id="input_selectfile" type="file" onchange="onchange_selectfile"></input>
-            <input id="input_senddata" type="text" value="send~~"></input>
-            <br></br>
-            <button id="button_send" onclick="onsend()">Send</button>
-            
+             <fieldset>
+                 <legend>Location</legend>
+                 <div>
+                    <!-- <input id="input_url" value="ws://echo.websocket.org"></input> -->
+                    <input id="input_url" style="width:300px" value="ws://10.1.1.246:3333/WEBSOCKET_TEST" width="200"></input>
+                 </div>
+                 <div style="margin:5px 0px 0px 0px">
+                    <button id="button_connect" onclick="onconnect()">Connect</button>
+                    <button id="button_disconnect" onclick="ondisconnect()">Disconnect</button>
+                    <button id="button_ping" onclick="onping()">Ping</button>
+                 </div>
+             </fieldset>
+            <fieldset>
+                <legend>Send</legend>
+                <div>
+                    <label>Message:</label>
+                    <input id="input_senddata" type="text" value="send~~"></input>
+                    <button id="button_send" onclick="onsend()">Send</button>
+                </div>
+                <div>
+                    <label>File:</label>
+                    <input id="input_selectfile" type="file" onchange="onchange_selectfile"></input>
+                    <button id="button_sendfile">Send</button>
+                </div>
+            </fieldset>
+            <fieldset>
+                <legend>Recv</legend>
+                <table style="width:100%">
+                    <thead>
+                        <th>Time</th>
+                        <th>Type</th>
+                        <th>Message</th>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th>AAAA</th>
+                            <th>Send-></th>
+                            <th>MMMMMMMMMAAAAAAAAAAAAA</th>
+                        </tr>
+                        <tr>
+                            <th>AAAA</th>
+                            <th>Send-></th>
+                            <th>MMMMMMMMMAAAAAAAAAAAAA</th>
+                        </tr>
+                        <tr>
+                            <th>AAAA</th>
+                            <th>Send-></th>
+                            <th>MMMMMMMMMAAAAAAAAAAAAA</th>
+                        </tr>
+                        <tr>
+                            <th>AAAA</th>
+                            <th>Send-></th>
+                            <th>MMMMMMMMMAAAAAAAAAAAAA</th>
+                        </tr>
+                    </tbody>
+                </table>
+            </fieldset>
         </div>
-        <div>
+
+        <!-- <div>
             <strong>Log:</strong>
             <br/>
             <div id="consolelog"></div>
             <button id="button_clearlog" onclick="onclearlog()">Clear Log</button>
-        </div>
+        </div> -->
         <script>
             function ontablechange(evt, name)
             {
