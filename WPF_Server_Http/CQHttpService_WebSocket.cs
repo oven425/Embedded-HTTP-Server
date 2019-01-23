@@ -36,13 +36,13 @@ namespace WPF_Server_Http.Service
         }
 
         [CQServiceMethod("/WEBSOCKET")]
-        public bool WEBSOCKET(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
+        public bool WEBSOCKET(string handlerid, CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
         {
             resp = null;
             process_result_code = 0;
             bool result = true;
 
-            resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+            resp = new CQHttpResponse();
             resp.Content = new FileStream("../WebTest/Websocket.html", FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
             resp.ContentLength = resp.Content.Length;
             resp.ContentType = "text/html; charset=utf-8";
@@ -53,7 +53,7 @@ namespace WPF_Server_Http.Service
         }
 
         [CQServiceMethod("/WEBSOCKET_TEST")]
-        public bool WEBSOCKET_TEST(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
+        public bool WEBSOCKET_TEST(string handlerid, CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
         {
             resp = null;
             process_result_code = 0;
@@ -64,7 +64,7 @@ namespace WPF_Server_Http.Service
             {
                 CQWebSocket websocket = new CQWebSocket();
                 CQTCPHandler handler;
-                this.Extension.ControlTransfer(req.HandlerID, out handler);
+                this.Extension.ControlTransfer(handlerid, out handler);
                 websocket.Open(handler, req.HeaderRaw, req.HeaderRaw.Length);
                 this.Extension.CacheControl<CQWebSocket>(CacheOperates.Create, websocket.ID, ref websocket, "websocket");
                 process_result_code = ServiceProcessResults.WebSocket;
@@ -83,7 +83,7 @@ namespace WPF_Server_Http.Service
         //    {
         //        case "/WEBSOCKET":
         //            {
-        //                resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+        //                resp = new CQHttpResponse();
         //                resp.Content = new FileStream("../WebTest/Websocket.html", FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
         //                resp.ContentLength = resp.Content.Length;
         //                resp.ContentType = "text/html; charset=utf-8";

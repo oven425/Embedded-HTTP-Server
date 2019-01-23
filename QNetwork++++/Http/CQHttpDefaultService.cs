@@ -37,10 +37,10 @@ namespace QNetwork.Http.Server.Service
         public IQHttpServer_Log Logger { set; get; }
 
         [CQServiceMethod("/favicon.ico")]
-        public bool favicon(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
+        public bool favicon(string handlerid, CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
         {
             process_result_code = ServiceProcessResults.OK;
-            resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+            resp = new CQHttpResponse();
             if (this.m_Icons.Count() > 0)
             {
                 resp.Content = new FileStream(this.m_Icons[0], FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
@@ -63,10 +63,10 @@ namespace QNetwork.Http.Server.Service
         }
 
         [CQServiceMethod("/PostTest")]
-        public bool PostTest(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
+        public bool PostTest(string handlerid, CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
         {
             process_result_code = ServiceProcessResults.OK;
-            resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+            resp = new CQHttpResponse();
 
             resp.Content = new MemoryStream();
             req.Content.Position = 0;
@@ -85,7 +85,7 @@ namespace QNetwork.Http.Server.Service
         //public bool Test(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
         //{
         //    process_result_code = ServiceProcessResults.OK;
-        //    resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+        //    resp = new CQHttpResponse();
 
         //    resp.Content = new FileStream("test.txt", FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         //    resp.Content.Position = 0;
@@ -98,10 +98,10 @@ namespace QNetwork.Http.Server.Service
         //}
 
         [CQServiceMethod("/")]
-        public bool Default(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
+        public bool Default(string handlerid, CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
         {
             process_result_code = ServiceProcessResults.OK;
-            resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+            resp = new CQHttpResponse();
 
             string content_str = string.Format("Hello world\r\n{0}\r\nQEmbedded Http server\r\n", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss.fff", System.Globalization.DateTimeFormatInfo.InvariantInfo));
             //resp.Content = new MemoryStream(Encoding.UTF8.GetBytes(content_str));

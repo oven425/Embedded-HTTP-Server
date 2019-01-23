@@ -12,7 +12,6 @@ using System.Text;
 
 namespace WPF_Server_Http.Service
 {
-    //[CQServiceSetting(Methods = new string[] { "/PLAYBACK", "/PLAYBACKCONTROL" })]
     public class CQHttpService_Playback : IQHttpService
     {
         public CQHttpService_Playback()
@@ -33,7 +32,7 @@ namespace WPF_Server_Http.Service
         }
 
         [CQServiceMethod("/PLAYBACKCONTROL")]
-        public bool PLAYBACKCONTROL(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
+        public bool PLAYBACKCONTROL(string handlerid, CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
         {
             bool result = true;
             process_result_code = ServiceProcessResults.None;
@@ -44,54 +43,23 @@ namespace WPF_Server_Http.Service
         }
 
         [CQServiceMethod("/PLAYBACK")]
-        public bool PLAYBACK(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
+        public bool PLAYBACK(string handlerid, CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
         {
             bool result = true;
             process_result_code = ServiceProcessResults.None;
             resp = null;
-            CQCache_Playback cache = null;
+            //CQCache_Playback cache = null;
 
-            string query_str = req.URL.Query;
-            process_result_code = ServiceProcessResults.ControlTransfer;
-            CQTCPHandler tcp;
-            this.Extension.ControlTransfer(req.HandlerID, out tcp);
+            //string query_str = req.URL.Query;
+            //process_result_code = ServiceProcessResults.ControlTransfer;
+            //CQTCPHandler tcp;
+            //this.Extension.ControlTransfer(req.HandlerID, out tcp);
 
-            this.Extension.CacheControl<CQCache_Playback>(CacheOperates.Create, "", ref cache, "playback");
-            cache.Open(tcp, req);
+            //this.Extension.CacheControl<CQCache_Playback>(CacheOperates.Create, "", ref cache, "playback");
+            //cache.Open(tcp, req);
 
             return result;
         }
-
-        //public bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
-        //{
-        //    bool result = true;
-        //    process_result_code = ServiceProcessResults.None;
-        //    resp = null;
-        //    switch (req.URL.LocalPath.ToUpperInvariant())
-        //    {
-        //        case "/PLAYBACKCONTROL":
-        //            {
-
-        //            }
-        //            break;
-        //        case "/PLAYBACK":
-        //            {
-        //                CQCache_Playback cache = null;
-                        
-        //                string query_str = req.URL.Query;
-        //                process_result_code = ServiceProcessResults.ControlTransfer;
-        //                CQTCPHandler tcp;
-        //                this.Extension.ControlTransfer(req.HandlerID, out tcp);
-
-        //                this.Extension.CacheControl<CQCache_Playback>(CacheOperates.Create, "", ref cache, "playback");
-        //                cache.Open(tcp, req);
-        //            }
-        //            break;
-        //    }
-
-        //    return result;
-        //}
-
         public bool RegisterCacheManager()
         {
             bool result = true;

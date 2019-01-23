@@ -32,9 +32,9 @@ namespace QNetwork.Http.Server.Service
         }
 
         [CQServiceMethod("/Web")]
-        public bool Web(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
+        public bool Web(string handlerid, CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
         {
-            resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+            resp = new CQHttpResponse();
             process_result_code = ServiceProcessResults.None;
             bool result = true;
 
@@ -57,9 +57,9 @@ namespace QNetwork.Http.Server.Service
         }
 
         [CQServiceMethod("/GetServerInfo")]
-        public bool GetServerInfo(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
+        public bool GetServerInfo(string handlerid, CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
         {
-            resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+            resp = new CQHttpResponse();
             process_result_code = ServiceProcessResults.None;
             bool result = true;
 
@@ -73,47 +73,6 @@ namespace QNetwork.Http.Server.Service
 
             return result;
         }
-
-        //public bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
-        //{
-        //    resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
-        //    process_result_code = ServiceProcessResults.None;
-        //    bool result = true;
-        //    switch(req.URL.LocalPath)
-        //    {
-        //        case "/Web":
-        //            {
-        //                process_result_code = ServiceProcessResults.OK;
-        //                if (File.Exists("../ServerOperate/Index.html") == true)
-        //                {
-        //                    resp.Set200();
-        //                    byte[] bb = File.ReadAllBytes("../ServerOperate/Index.html");
-        //                    resp.ContentLength = bb.Length;
-        //                    resp.Content = new MemoryStream();
-        //                    resp.Content.Write(bb, 0, bb.Length);
-        //                    resp.Content.Position = 0;
-        //                }
-        //                else
-        //                {
-        //                    resp.Set404();
-        //                }
-        //            }
-        //            break;
-        //        case "/GetServerInfo":
-        //            {
-        //                ManagementObjectSearcher my = new ManagementObjectSearcher("SELECT * FROM Win32_BaseBoard");
-        //                foreach (ManagementObject share in my.Get())
-        //                {
-        //                    string a = "主機板製造商：" + share["Manufacturer"].ToString();
-        //                    string b = "產品：" + share["Product"].ToString();
-        //                    string c = "主機板序號：" + share["SerialNumber"].ToString();
-        //                }
-        //            }
-        //            break;
-        //    }
-
-        //    return result;
-        //}
 
         public bool RegisterCacheManager()
         {

@@ -38,6 +38,19 @@ namespace QNetwork.Http.Server.Protocol
         public long ContentLength { set; get; }
         public string ContentType { set; get; }
         public BuildTypes BuildType { get { return this.m_BuildType; } }
+
+        public CQHttpResponse(BuildTypes builetype = BuildTypes.Basic)
+        {
+            this.AccessControlAllowHeaders = new List<string>();
+            this.m_BuildType = builetype;
+            //this.m_HandlerID = handlerid;
+            //this.m_ProcessID = processid;
+            this.Headers = new Dictionary<string, string>();
+            this.Message = "OK";
+            this.Code = "200";
+            this.Protocol = "HTTP/1.1";
+        }
+
         public CQHttpResponse(string handlerid, string processid, BuildTypes builetype= BuildTypes.Basic)
         {
             this.AccessControlAllowHeaders = new List<string>();

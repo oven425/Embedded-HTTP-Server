@@ -37,9 +37,9 @@ namespace WPF_Server_Http.Service
         }
 
         [CQServiceMethod("/MediaTest")]
-        public bool MediaTest(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
+        public bool MediaTest(string handlerid, CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
         {
-            resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+            resp = new CQHttpResponse();
             process_result_code = ServiceProcessResults.None;
             bool result = true;
 
@@ -53,9 +53,9 @@ namespace WPF_Server_Http.Service
         }
 
         [CQServiceMethod("/GetMediaFile")]
-        public bool GetMediaFile(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
+        public bool GetMediaFile(string handlerid, CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
         {
-            resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+            resp = new CQHttpResponse();
             process_result_code = ServiceProcessResults.None;
             bool result = true;
 
@@ -76,48 +76,6 @@ namespace WPF_Server_Http.Service
 
             return result;
         }
-
-        //public bool Process(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
-        //{
-        //    resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
-        //    process_result_code = ServiceProcessResults.None;
-        //    bool result = true;
-        //    switch (req.URL.LocalPath)
-        //    {
-        //        case "/MediaTest":
-        //            {
-        //                //WebMediaPlayer.html
-
-        //                byte[] bb = File.ReadAllBytes("../WebTest/WebMediaPlayer.html");
-        //                resp.ContentLength = bb.LongLength;
-        //                resp.Content = new MemoryStream(bb);
-        //                resp.ContentType = "text/html; charset=utf-8";
-        //                process_result_code = ServiceProcessResults.OK;
-        //            }
-        //            break;
-        //        case "/GetMediaFile":
-        //            {
-        //                CQMediaFiles files = new CQMediaFiles();
-        //                CQMediaFile mf = new CQMediaFile();
-        //                mf.FullName = "D:\\123.mp4";
-        //                mf.ID = "1";
-        //                mf.Name = "1234.mp4";
-        //                files.Files.Add(mf);
-        //                JavaScriptSerializer ss = new JavaScriptSerializer();
-        //                string sre = ss.Serialize(files.Files);
-        //                byte[] bb = Encoding.UTF8.GetBytes(sre);
-        //                resp.ContentLength = bb.LongLength;
-        //                resp.Content = new MemoryStream(bb);
-        //                resp.ContentType = "application/json; charset=utf-8";
-        //                process_result_code = ServiceProcessResults.OK;
-        //                this.Extension.CacheControl<CQMediaFiles> (CacheOperates.Create, "QQ", ref files);
-        //            }
-        //            break;
-
-
-        //    }
-        //    return result;
-        //}
 
         public bool RegisterCacheManager()
         {

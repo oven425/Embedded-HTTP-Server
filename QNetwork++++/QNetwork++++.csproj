@@ -56,6 +56,7 @@
     <Compile Include="Http\IQCacheIDProvider.cs" />
     <Compile Include="Http\IQHttpService.cs" />
     <Compile Include="Http\IQHttpServer_Log.cs" />
+    <Compile Include="IQSession.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

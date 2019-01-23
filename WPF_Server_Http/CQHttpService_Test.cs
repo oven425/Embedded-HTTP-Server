@@ -98,14 +98,14 @@ namespace WPF_Server_Http.Service
         }
 
         [CQServiceMethod("/PostTest")]
-        public bool PostTest(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
+        public bool PostTest(string handlerid, CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
         {
             process_result_code = 0;
             resp = null;
             bool result = true;
 
             process_result_code = ServiceProcessResults.OK;
-            resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+            resp = new CQHttpResponse();
             resp.Content = new MemoryStream();
             byte[] bb = new byte[8192];
             while (true)
@@ -127,13 +127,13 @@ namespace WPF_Server_Http.Service
         }
 
         [CQServiceMethod("/Push")]
-        public bool Push(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
+        public bool Push(string handlerid, CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
         {
             process_result_code = 0;
             resp = null;
             bool result = true;
 
-            this.m_NewPushHandlers.Add(req.HandlerID);
+            //this.m_NewPushHandlers.Add(req.HandlerID);
             if (this.m_Thread_PushT.IsBusy == false)
             {
                 this.m_Thread_PushT.RunWorkerAsync();
@@ -145,7 +145,7 @@ namespace WPF_Server_Http.Service
         }
 
         [CQServiceMethod("/TEST1")]
-        public bool TEST1(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
+        public bool TEST1(string handlerid, CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
         {
             process_result_code = 0;
             resp = null;
@@ -165,7 +165,7 @@ namespace WPF_Server_Http.Service
             }
             if (cc == null)
             {
-                resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+                resp = new CQHttpResponse();
                 resp.Set200();
                 resp.Connection = Connections.KeepAlive;
                 string str = string.Format("Time:{0}\r\nID:{1} not exist"
@@ -176,7 +176,7 @@ namespace WPF_Server_Http.Service
             else
             {
                 cc.Count++;
-                resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+                resp = new CQHttpResponse();
                 resp.Set200();
                 resp.Connection = Connections.KeepAlive;
                 string str = string.Format("Time:{0}\r\nID:{1}\r\nCount:{2}"
@@ -190,7 +190,7 @@ namespace WPF_Server_Http.Service
         }
 
         [CQServiceMethod("/TEST")]
-        public bool TEST(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
+        public bool TEST(string handlerid, CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
         {
             process_result_code = 0;
             resp = null;
@@ -211,7 +211,7 @@ namespace WPF_Server_Http.Service
 
             if (cc == null)
             {
-                resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+                resp = new CQHttpResponse();
                 resp.Set200();
                 resp.Connection = Connections.KeepAlive;
                 string str = string.Format("Time:{0}\r\nID:{1} not exist"
@@ -222,7 +222,7 @@ namespace WPF_Server_Http.Service
             else
             {
                 cc.Count++;
-                resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+                resp = new CQHttpResponse();
                 resp.Set200();
                 resp.Connection = Connections.KeepAlive;
                 string str = string.Format("Time:{0}\r\nID:{1}\r\nCount:{2}"
@@ -245,7 +245,7 @@ namespace WPF_Server_Http.Service
         //        case "/PostTest":
         //            {
         //                process_result_code = ServiceProcessResults.OK;
-        //                resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+        //                resp = new CQHttpResponse();
         //                resp.Content = new MemoryStream();
         //                byte[] bb = new byte[8192];
         //                while (true)
@@ -292,7 +292,7 @@ namespace WPF_Server_Http.Service
         //                }
         //                if (cc == null)
         //                {
-        //                    resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+        //                    resp = new CQHttpResponse();
         //                    resp.Set200();
         //                    resp.Connection = Connections.KeepAlive;
         //                    string str = string.Format("Time:{0}\r\nID:{1} not exist"
@@ -303,7 +303,7 @@ namespace WPF_Server_Http.Service
         //                else
         //                {
         //                    cc.Count++;
-        //                    resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+        //                    resp = new CQHttpResponse();
         //                    resp.Set200();
         //                    resp.Connection = Connections.KeepAlive;
         //                    string str = string.Format("Time:{0}\r\nID:{1}\r\nCount:{2}"
@@ -331,7 +331,7 @@ namespace WPF_Server_Http.Service
 
         //                if (cc == null)
         //                {
-        //                    resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+        //                    resp = new CQHttpResponse();
         //                    resp.Set200();
         //                    resp.Connection = Connections.KeepAlive;
         //                    string str = string.Format("Time:{0}\r\nID:{1} not exist"
@@ -342,7 +342,7 @@ namespace WPF_Server_Http.Service
         //                else
         //                {
         //                    cc.Count++;
-        //                    resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+        //                    resp = new CQHttpResponse();
         //                    resp.Set200();
         //                    resp.Connection = Connections.KeepAlive;
         //                    string str = string.Format("Time:{0}\r\nID:{1}\r\nCount:{2}"

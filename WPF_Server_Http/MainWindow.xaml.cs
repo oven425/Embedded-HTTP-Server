@@ -296,7 +296,7 @@ namespace WPF_Server_Http
 
         int m_Count = 0;
         [CQServiceMethod("/Count")]
-        public bool TEST(CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
+        public bool TEST(string handlerid, CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
         {
             process_result_code = 0;
             resp = null;
@@ -304,7 +304,7 @@ namespace WPF_Server_Http
             System.Threading.Thread.Sleep(5000);
             process_result_code = ServiceProcessResults.OK;
             this.m_Count++;
-            resp = new CQHttpResponse(req.HandlerID, req.ProcessID);
+            resp = new CQHttpResponse();
             resp.Set200();
             resp.Connection = Connections.KeepAlive;
             string str = string.Format("Time:{0}\r\nCount:{1}"

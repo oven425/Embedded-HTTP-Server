@@ -53,6 +53,7 @@ namespace QNetwork.Http.Server.Service
         public CQServiceMethod(string local_path)
         {
             this.LocalPath = local_path;
+            this.UseLimit = 1;
         }
         public override string ToString()
         {
