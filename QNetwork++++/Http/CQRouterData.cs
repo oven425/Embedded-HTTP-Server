@@ -17,6 +17,7 @@ namespace QNetwork.Http.Server.Router
         public int UseLimit { set; get; }
         public int CurrentUse { set; get; }
         object m_UseLock = new object();
+        public bool IsEnableCORS { set; get; }
         public CQRouterData()
         {
             this.LifeType = LifeTypes.Transient;
@@ -71,10 +72,18 @@ namespace QNetwork.Http.Server.Router
                     {
                         CQRouterData rr = new CQRouterData();
                         rr.LifeType = lifetype;
-                        rr.Url = string.Format("{0}{1}", root_path, service_method.LocalPath);
+                        if(service_method.IgnoreRoot == false)
+                        {
+                            rr.Url = string.Format("{0}{1}", root_path, service_method.LocalPath);
+                        }
+                        else
+                        {
+                            rr.Url = service_method.LocalPath;
+                        }
                         rr.Service = data;
                         rr.Method = methods[i];
                         rr.UseLimit = service_method.UseLimit;
+                        rr.IsEnableCORS = service_method.IsEnableCORS;
                         rrs.Add(rr);
                     }
                 }

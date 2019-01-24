@@ -61,5 +61,7 @@ namespace QNetwork.Http.Server.Service
         }
         public string LocalPath { set; get; }
         public int UseLimit { set; get; }
+        public bool IgnoreRoot { set; get; }
+        public bool IsEnableCORS { set; get; }
     }
 }

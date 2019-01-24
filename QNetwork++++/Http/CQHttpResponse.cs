@@ -38,7 +38,7 @@ namespace QNetwork.Http.Server.Protocol
         public long ContentLength { set; get; }
         public string ContentType { set; get; }
         public BuildTypes BuildType { get { return this.m_BuildType; } }
-
+        
         public CQHttpResponse(BuildTypes builetype = BuildTypes.Basic)
         {
             this.AccessControlAllowHeaders = new List<string>();

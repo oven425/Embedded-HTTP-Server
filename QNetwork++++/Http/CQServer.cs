@@ -419,6 +419,10 @@ namespace QNetwork.Http.Server
                     session.Router.Exit();
                     //session.Router.CurrentUse = session.Router.CurrentUse - 1;
                     resp = oos[2] as CQHttpResponse;
+                    if(session.Router.IsEnableCORS == true)
+                    {
+                        this.AddCROS(resp);
+                    }
                     process_result_code = (ServiceProcessResults)oos[3];
                 }
                 this.LogProcess(LogStates_Process.CreateResponse, session.HandlerID, session.ID, DateTime.Now, session.Request, resp);
@@ -431,6 +435,18 @@ namespace QNetwork.Http.Server
 
             return result;
         } 
+
+        protected virtual void AddCROS(CQHttpResponse resp)
+        {
+            if (resp.Headers.ContainsKey("Access-Control-Allow-Origin") == false)
+            {
+                resp.Headers.Add("Access-Control-Allow-Origin", "*");
+            }
+            else
+            {
+
+            }
+        }
 
         public bool Close()
         {

@@ -37,7 +37,7 @@ namespace WPF_Server_Http
     /// MainWindow.xaml 的互動邏輯
     /// </summary>
     /// 
-    [CQServiceRoot(LifeType = LifeTypes.Singleton)]
+    [CQServiceRoot(LifeType = LifeTypes.Singleton, Root ="/web")]
     public partial class MainWindow : Window, IQHttpServer_Log,IQHttpService
     {
         CQHttpServer m_TestServer = new CQHttpServer();
@@ -292,6 +292,38 @@ namespace WPF_Server_Http
                     break;
             }
             return true;
+        }
+
+        [CQServiceMethod("/OperateAccept")]
+        public bool OperateAccept(string handlerid, CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
+        {
+            process_result_code = 0;
+            resp = null;
+            bool result = true;
+            JavaScriptSerializer serializer = new JavaScriptSerializer();
+            string str = serializer.Serialize(this.m_MainUI.AddressList);
+            process_result_code = ServiceProcessResults.OK;
+            this.m_Count++;
+            resp = new CQHttpResponse();
+            resp.Set200();
+            resp.BuildContentFromString(str);
+            return result;
+        }
+
+        [CQServiceMethod("/GetAccepters", IsEnableCORS =true)]
+        public bool GetAccepters(string handlerid, CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
+        {
+            process_result_code = 0;
+            resp = null;
+            bool result = true;
+            JavaScriptSerializer serializer = new JavaScriptSerializer();
+            string str = serializer.Serialize(this.m_MainUI.AddressList);
+            process_result_code = ServiceProcessResults.OK;
+            this.m_Count++;
+            resp = new CQHttpResponse();
+            resp.Set200();
+            resp.BuildContentFromString(str);
+            return result;
         }
 
         int m_Count = 0;
