@@ -2,35 +2,56 @@
     <head>
         <title>Server web</title>
         <style>
+            .accepts{
+                display: inline-block;
+            }
+            .acceptor{
+                display: inline-block;
+                background-color: red;
+                margin: 5px;
+                font-family: Arial, Helvetica, sans-serif;
+                font-size: 16;
+            }
+            .acceptor_state{
+                display: inline-block;
+                width: 30px;
+                height: 30px;
+                background-color: green;
+            }
         </style>
     </head>
     <body onload="myFunction()">
-        <div id="accepts">
-            <div>123</div>
-            <div>123</div>
-            <div>123</div>
+        <div id="accepts" class="accepts">
+            <div class="acceptor_state"></div>
+            <div>127.0.0.1:33333</div>
         </div>
-        <div id="demo"></div>
+        <div>123</div>
     <script type="text/javascript">
         function myFunction()
         {
-            var xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = function() {
-                if (this.readyState == 4 && this.status == 200) {
-                    // document.getElementById("demo").innerHTML = this.responseText;
-                    var vv = JSON.parse(this.responseText);
-                    console.log(this.responseText);
-                    for(var i=0 ; i<vv.length ; i++)
-                    {
-                        console.log("IsOpen: "+vv[i].IsOpen);
-                        console.log("ListenState: "+vv[i].ListenState);
-                        console.log("IP: "+vv[i].Address.IP);
-                        console.log("Port: "+vv[i].Address.Port);
-                    }
-                }
-            };
-            xhttp.open("GET", "http://10.1.1.246:3333/web/GetAccepters", true);
-            xhttp.send();
+            // var xhttp = new XMLHttpRequest();
+            // xhttp.onreadystatechange = function() {
+            //     if (this.readyState == 4 && this.status == 200) {
+            //         var vv = JSON.parse(this.responseText);
+            //         console.log(this.responseText);
+            //         var tt = "";
+            //         for(var i=0 ; i<vv.length ; i++)
+            //         {
+                        
+            //             tt = tt+"<div class=\"acceptor\">" + vv[i].Address.IP + ":" + vv[i].Address.Port + "</div>";
+                        
+            //             console.log("IsOpen: "+vv[i].IsOpen);
+            //             console.log("ListenState: "+vv[i].ListenState);
+            //             console.log("IP: "+vv[i].Address.IP);
+            //             console.log("Port: "+vv[i].Address.Port);
+            //         }
+
+            //         var aac = document.getElementById("accepts");
+            //             // aac.innerHTML = tt;
+            //     }
+            // };
+            // xhttp.open("GET", "http://10.1.1.246:3333/web/GetAccepters", true);
+            // xhttp.send();
         }
     </script>
             
