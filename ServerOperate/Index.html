@@ -2,56 +2,162 @@
     <head>
         <title>Server web</title>
         <style>
-            .accepts{
-                display: inline-block;
+            .grid{
+                display: grid;
+                grid-template-columns: 200px auto;
+                height: 100%;
+            }
+            .main_control{
+                background-color: lightblue;
+            }
+            .sub_control
+            {
+                background-color: wheat;
             }
             .acceptor{
+                margin-bottom: 3px;
+            }
+            .acceptor_address{
                 display: inline-block;
-                background-color: red;
-                margin: 5px;
                 font-family: Arial, Helvetica, sans-serif;
-                font-size: 16;
+                font-size: 14;
+                vertical-align: middle;
             }
             .acceptor_state{
                 display: inline-block;
-                width: 30px;
-                height: 30px;
+                width: 25px;
+                height: 25px;
+                border-radius: 5px;
+                border: 10px, black;
                 background-color: green;
+                vertical-align: middle;
             }
+            .acceptor_state_error{
+                background-color:red;
+            }
+            /* .container{
+width: 900px;
+background-color: gray;
+            }
+            .clearfix::after{
+                content: "";
+                display: block;
+                clear: both;
+            }
+            .container div{
+                width: 250px;
+            }
+            .a{
+background-color: red;
+float: left;
+height: 600px;
+            }
+            .b{
+background-color: green;
+float: left;
+height: 400px;
+            }
+            .c{
+background-color: blue;
+float: left;
+height: 300px;
+            } */
+            /* .container{
+                width: 300px;
+                height: 300px;
+                background-color: gray;
+            }
+            .qq{
+                width: 20px;
+                height: 300;
+                background-color: red;
+                display: inline-block;
+                vertical-align: middle;
+            }
+            .container::after{
+                content: "";
+                height: 100%;
+                display: inline-block;
+                vertical-align: middle;
+            }
+            .box{
+                width: 250px;
+                display: inline-block;
+                vertical-align: middle;
+            } */
         </style>
     </head>
     <body onload="myFunction()">
-        <div id="accepts" class="accepts">
-            <div class="acceptor_state"></div>
-            <div>127.0.0.1:33333</div>
+        <!-- <div class="container clearfix">
+            <div class="a">a</div>
+            <div class="b">b</div>
+            <div class="c">c</div>
+        </div> -->
+        <!-- <div class="container">
+            <div class="box">
+                    http://10.1.1.105:666/uuid
+                    {
+                      "uuid": "f5bde08f-4387-412c-a931-34b0b728fcb6"     79642754475475
+                    
+            </div>
+        </div> -->
+        <div class="grid">
+            <div class="main_control">
+                <div id="time"> </div>
+                <div>Method list</div>
+                <div id="ll">Acceptor</div>
+                <div class="acceptor">
+                    <div class="acceptor_state"></div>
+                    <div class="acceptor_address">127.0.0.1:3333</div>
+                </div>
+                <div class="acceptor">
+                    <div class="acceptor_state"></div>
+                    <div class="acceptor_address">127.0.0.1:3333</div>
+                </div>
+                <div class="acceptor">
+                    <div class="acceptor_state"></div>
+                    <div class="acceptor_address">127.0.0.1:3333</div>
+                </div>
+            </div>
+            <div class="sub_control"></div>
         </div>
-        <div>123</div>
+        
     <script type="text/javascript">
         function myFunction()
         {
-            // var xhttp = new XMLHttpRequest();
-            // xhttp.onreadystatechange = function() {
-            //     if (this.readyState == 4 && this.status == 200) {
-            //         var vv = JSON.parse(this.responseText);
-            //         console.log(this.responseText);
-            //         var tt = "";
-            //         for(var i=0 ; i<vv.length ; i++)
-            //         {
-                        
-            //             tt = tt+"<div class=\"acceptor\">" + vv[i].Address.IP + ":" + vv[i].Address.Port + "</div>";
-                        
-            //             console.log("IsOpen: "+vv[i].IsOpen);
-            //             console.log("ListenState: "+vv[i].ListenState);
-            //             console.log("IP: "+vv[i].Address.IP);
-            //             console.log("Port: "+vv[i].Address.Port);
-            //         }
+           
+            setInterval(Timer1, 1000);
+        }
 
-            //         var aac = document.getElementById("accepts");
-            //             // aac.innerHTML = tt;
-            //     }
-            // };
-            // xhttp.open("GET", "http://10.1.1.246:3333/web/GetAccepters", true);
-            // xhttp.send();
+        function update_acceptor(){
+        var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    var vv = JSON.parse(this.responseText);
+                    console.log(this.responseText);
+                    var tt = "";
+                    for(var i=0 ; i<vv.length ; i++)
+                    {
+                        
+                        tt = tt+"<div class=\"acceptor\">" + vv[i].Address.IP + ":" + vv[i].Address.Port + "</div>";
+                        
+                        console.log("IsOpen: "+vv[i].IsOpen);
+                        console.log("ListenState: "+vv[i].ListenState);
+                        console.log("IP: "+vv[i].Address.IP);
+                        console.log("Port: "+vv[i].Address.Port);
+                    }
+
+                    var aac = document.getElementById("accepts");
+                        // aac.innerHTML = tt;
+                }
+            };
+            xhttp.open("GET", "http://10.1.1.246:3333/web/GetAccepters", true);
+            xhttp.send();
+        }
+        function Timer1(){
+            var time = document.getElementById("time");
+            var datetime = new Date();
+            time.innerHTML = datetime.getFullYear()+"/"+datetime.getMonth()+1+"/"+datetime.getDay() + " "+datetime.getHours()+":"+datetime.getMinutes()+":"+datetime.getSeconds();
         }
     </script>
             

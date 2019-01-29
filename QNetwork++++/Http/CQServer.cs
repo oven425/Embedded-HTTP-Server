@@ -19,7 +19,7 @@ using QNetwork.Http.Server.Protocol;
 
 namespace QNetwork.Http.Server
 {
-    public class CQHttpServer: IQHttpServer_Extension,IQHttpServer_Log
+    public class CQHttpServer: IQHttpServer_Extension,IQHttpServer_Log, IQHttpServer_Operation
     {
         List<BackgroundWorker> m_Threads = new List<BackgroundWorker>();
         Dictionary<CQSocketListen_Address, CQSocketListen> m_AcceptSockets = new Dictionary<CQSocketListen_Address, CQSocketListen>();
@@ -127,7 +127,7 @@ namespace QNetwork.Http.Server
 
                     //    rd.CurrentUse = rd.CurrentUse + 1;
                     //}
-                    if(rd.Enter() == true)
+                    if(rd!=null && rd.Enter() == true)
                     {
                         session = this.m_Requests[i];
                     }
@@ -720,6 +720,28 @@ namespace QNetwork.Http.Server
                 this.Logger.LogAccept(state, ip, port, obj);
             }
             return true;
+        }
+
+        public bool GetRouters(out List<CQRouterData> datas)
+        {
+            datas = new List<CQRouterData>();
+            datas.AddRange(this.m_Services);
+            return true;
+        }
+
+        public bool GetAccetpAddress(out List<string> addresslist)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Reboot()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Open()
+        {
+            throw new NotImplementedException();
         }
 
         Dictionary<string, IQCacheIDProvider> m_CacheIDProviders = new Dictionary<string, IQCacheIDProvider>();

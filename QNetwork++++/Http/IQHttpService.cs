@@ -2,6 +2,7 @@
 using QNetwork.Http.Server.Handler;
 using QNetwork.Http.Server.Log;
 using QNetwork.Http.Server.Protocol;
+using QNetwork.Http.Server.Router;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -62,6 +63,7 @@ namespace QNetwork.Http.Server
 
     public interface IQHttpServer_Operation
     {
+        bool GetRouters(out List<CQRouterData> datas);
         bool GetAccetpAddress(out List<string> addresslist);
         bool Reboot();
         bool Open();

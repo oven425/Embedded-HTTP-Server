@@ -13,7 +13,7 @@ namespace QNetwork.Http.Server.Service
     {
         public IQHttpServer_Log Logger { set; get; }
         public IQHttpServer_Extension Extension { set; get; }
-        public IQHttpServer_Operation Operate { set; get; }
+        //public IQHttpServer_Operation Operate { set; get; }
         //public List<string> Methods => this.m_Methods;
         //List<string> m_Methods = new List<string>();
 

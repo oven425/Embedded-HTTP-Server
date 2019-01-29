@@ -30,6 +30,7 @@ using QNetwork;
 using QNetwork.Http.Server.Log;
 using WPF_Server_Http.Service;
 using QNetwork.Http.Server.Protocol;
+using QNetwork.Http.Server.Router;
 
 namespace WPF_Server_Http
 {
@@ -319,12 +320,39 @@ namespace WPF_Server_Http
             JavaScriptSerializer serializer = new JavaScriptSerializer();
             string str = serializer.Serialize(this.m_MainUI.AddressList);
             process_result_code = ServiceProcessResults.OK;
-            this.m_Count++;
             resp = new CQHttpResponse();
             resp.Set200();
             resp.BuildContentFromString(str);
             return result;
         }
+
+        [CQServiceMethod("/GetRouters", IsEnableCORS = true)]
+        public bool GetRouters(string handlerid, CQHttpRequest req, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
+        {
+            process_result_code = 0;
+            resp = null;
+            bool result = true;
+            try
+            {
+                JavaScriptSerializer serializer = new JavaScriptSerializer();
+                List<CQRouterData> routers;
+                this.m_TestServer.GetRouters(out routers);
+
+
+                string str = serializer.Serialize(routers.Select(x =>new { x.Url, x.LifeType, x.CurrentUse}));
+                process_result_code = ServiceProcessResults.OK;
+                resp = new CQHttpResponse();
+                resp.Set200();
+                resp.BuildContentFromString(str);
+            }
+            catch (Exception ee)
+            {
+                System.Diagnostics.Trace.WriteLine(ee.Message);
+                System.Diagnostics.Trace.WriteLine(ee.StackTrace);
+            }
+            return result;
+        }
+        
 
         int m_Count = 0;
         [CQServiceMethod("/Count")]
