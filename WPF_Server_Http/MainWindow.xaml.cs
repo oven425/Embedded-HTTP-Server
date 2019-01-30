@@ -128,8 +128,10 @@ namespace WPF_Server_Http
             }
         }
 
+        object m_LogLock = new object();
         public bool LogProcess(LogStates_Process state, string handler_id, string process_id, DateTime time, CQHttpRequest request, CQHttpResponse response)
         {
+            Monitor.Enter(this.m_LogLock);
             switch(state)
             {
                 case LogStates_Process.CreateHandler:
@@ -221,6 +223,7 @@ namespace WPF_Server_Http
                     }
                     break;
             }
+            Monitor.Exit(this.m_LogLock);
             return true;
         }
 

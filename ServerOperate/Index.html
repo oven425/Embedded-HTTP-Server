@@ -29,103 +29,86 @@
                 height: 25px;
                 border-radius: 5px;
                 border: 10px, black;
-                background-color: green;
                 vertical-align: middle;
             }
-            .acceptor_state_error{
+            .acceptor_state_fail{
                 background-color:red;
             }
-            /* .container{
-width: 900px;
-background-color: gray;
+            .acceptor_state_close{
+                background-color:gray;
             }
-            .clearfix::after{
-                content: "";
-                display: block;
-                clear: both;
+            .acceptor_state_opening{
+                background-color:orange;
             }
-            .container div{
-                width: 250px;
+            .acceptor_state_normal{
+                background-color:green;
             }
-            .a{
-background-color: red;
-float: left;
-height: 600px;
-            }
-            .b{
-background-color: green;
-float: left;
-height: 400px;
-            }
-            .c{
-background-color: blue;
-float: left;
-height: 300px;
-            } */
-            /* .container{
-                width: 300px;
-                height: 300px;
-                background-color: gray;
-            }
-            .qq{
-                width: 20px;
-                height: 300;
-                background-color: red;
-                display: inline-block;
-                vertical-align: middle;
-            }
-            .container::after{
-                content: "";
-                height: 100%;
-                display: inline-block;
-                vertical-align: middle;
-            }
-            .box{
-                width: 250px;
-                display: inline-block;
-                vertical-align: middle;
-            } */
         </style>
     </head>
     <body onload="myFunction()">
-        <!-- <div class="container clearfix">
-            <div class="a">a</div>
-            <div class="b">b</div>
-            <div class="c">c</div>
-        </div> -->
-        <!-- <div class="container">
-            <div class="box">
-                    http://10.1.1.105:666/uuid
-                    {
-                      "uuid": "f5bde08f-4387-412c-a931-34b0b728fcb6"     79642754475475
-                    
-            </div>
-        </div> -->
         <div class="grid">
             <div class="main_control">
                 <div id="time"> </div>
-                <div>Method list</div>
+                <div onclick="OnMethodList()">Method list</div>
                 <div id="ll">Acceptor</div>
-                <div class="acceptor">
-                    <div class="acceptor_state"></div>
-                    <div class="acceptor_address">127.0.0.1:3333</div>
-                </div>
-                <div class="acceptor">
-                    <div class="acceptor_state"></div>
-                    <div class="acceptor_address">127.0.0.1:3333</div>
-                </div>
-                <div class="acceptor">
-                    <div class="acceptor_state"></div>
-                    <div class="acceptor_address">127.0.0.1:3333</div>
+                <div id="accepts">
+                    <!-- <div class="acceptor">
+                        <div class="acceptor_state"></div>
+                        <div class="acceptor_address">127.0.0.1:3333</div>
+                    </div>
+                    <div class="acceptor">
+                        <div class="acceptor_state"></div>
+                        <div class="acceptor_address">127.0.0.1:3333</div>
+                    </div>
+                    <div class="acceptor">
+                        <div class="acceptor_state"></div>
+                        <div class="acceptor_address">127.0.0.1:3333</div>
+                    </div> -->
                 </div>
             </div>
-            <div class="sub_control"></div>
+            <div id="sub_control" class="sub_control">
+                <div>
+                    <table id="table_methods">
+                        <thead>
+                            <th>Method</th>
+                            <th>Type</th>
+                        </thead>
+                        <tbody>
+                            
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
         
     <script type="text/javascript">
-        function myFunction()
-        {
-           
+        function OnMethodList(){
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    var vv = document.getElementById("sub_control");
+                    
+                    var vv = JSON.parse(this.responseText);
+                    var table = document.getElementById("table_methods");
+
+                    while(table.rows.length > 1)
+                    {
+                        table.deleteRow(1);
+                    }
+                    for(var i=0 ; i<vv.length ; i++)
+                    {
+                        var row = table.insertRow();
+                        var cell_1 = row.insertCell(0);
+                        cell_1.innerHTML = vv[i].Url;
+                        var cell_2 = row.insertCell(1);
+                        cell_2.innerHTML = vv[i].LifeType==1?"Singleton":"Transient";
+                    }
+                }
+            };
+            xhttp.open("GET", "http://10.1.1.246:3333/web/GetRouters", true);
+            xhttp.send();
+        }
+        function myFunction(){
             setInterval(Timer1, 1000);
         }
 
@@ -134,31 +117,52 @@ height: 300px;
             xhttp.onreadystatechange = function() {
                 if (this.readyState == 4 && this.status == 200) {
                     var vv = JSON.parse(this.responseText);
-                    console.log(this.responseText);
                     var tt = "";
                     for(var i=0 ; i<vv.length ; i++)
                     {
-                        
-                        tt = tt+"<div class=\"acceptor\">" + vv[i].Address.IP + ":" + vv[i].Address.Port + "</div>";
-                        
-                        console.log("IsOpen: "+vv[i].IsOpen);
-                        console.log("ListenState: "+vv[i].ListenState);
-                        console.log("IP: "+vv[i].Address.IP);
-                        console.log("Port: "+vv[i].Address.Port);
+                        tt = tt+"<div class=\"acceptor\">";
+                        var state = "acceptor_state";
+                        switch(vv[i].ListenState)
+                        {
+                            case 1:{
+                                state = state + " " + "acceptor_state_close";
+                            }
+                            break;
+                            case 2:{
+                                state = state + " " + "acceptor_state_opening";
+                            }
+                            break;
+                            case 3:{
+                                state = state + " " + "acceptor_state_fail";
+                            }
+                            break;
+                            case 4:{
+                                state = state + " " + "acceptor_state_normal";
+                            }
+                            break;
+                        }
+                        tt = tt + "<div class=\""+state+"\"></div>";
+                        tt = tt + "<div class=\"acceptor_address\">"+vv[i].Address.IP+":"+vv[i].Address.Port+"</div>";
+                        tt = tt +"</div>";
                     }
 
                     var aac = document.getElementById("accepts");
-                        // aac.innerHTML = tt;
+                    if(aac.innerHTML != tt)
+                    {
+                        aac.innerHTML = tt;
+                    }
                 }
             };
             xhttp.open("GET", "http://10.1.1.246:3333/web/GetAccepters", true);
             xhttp.send();
         }
         function Timer1(){
+            update_acceptor();
             var time = document.getElementById("time");
             var datetime = new Date();
             time.innerHTML = datetime.getFullYear()+"/"+datetime.getMonth()+1+"/"+datetime.getDay() + " "+datetime.getHours()+":"+datetime.getMinutes()+":"+datetime.getSeconds();
         }
+
     </script>
             
     </body>
