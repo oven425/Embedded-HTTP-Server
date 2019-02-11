@@ -39,14 +39,14 @@ namespace QNetwork.Http.Server.Log
 
     public interface IQHttpServer_Log
     {
-        bool LogProcess(LogStates_Process state, string handler_id, string process_id, DateTime time, CQHttpRequest request, CQHttpResponse response);
+        bool LogProcess(LogStates_Process state, IQSession session, string handler_id, string process_id, DateTime time, CQHttpRequest request, CQHttpResponse response);
         bool LogAccept(LogStates_Accept state, string ip, int port, CQSocketListen obj);
         bool LogCache(LogStates_Cache state, DateTime time, string manager_id, string cache_id, string name);
     }
 
     public class CQDefault_Log : IQHttpServer_Log
     {
-        public bool LogProcess(LogStates_Process state, string handler_id, string process_id, DateTime time, CQHttpRequest request, CQHttpResponse response)
+        public bool LogProcess(LogStates_Process state, IQSession session, string handler_id, string process_id, DateTime time, CQHttpRequest request, CQHttpResponse response)
         {
             System.Diagnostics.Trace.WriteLine(string.Format("State:{0} Handler:{1} Process:{2} time:{3}"
                 , state

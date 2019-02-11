@@ -23,9 +23,12 @@ namespace QNetwork.Http.Server.Handler
         bool Open();
         bool Close();
         bool Send(Stream stream);
-        IQHandlerResponse Parser { set; get; }
+
+        List<IQHandlerResponse> Parsers { set; get; }
         bool IsEnd { get; }
     }
+
+    
 
 
     public class CQHttpHandler
@@ -54,6 +57,40 @@ namespace QNetwork.Http.Server.Handler
         {
             this.ParseRequest(data);
             return true;
+        }
+
+        public bool SendResp(IQSession session)
+        {
+            bool result = true;
+            CQHttpResponseReader resp_reader = new CQHttpResponseReader();
+            resp_reader.Set(session.Response);
+            this.m_SocketHandler.AddSend(resp_reader);
+            //Monitor.Enter(this.m_SendRespsLock);
+            //this.m_SendResps.Enqueue(resp);
+            //Monitor.Exit(this.m_SendRespsLock);
+#if Async_Args
+            if (this.m_SendArgs.LastOperation == SocketAsyncOperation.None)
+            {
+                CQHttpResponse resp1 = null;
+                Monitor.Enter(this.m_SendRespsLock);
+                resp1 = this.m_SendResps.Dequeue();
+                Monitor.Exit(this.m_SendRespsLock);
+                if (resp1 != null)
+                {
+                    this.m_CurrentResp.Set(resp1);
+                }
+            }
+            Monitor.Enter(this.m_SendLock);
+            this.Send();
+            Monitor.Exit(this.m_SendLock);
+#else
+            //if (this.m_Thread_Send.IsBusy == false)
+            //{
+            //    this.m_Thread_Send.RunWorkerAsync();
+            //}
+#endif
+
+            return result;
         }
 
 
@@ -147,7 +184,7 @@ namespace QNetwork.Http.Server.Handler
                             address = string.Format("{0}:{1}", ppoint.Address.ToString(), ppoint.Port);
                         }
 
-                        CQHttpRequest req = new CQHttpRequest(this.m_SocketHandler.ID, address);
+                        CQHttpRequest req = new CQHttpRequest(address);
                         req.ParseHeader(req_, lastindex, findindex);
                         if ((req.Method == "POST") && (req.ContentLength > 0))
                         {

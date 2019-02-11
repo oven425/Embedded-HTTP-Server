@@ -30,7 +30,7 @@ namespace QNetwork.Http.Server.Cache
             bool result = true;
             this.m_TcpHandler = handler;
             this.m_TcpHandler.OnParse += M_TcpHandler_OnParse;
-            CQHttpRequest req = new CQHttpRequest("", "");
+            CQHttpRequest req = new CQHttpRequest("");
             req.ParseHeader(data, 0, len);
             string key = req.Headers["SEC-WEBSOCKET-KEY"];
 

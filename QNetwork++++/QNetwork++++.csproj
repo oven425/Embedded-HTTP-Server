@@ -39,6 +39,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CQSocketHandler.cs" />
     <Compile Include="Http\CQHttpService_ServerOperate.cs" />
     <Compile Include="Http\CQCircleStream.cs" />
     <Compile Include="Http\CQRouterData.cs" />

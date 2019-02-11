@@ -8,6 +8,35 @@
         <valueconvert:CQObject2Name x:Key="object2name"/>
         <valueconvert:CQListenStates2Brush x:Key="listenstates2brush"/>
     </Window.Resources>
+    <!--<Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid>
+            <Expander Header="Accept">
+                <ItemsControl>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate></DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+            </Expander>
+        </Grid>
+        <Grid Grid.Column="2">
+            <ListBox>
+                
+            </ListBox>
+        </Grid>
+        <Grid Grid.Column="4">
+            
+        </Grid>
+    </Grid>-->
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

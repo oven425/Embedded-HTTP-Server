@@ -8,6 +8,17 @@ using System.Text;
 
 namespace QNetwork
 {
+    public enum SessionStates
+    {
+        None,
+        Request_Create,
+        Session_Create,
+        Request_Process,
+        Response_Create,
+        Response_Send,
+        Response_SendCompelete,
+        Session_Destory
+    }
     public interface IQSession:IDisposable
     {
         string HandlerID { get; }
@@ -15,6 +26,14 @@ namespace QNetwork
         CQHttpResponse Response { set; get; }
         string ID { get; }
         CQRouterData Router { set; get; }
+        DateTime Request_Create { set; get; }
+        DateTime Session_Create { set; get; }
+        DateTime Request_Process { set; get; }
+        DateTime Response_Create { set; get; }
+        DateTime Response_Send { set; get; }
+        DateTime Response_SendCompelete { set; get; }
+        DateTime Session_Destory { set; get; }
+        SessionStates SessionState { set; get; }
     }
 
     public class CQSession : IQSession
@@ -29,6 +48,14 @@ namespace QNetwork
         public string HandlerID => this.m_HandlerID;
 
         public CQRouterData Router { set; get; }
+        public DateTime Request_Create { set; get; }
+        public DateTime Session_Create { set; get; }
+        public DateTime Request_Process { set; get; }
+        public DateTime Response_Create { set; get; }
+        public DateTime Response_Send { set; get; }
+        public DateTime Response_SendCompelete { set; get; }
+        public DateTime Session_Destory { set; get; }
+        public SessionStates SessionState { set; get; }
 
         public CQSession(string handler)
         {
@@ -38,7 +65,16 @@ namespace QNetwork
 
         public void Dispose()
         {
-           
+           if(this.Request != null)
+            {
+                this.Request.Dispose();
+                this.Request = null;
+            }
+           if(this.Response != null)
+            {
+                this.Response.Dispose();
+                this.Response = null;
+            }
         }
     }
 }

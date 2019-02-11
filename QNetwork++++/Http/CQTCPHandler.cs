@@ -119,7 +119,7 @@ namespace QNetwork.Http.Server.Handler
                 CQHttpResponseReader resp_reader = this.m_CurrentResp as CQHttpResponseReader;
                 if(resp_reader != null && resp_reader.Response.Logger !=null)
                 {
-                    resp_reader.Response.Logger.LogProcess(LogStates_Process.SendResponse, this.m_ID, resp_reader.Response.ProcessID, DateTime.Now, null, resp_reader.Response);
+                    resp_reader.Response.Logger.LogProcess(LogStates_Process.SendResponse, null, this.m_ID, resp_reader.Response.ProcessID, DateTime.Now, null, resp_reader.Response);
                 }
             }
 
@@ -206,7 +206,7 @@ namespace QNetwork.Http.Server.Handler
                 CQHttpResponseReader resp_reader =  this.m_CurrentResp as CQHttpResponseReader;
                 if(resp_reader !=null && resp_reader.Response.Logger!=null)
                 {
-                    resp_reader.Response.Logger.LogProcess(LogStates_Process.SendResponse_Compelete, this.m_ID, resp_reader.Response.ProcessID, DateTime.Now, null, null);
+                    resp_reader.Response.Logger.LogProcess(LogStates_Process.SendResponse_Compelete, null, this.m_ID, resp_reader.Response.ProcessID, DateTime.Now, null, null);
                 }
                 
                 Monitor.Enter(this.m_SendRespsLock);
@@ -258,7 +258,7 @@ namespace QNetwork.Http.Server.Handler
 
         public EndPoint RemoteEndPoint { get { return this.m_Socket.RemoteEndPoint; } }
 
-        public IQHandlerResponse Parser { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        //public IQHandlerResponse Parser { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         object m_SendLock = new object();
         System.IO.Stream m_CurrentResp;

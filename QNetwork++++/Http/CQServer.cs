@@ -33,6 +33,7 @@ namespace QNetwork.Http.Server
         public IQHttpServer_Log Logger { set; get; }
         public CQHttpServer()
         {
+
             this.Logger = new CQDefault_Log();
             for (int i = 0; i < 8; i++)
             {
@@ -42,10 +43,6 @@ namespace QNetwork.Http.Server
             }
             this.m_Thread = new BackgroundWorker();
             this.m_Thread.DoWork += new DoWorkEventHandler(m_Thread_DoWork);
-
-            
-            //CQCacheID_Default<byte> aa = new CQCacheID_Default<byte>();
-            //aa.NewID();
         }
 
         object m_SessionsLock = new object();
@@ -59,7 +56,7 @@ namespace QNetwork.Http.Server
                 closehandlers.Clear();
                 foreach (CQHttpHandler handler in vv)
                 {
-                    this.LogProcess(LogStates_Process.DestoryHandler, handler.ID, "", DateTime.Now, null, null);
+                    this.LogProcess(LogStates_Process.DestoryHandler, null, handler.ID, "", DateTime.Now, null, null);
                     handler.Close();
                     
                     Monitor.Enter(this.m_RequestsLock);
@@ -172,22 +169,23 @@ namespace QNetwork.Http.Server
             {
                 ServiceProcessResults process_result;
                 //CQCacheBase cache;
-                CQHttpResponse resp;
+                //CQHttpResponse resp;
                 //this.ProcessWebSocket(req, out resp, out process_result);
                 //if(process_result == 0)
                 {
-                    this.ProcessRequest(session, out resp, out process_result);
-                    
-                    if ((resp != null) && (process_result == ServiceProcessResults.OK))
+                    //this.ProcessRequest(session, out resp, out process_result);
+                    this.ProcessRequest(session, out process_result);
+                    //if ((resp != null) && (process_result == ServiceProcessResults.OK))
+                    if (process_result == ServiceProcessResults.OK)
                     {
-                        resp.Logger = this;
+                        session.Response.Logger = this;
                         Monitor.Enter(this.m_SessionsLock);
                         if (this.m_Handlers.ContainsKey(session.HandlerID) == true)
                         {
                             CQHttpHandler handler = this.m_Handlers[session.HandlerID];
 
-                            this.LogProcess(LogStates_Process.ProcessResponse, handler.ID, session.ID, DateTime.Now, session.Request, resp);
-                            handler.SendResp(resp);
+                            this.LogProcess(LogStates_Process.ProcessResponse, session, session.HandlerID, session.ID, DateTime.Now, session.Request, session.Response);
+                            handler.SendResp(session.Response);
                         }
                         Monitor.Exit(this.m_SessionsLock);
                     }
@@ -200,11 +198,11 @@ namespace QNetwork.Http.Server
                         Monitor.Enter(this.m_SessionsLock);
                         if (this.m_Handlers.ContainsKey(session.HandlerID) == true)
                         {
-                            resp = new CQHttpResponse();
-                            resp.Logger = this;
-                            resp.Set403();
+                            session.Response = new CQHttpResponse();
+                            session.Response.Logger = this;
+                            session.Response.Set403();
                             CQHttpHandler handler = this.m_Handlers[session.HandlerID];
-                            handler.SendResp(resp);
+                            handler.SendResp(session.Response);
                         }
                         Monitor.Exit(this.m_SessionsLock);
                     }
@@ -230,7 +228,7 @@ namespace QNetwork.Http.Server
             
             CQTCPHandler tcphandler = new CQTCPHandler(client, listen.Addrss);
             CQHttpHandler session = new CQHttpHandler(tcphandler);
-            this.LogProcess(LogStates_Process.CreateHandler, session.ID, "", DateTime.Now, null, null);
+            this.LogProcess(LogStates_Process.CreateHandler, null, session.ID, "", DateTime.Now, null, null);
             session.OnNewRequest += new CQHttpHandler.NewRequestDelegate(session_OnNewRequest);
             Monitor.Enter(this.m_SessionsLock);
 
@@ -249,7 +247,7 @@ namespace QNetwork.Http.Server
             {
                 CQSession session = new CQSession(hadler.ID);
                 session.Request = requests[i];
-                this.LogProcess(LogStates_Process.CreateRequest, hadler.ID, session.ID, DateTime.Now, requests[i], null);
+                this.LogProcess(LogStates_Process.CreateRequest, session, hadler.ID, session.ID, DateTime.Now, requests[i], null);
                 
                 this.m_Requests.Add(session);
             }
@@ -381,11 +379,11 @@ namespace QNetwork.Http.Server
             return vv;
         }
 
-        protected bool ProcessRequest(IQSession session, out CQHttpResponse resp, out ServiceProcessResults process_result_code)
+        protected bool ProcessRequest(IQSession session, out ServiceProcessResults process_result_code)
         {
             bool result = true;
             process_result_code = ServiceProcessResults.None;
-            resp = null;
+            //resp = null;
 
             if (session.Router != null)
             {
@@ -404,7 +402,7 @@ namespace QNetwork.Http.Server
                         break;
                 }
                 
-                this.LogProcess(LogStates_Process.ProcessRequest, session.HandlerID, session.ID, DateTime.Now, session.Request, null);
+                this.LogProcess(LogStates_Process.ProcessRequest, session, session.HandlerID, session.ID, DateTime.Now, session.Request, null);
                 instance.Extension = this;
                 instance.RegisterCacheManager();
                 if (instance != null)
@@ -412,25 +410,26 @@ namespace QNetwork.Http.Server
                     object[] oos = new object[4];
                     oos[0] = session.HandlerID;
                     oos[1] = session.Request;
-                    oos[2] = resp;
+                    oos[2] = session.Response;
                     oos[3] = process_result_code;
 
                     session.Router.Method.Invoke(instance, oos);
                     session.Router.Exit();
                     //session.Router.CurrentUse = session.Router.CurrentUse - 1;
-                    resp = oos[2] as CQHttpResponse;
-                    if(session.Router.IsEnableCORS == true)
+                    //resp = oos[2] as CQHttpResponse;
+                    session.Response = oos[2] as CQHttpResponse;
+                    if (session.Router.IsEnableCORS == true)
                     {
-                        this.AddCROS(resp);
+                        this.AddCROS(session.Response);
                     }
                     process_result_code = (ServiceProcessResults)oos[3];
                 }
-                this.LogProcess(LogStates_Process.CreateResponse, session.HandlerID, session.ID, DateTime.Now, session.Request, resp);
+                this.LogProcess(LogStates_Process.CreateResponse, session, session.HandlerID, session.ID, DateTime.Now, session.Request, session.Response);
             }
             else
             {
-                resp = new CQHttpResponse();
-                resp.Set404();
+                session.Response = new CQHttpResponse();
+                session.Response.Set404();
             }
 
             return result;
@@ -686,11 +685,11 @@ namespace QNetwork.Http.Server
             return result;
         }
 
-        public bool LogProcess(LogStates_Process state, string handler_id, string process_id, DateTime time, CQHttpRequest request, CQHttpResponse response)
+        public bool LogProcess(LogStates_Process state, IQSession session, string handler_id, string process_id, DateTime time, CQHttpRequest request, CQHttpResponse response)
         {
             if(this.Logger != null)
             {
-                this.Logger.LogProcess(state, handler_id, process_id, time, request, response);
+                this.Logger.LogProcess(state, session, handler_id, process_id, time, request, response);
             }
             //System.Diagnostics.Trace.WriteLine(string.Format("State:{0} Handler:{1} Process:{2} time:{3}"
             //    , state
