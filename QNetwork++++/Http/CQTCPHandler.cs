@@ -193,6 +193,8 @@ namespace QNetwork.Http.Server.Handler
 
         object m_SendRespsLock = new object();
         bool m_IsSending = false;
+        public delegate void SendCompleteDelegate(Stream stream);
+        public event SendCompleteDelegate OnSendComplete;
         bool Send()
         {
             bool result = true;
@@ -204,6 +206,10 @@ namespace QNetwork.Http.Server.Handler
             {
                 System.IO.Stream resp = null;
                 CQHttpResponseReader resp_reader =  this.m_CurrentResp as CQHttpResponseReader;
+                if(this.OnSendComplete != null)
+                {
+                    this.OnSendComplete(resp_reader);
+                }
                 if(resp_reader !=null && resp_reader.Response.Logger!=null)
                 {
                     resp_reader.Response.Logger.LogProcess(LogStates_Process.SendResponse_Compelete, null, this.m_ID, resp_reader.Response.ProcessID, DateTime.Now, null, null);

@@ -48,10 +48,15 @@ namespace QNetwork.Http.Server.Handler
         {
             this.m_SocketHandler = data;
             this.m_SocketHandler.OnParse += M_SocketHandler_OnParse;
+            this.m_SocketHandler.OnSendComplete += M_SocketHandler_OnSendComplete;
             this.MaxHeaderSize = 8192;
             this.m_ID = this.m_SocketHandler.ID;
         }
 
+        private void M_SocketHandler_OnSendComplete(Stream stream)
+        {
+            //throw new NotImplementedException();
+        }
 
         private bool M_SocketHandler_OnParse(System.IO.Stream data)
         {
