@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -25,7 +26,7 @@ namespace QSoft.Server.Http
             this.m_Listener.Prefixes.Add($"http://{ip}:{port}/");
             //this.m_Listener.AuthenticationSchemeSelectorDelegate = new AuthenticationSchemeSelector(AuthenticationSchemeForClient);
             this.m_Listener.Realm = "testrealm@host.com";
-            this.m_Listener.AuthenticationSchemes = AuthenticationSchemes.Digest;
+            //this.m_Listener.AuthenticationSchemes = AuthenticationSchemes.Digest;
             this.m_Listener.Start();
 
             Task.Run(async () =>
@@ -66,6 +67,51 @@ namespace QSoft.Server.Http
 
     public class Session
     {
-        public string Path { set; get; }
+        public bool IsHandled { set; get; }
+        public HttpListenerRequest Request { set; get; }
+        public HttpListenerResponse Response { set; get; }
+    }
+
+    
+} 
+
+namespace QSoft.Server.Http.Extention
+{
+    static public class HttpListenerResponseEx
+    {
+        public static void Write(this HttpListenerResponse src, string data, string content_type)
+        {
+            if(string.IsNullOrWhiteSpace(content_type) == false)
+            {
+
+            }
+            byte[] writebuf = Encoding.UTF8.GetBytes(data);
+            src.OutputStream.Write(writebuf, 0, writebuf.Length);
+        }
+
+        public static void Write(this HttpListenerResponse src, byte[] data)
+        {
+            src.OutputStream.Write(data, 0, data.Length);
+        }
+
+        public static void Write(this HttpListenerResponse src, string data)
+        {
+            byte[] writebuf = Encoding.UTF8.GetBytes(data);
+            src.OutputStream.Write(writebuf, 0, writebuf.Length);
+        }
+
+        public static void Write(this HttpListenerResponse src, Stream data)
+        {
+            byte[] read_buf = new byte[8192];
+            while(true)
+            {
+                int read_len = data.Read(read_buf, 0, read_buf.Length);
+                src.OutputStream.Write(read_buf, 0, read_len);
+                if(read_len != read_buf.Length)
+                {
+                    return;
+                }
+            }
+        }
     }
 }
