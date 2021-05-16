@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Security.Permissions;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,18 +21,10 @@ namespace QSoft.Server.Http
         HttpListener m_Listener = new HttpListener();
         public void Start(string ip, int port)
         {
-            //HttpListener listener = new HttpListener();
-            //listener.Prefixes.Add("http://127.0.0.1:3456");
-            //listener.AuthenticationSchemes = AuthenticationSchemes.Digest;
-            //listener.Realm = "testrealm@host.com";
-            //listener.Start();
-            //var context = listener.GetContext();
-
             string domain = Environment.UserDomainName;
             string hostname = Dns.GetHostName();
             this.m_Listener.Prefixes.Add($"http://{ip}:{port}/");
             //this.m_Listener.AuthenticationSchemeSelectorDelegate = new AuthenticationSchemeSelector(AuthenticationSchemeForClient);
-            this.m_Listener.Realm = "testrealm@host.com";
             //this.m_Listener.AuthenticationSchemes = AuthenticationSchemes.Digest;
             this.m_Listener.Start();
 
@@ -73,13 +66,18 @@ namespace QSoft.Server.Http
                                 }
                                 try
                                 {
-                                    Type returntype =  ad.Method.ReturnType;
-                                    Task<Result> hr = (Task<Result>)ad.Method.Invoke(ad.Target, new object[] { context, obj });
-                                    await hr;
-                                    //var fff = await hr;
-                                    //Type fff = hr.GetType();
-                                    //Result result = hr as Result;
-                                    //result.Invoke(context.Response);
+                                    if (ad.Method.ReturnType.IsGenericType == true && ad.Method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
+                                    {
+                                        Task<Result> hr = (Task<Result>)ad.Method.Invoke(ad.Target, new object[] { context, obj });
+                                        Result result = await hr;
+                                        result.Invoke(context.Response);
+                                    }
+                                    else
+                                    {
+                                        object hr = ad.Method.Invoke(ad.Target, new object[] { context, obj });
+                                        Result result = hr as Result;
+                                        result.Invoke(context.Response);
+                                    }
                                 }
                                 catch (Exception ee)
                                 {
@@ -123,10 +121,18 @@ namespace QSoft.Server.Http
                                             }
                                         }
                                     }
-                                    object hr = ad.Method.Invoke(ad.Target, new object[] { context, obj });
-                                    Result result = hr as Result;
-                                    result.Invoke(context.Response);
-                                    context.Response.Close();
+                                    if (ad.Method.ReturnType.IsGenericType == true && ad.Method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
+                                    {
+                                        Task<Result> hr = (Task<Result>)ad.Method.Invoke(ad.Target, new object[] { context, obj });
+                                        Result result = await hr;
+                                        result.Invoke(context.Response);
+                                    }
+                                    else
+                                    {
+                                        object hr = ad.Method.Invoke(ad.Target, new object[] { context, obj });
+                                        Result result = hr as Result;
+                                        result.Invoke(context.Response);
+                                    }
                                 }
                             }
                         }
@@ -144,90 +150,6 @@ namespace QSoft.Server.Http
                 }
             });
 
-            //Task.Run(async () =>
-            //{
-            //    while (true)
-            //    {
-            //        var context = await this.m_Listener.GetContextAsync();
-
-            //        if (context.Request.HttpMethod.ToUpperInvariant() == "GET" && this.m_Gets.ContainsKey(context.Request.Url.LocalPath) == true)
-            //        {
-            //            ActionData ad = this.m_Gets[context.Request.Url.LocalPath];
-            //            object obj = null;
-            //            if(ad.DataType == typeof(NameValueCollection))
-            //            {
-            //                obj = context.Request.QueryString;
-            //            }
-            //            else
-            //            {
-            //                obj = Activator.CreateInstance(ad.DataType);
-            //                var pps = ad.DataType.GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(x => x.CanWrite == true);
-            //                foreach (var pp in pps)
-            //                {
-            //                    if (context.Request.QueryString.AllKeys.Any(x => x == pp.Name) == true)
-            //                    {
-            //                        pp.SetValue(obj, pp.Convert(context.Request.QueryString[pp.Name]));
-            //                    }
-            //                }
-            //            }
-
-            //            try
-            //            {
-            //                object hr = ad.Method.Invoke(ad.Target, new object[] { context, obj });
-            //                Result result = hr as Result;
-            //                result.Invoke(context.Response);
-            //            }
-            //            catch(Exception ee)
-            //            {
-            //                System.Diagnostics.Trace.WriteLine(ee.Message);
-            //            }
-            //            finally
-            //            {
-            //                context.Response.Close();
-            //            }
-
-
-            //        }
-            //        else if (context.Request.HttpMethod.ToUpperInvariant() == "POST" && this.m_Posts.ContainsKey(context.Request.Url.LocalPath) == true)
-            //        {
-            //            ActionData ad = this.m_Posts[context.Request.Url.LocalPath];
-            //            object obj = null;
-            //            if (context.Request.ContentLength64 > 0)
-            //            {
-
-            //                if (context.Request.ContentType == "application/xml")
-            //                {
-            //                    System.Xml.Serialization.XmlSerializer xml = new System.Xml.Serialization.XmlSerializer(ad.DataType);
-            //                    obj = xml.Deserialize(context.Request.InputStream);
-            //                }
-            //                else if (context.Request.ContentType == "application/json")
-            //                {
-            //                    string data_str = context.Request.ReadString();
-            //                    JavaScriptSerializer js = new JavaScriptSerializer();
-            //                    obj = js.Deserialize(data_str, ad.DataType);
-            //                }
-            //                else if (context.Request.ContentType == "application/x-www-form-urlencoded")
-            //                {
-            //                    string data_str = context.Request.ReadString();
-            //                    var vv = HttpUtility.ParseQueryString(data_str);
-            //                    obj = Activator.CreateInstance(ad.DataType);
-            //                    var pps = ad.DataType.GetProperties(BindingFlags.Instance|BindingFlags.Public).Where(x=>x.CanWrite==true);
-            //                    foreach(var pp in pps)
-            //                    {
-            //                        if(vv.AllKeys.Any(x => x ==pp.Name) == true)
-            //                        {
-            //                            pp.SetValue(obj, pp.Convert(vv[pp.Name]));
-            //                        }
-            //                    }
-            //                }
-            //                object hr = ad.Method.Invoke(ad.Target, new object[] { context, obj });
-            //                Result result = hr as Result;
-            //                result.Invoke(context.Response);
-            //                context.Response.Close();
-            //            }
-            //        }
-            //    }
-            //});
         }
 
         AuthenticationSchemes AuthenticationSchemeForClient(HttpListenerRequest request)
@@ -272,6 +194,11 @@ namespace QSoft.Server.Http
             this.Get<NameValueCollection>(path, process, fail);
         }
 
+        public void Get(string path, Func<HttpListenerContext, NameValueCollection, Task<Result>> process, Action<Exception> fail = null)
+        {
+            this.Get<NameValueCollection>(path, process, fail);
+        }
+
         Dictionary<string, ActionData> m_Posts = new Dictionary<string, ActionData>();
         public void Post<T>(string path, Func<HttpListenerContext, T, Result> process, Action<Exception> fail = null)
         {
@@ -283,7 +210,18 @@ namespace QSoft.Server.Http
             action.Method = process.Method;
             action.Target = process.Target;
             this.m_Posts[path] = action;
+        }
 
+        public void Post<T>(string path, Func<HttpListenerContext, T, Task<Result>> process, Action<Exception> fail = null)
+        {
+            var parameters = process.Method.GetParameters();
+            ActionData action = new ActionData();
+            action.Path = path;
+            action.DataType = parameters[1].ParameterType;
+            action.Fail = fail;
+            action.Method = process.Method;
+            action.Target = process.Target;
+            this.m_Posts[path] = action;
         }
     }
     public class ActionData
@@ -456,6 +394,33 @@ namespace QSoft.Server.Http
             this.m_Resp.Write("\r\n", false);
         }
     }
+
+    public abstract class Auth
+    {
+        public enum Types
+        {
+            None,
+            Basic,
+            JWT
+        }
+        public Types Type { set; get; }
+        public string Account { set; get; }
+        public string Password { set; get; }
+        abstract public bool Verify(string data);
+    }
+
+    public class Auth_Basic : Auth
+    {
+        public override bool Verify(string data)
+        {
+            byte[] bb = Convert.FromBase64String(data);
+
+            return true;
+        }
+    }
+
+
+
 } 
 
 namespace QSoft.Server.Http.Extention

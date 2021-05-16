@@ -104,10 +104,9 @@ namespace WPF_Http_Server
             return (a + b).ToString();
         }
         MainUI m_MainUI;
-        int m_Int = 0;
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            if(this.m_MainUI == null)
+            if (this.m_MainUI == null)
             {
                 this.DataContext = this.m_MainUI = new MainUI();
             }
@@ -118,104 +117,7 @@ namespace WPF_Http_Server
             JavaScriptSerializer js = new JavaScriptSerializer();
             string json_str = js.Serialize(rd);
             System.Diagnostics.Trace.WriteLine(json_str);
-            //System.Xml.Serialization.XmlSerializer xml = new System.Xml.Serialization.XmlSerializer(typeof(RowData));
-            //using (MemoryStream mm = new MemoryStream())
-            //{
-            //    xml.Serialize(mm, rd);
-            //    System.Diagnostics.Trace.WriteLine(Encoding.UTF8.GetString(mm.ToArray()));
-            //}
-            ////Test("1", (str) =>
-            ////{
-            ////    return str;
-            ////});
-            //Test<int>("1", (data) =>
-            //{
-            //    return data.ToString();
-            //});
 
-            //var hhh = this.m_Funcs["1"].Invoke(new object[] { 123});
-            //var result = new HogeController().HugaAction(1, 10);
-
-            //var controllerName = "WPF_Http_Server.HogeController";
-            //var actionName = "HugaAction";
-
-            //var instance = Activator.CreateInstance(Type.GetType(controllerName));
-            //var result = (string)Type.GetType(controllerName).GetMethod(actionName).Invoke(instance, new object[] { 1, 10 });
-
-
-            //var controllerName = "WPF_Http_Server.HogeController";
-            //var actionName = "HugaAction";
-            //var type = Type.GetType(controllerName);
-            //var method = type.GetMethod(actionName);
-
-            //var instance = Activator.CreateInstance(type);
-            ////var methodDelegate = (Func<int, int, string>)Delegate.CreateDelegate(typeof(Func<int, int, string>), instance, method);
-            //var methodDelegate = (Func<HogeController, int, int, string>)Delegate.CreateDelegate(typeof(Func<HogeController, int, int, string>), method);
-            //var result = methodDelegate((HogeController)Activator.CreateInstance(type), 10, 20);
-
-
-            //var x = System.Linq.Expressions.Expression.Parameter(typeof(int), "x");
-            //var y = System.Linq.Expressions.Expression.Parameter(typeof(int), "y");
-            //var lambda = System.Linq.Expressions.Expression.Lambda<Func<int, int, string>>(
-            //    System.Linq.Expressions.Expression.Call( // .HugaAction(x, y)
-            //        System.Linq.Expressions.Expression.New(type), // new HogeController()
-            //        method,
-            //        x, y),
-            //    x, y) // (x, y) => 
-            //    .Compile();
-            //var result = lambda(5, 10);
-
-            //var cache = new ConcurrentDictionary<Tuple<string, string>, Delegate>();
-            //var dynamicDelegate = cache.GetOrAdd(Tuple.Create(controllerName, actionName), _ =>
-            //{
-            //    // パラメータはMethodInfoから動的に作る
-            //    var parameters = method.GetParameters().Select(x =>
-            //            System.Linq.Expressions.Expression.Parameter(x.ParameterType, x.Name))
-            //        .ToArray();
-
-            //    return System.Linq.Expressions.Expression.Lambda(
-            //            System.Linq.Expressions.Expression.Call(System.Linq.Expressions.Expression.New(type), method, parameters),
-            //        parameters).Compile();
-            //});
-            //var result = dynamicDelegate.DynamicInvoke(new object[] { 10, 20 });
-
-            //var cache = new ConcurrentDictionary<string, Func<object[], object>>();
-            //var args = System.Linq.Expressions.Expression.Parameter(typeof(object[]), "args");
-            //var parameters = method.GetParameters()
-            //    .Select((x, index) =>
-            //        System.Linq.Expressions.Expression.Convert(
-            //            System.Linq.Expressions.Expression.ArrayIndex(args, System.Linq.Expressions.Expression.Constant(index)),
-            //        x.ParameterType))
-            //    .ToArray();
-
-            //var lambda = System.Linq.Expressions.Expression.Lambda<Func<object[], object>>(
-            //            System.Linq.Expressions.Expression.Convert(
-            //                System.Linq.Expressions.Expression.Call(System.Linq.Expressions.Expression.New(type), method, parameters),
-            //                typeof(object)),
-            //            args).Compile();
-            //var result = lambda.Invoke(new object[] { "1.1", (float)2.2 });
-
-
-
-            //return;
-            //WebRequest.DefaultWebProxy = null;
-            //WebRequest webreq = WebRequest.Create("https://cctvn.freeway.gov.tw/abs2mjpg/bmjpg?camera=10000&0.21707882011757307&t1968=0.8138169668544286");
-            //try
-            //{
-            //    var resp = webreq.GetResponse();
-            //    var stream = resp.GetResponseStream();
-            //    byte[] readbuf = new byte[81920];
-            //    while (true)
-            //    {
-            //        int read_len = stream.Read(readbuf, 0, readbuf.Length);
-
-            //        System.Diagnostics.Trace.WriteLine(Encoding.UTF8.GetString(readbuf, 0, read_len));
-            //    }
-            //}
-            //catch (Exception ee)
-            //{
-            //    System.Diagnostics.Trace.WriteLine(ee.Message);
-            //}
             
 
             Server server = new Server();
@@ -223,15 +125,12 @@ namespace WPF_Http_Server
             {
                 server.Get<RowData>("/get/json", async (context, data) =>
                 {
-                    //System.Threading.Thread.Sleep(10000);
-                    await Task.Delay(10000);
+                    await Task.Delay(1);
                     return Result.Josn<DateTime>(DateTime.Now);
                 });
 
-                server.Get<RowData>("/get/xml", (context, data) =>
-                {
-                    return Result.Xml<DateTime>(DateTime.Now);
-                });
+                server.Get<RowData>("/get/json", (context, data) => Get_Json(context, data));
+                server.Get<RowData>("/get/xml", (context, data) => Get_xml(context, data));
 
                 server.Get("/get/jpg", (context, query) =>
                 {
@@ -351,8 +250,14 @@ namespace WPF_Http_Server
         {
         }
 
-        public Result Test_get(HttpListenerContext context, RowData data)
+        public Result Get_Json(HttpListenerContext context, RowData data)
         {
+            return Result.Josn<DateTime>(DateTime.Now);
+        }
+
+        async public Task<Result> Get_xml(HttpListenerContext context, RowData data)
+        {
+            await Task.Delay(1000);
             return Result.Josn<DateTime>(DateTime.Now);
         }
         ConcurrentBag<MultiPatStream> m_MultiParts = new ConcurrentBag<MultiPatStream>();
