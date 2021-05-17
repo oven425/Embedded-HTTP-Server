@@ -61,7 +61,7 @@ namespace WPF_Http_Server
                 server.Get<RowData>("/get/json", async (context, data) =>
                 {
                     await Task.Delay(1);
-                    return Result.Josn<DateTime>(DateTime.Now);
+                    return Result.Josn(DateTime.Now);
                 });
 
                 server.Get<RowData>("/get/json", (context, data) => Get_Json(context, data));
@@ -193,13 +193,13 @@ namespace WPF_Http_Server
         /// <returns></returns>
         public Result Get_Json(HttpListenerContext context, RowData data)
         {
-            return Result.Josn<DateTime>(DateTime.Now);
+            return Result.Josn(DateTime.Now);
         }
 
         async public Task<Result> Get_xml(HttpListenerContext context, RowData data)
         {
             await Task.Delay(10000);
-            return Result.Josn<DateTime>(DateTime.Now);
+            return Result.Josn(DateTime.Now);
         }
         ConcurrentBag<MultiPatStream> m_MultiParts = new ConcurrentBag<MultiPatStream>();
     }

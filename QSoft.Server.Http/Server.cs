@@ -271,8 +271,8 @@ namespace QSoft.Server.Http
         protected bool IsHanlded { set; get; }
 
         public static Result Hanlded { get; } = new Result() { IsHanlded = true };
-        public static JsonReuslt<T> Josn<T>(T data) { return new JsonReuslt<T>(data); }
-        public static XmlReuslt<T> Xml<T>(T data) { return new XmlReuslt<T>(data); }
+        public static JsonReuslt Josn(object data) { return new JsonReuslt(data); }
+        public static XmlReuslt Xml(object data) { return new XmlReuslt(data); }
         public static StreamResult Stream(Stream data, string contenttype="", bool auto_close=true) { return new StreamResult(data, contenttype, auto_close); }
         public static StringResult String(string data, string contenttype = "text/plain") { return new StringResult(data, contenttype); }
     }
@@ -357,13 +357,13 @@ namespace QSoft.Server.Http
         }
     }
 
-    public class JsonReuslt<T> : Result
+    public class JsonReuslt : Result
     {
-        public JsonReuslt(T data)
+        public JsonReuslt(object data)
         {
             this.m_Data = data;
         }
-        T m_Data;
+        object m_Data;
         
         override public void Invoke(HttpListenerResponse resp)
         {
@@ -375,18 +375,18 @@ namespace QSoft.Server.Http
         }
     }
 
-    public class XmlReuslt<T> : Result
+    public class XmlReuslt : Result
     {
-        public XmlReuslt(T data)
+        public XmlReuslt(object data)
         {
             this.m_Data = data;
         }
-        T m_Data;
+        object m_Data;
 
         override public void Invoke(HttpListenerResponse resp)
         {
             resp.ContentType = "application/xml";
-            System.Xml.Serialization.XmlSerializer xml = new System.Xml.Serialization.XmlSerializer(typeof(T));
+            System.Xml.Serialization.XmlSerializer xml = new System.Xml.Serialization.XmlSerializer(this.m_Data.GetType());
             using (MemoryStream mm = new MemoryStream())
             {
                 xml.Serialize(mm, this.m_Data);
