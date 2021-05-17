@@ -36,76 +36,11 @@ namespace WPF_Http_Server
             InitializeComponent();
         }
 
-        void Sleep(TimeSpan data)
-        {
-            DateTime now = DateTime.Now;
-            while(true)
-            {
-                if((DateTime.Now - now)>= data)
-                {
-                    return;
-                }
-            }
-        }
-
-        public void TT(string data)
-        {
-
-        }
-
-        Dictionary<string, Func<object[], object>> m_Funcs = new Dictionary<string, Func<object[], object>>();
-        public void Test(string path, Func<string, string> process)
-        {
-            
-            var method = process.GetType().GetMethods()[0];
-            var args = System.Linq.Expressions.Expression.Parameter(typeof(object[]), "args");
-            var parameters = method.GetParameters()
-                .Select((x, index) =>
-                    System.Linq.Expressions.Expression.Convert(
-                        System.Linq.Expressions.Expression.ArrayIndex(args, System.Linq.Expressions.Expression.Constant(index)),
-                    x.ParameterType))
-                .ToArray();
-
-            var lambda = System.Linq.Expressions.Expression.Lambda<Func<object[], object>>(
-                        System.Linq.Expressions.Expression.Convert(
-                            System.Linq.Expressions.Expression.Call(System.Linq.Expressions.Expression.New(process.Target.GetType()), process.Method, parameters),
-                            typeof(object)),
-                        args).Compile();
-            m_Funcs[path] = lambda;
-        }
-
-        public void Test<T>(string path, Func<T, string> process)
-        {
-
-            var method = process.GetType().GetMethods()[0];
-            var args = System.Linq.Expressions.Expression.Parameter(typeof(object[]), "args");
-            var parameters = method.GetParameters()
-                .Select((x, index) =>
-                    System.Linq.Expressions.Expression.Convert(
-                        System.Linq.Expressions.Expression.ArrayIndex(args, System.Linq.Expressions.Expression.Constant(index)),
-                    x.ParameterType))
-                .ToArray();
-
-            var lambda = System.Linq.Expressions.Expression.Lambda<Func<object[], object>>(
-                        System.Linq.Expressions.Expression.Convert(
-                            System.Linq.Expressions.Expression.Call(System.Linq.Expressions.Expression.New(process.Target.GetType()), process.Method, parameters),
-                            typeof(object)),
-                        args).Compile();
-            m_Funcs[path] = lambda;
-        }
-
-        class MyClass
-        {
-            public int MyProperty { get; set; }
-        }
-
-        string TFunc(int a, int b)
-        {
-            return (a + b).ToString();
-        }
         MainUI m_MainUI;
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            DirectoryInfo dir = new DirectoryInfo("../../webdata/");
+            string pp = dir.FullName.Replace(dir.Parent.FullName, "").Trim('\\');
             if (this.m_MainUI == null)
             {
                 this.DataContext = this.m_MainUI = new MainUI();
@@ -137,9 +72,9 @@ namespace WPF_Http_Server
                     return Result.Stream(File.OpenRead("../../1.jpg"));
                 });
 
-                server.Get<RowData>("/sse", (context, data) =>
+                server.Get("/events.html", (context, data) =>
                 {
-                    return Result.Stream(File.OpenRead("../../events.html"));
+                    return Result.Stream(File.OpenRead($"{server.Statics.FullName}events.html"));
                 });
 
                 server.Get<RowData>("/sse/test", (context, data) =>
@@ -237,7 +172,7 @@ namespace WPF_Http_Server
                     return Result.String($"Index:{data.Index} Name:{data.Name}");
                 });
 
-                server.Start("127.0.0.1", 3456);
+                server.Start("127.0.0.1", 3456, new DirectoryInfo("../../webdata/"));
             }
             catch(Exception ee)
             {
@@ -250,6 +185,12 @@ namespace WPF_Http_Server
         {
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="data"></param>
+        /// <returns></returns>
         public Result Get_Json(HttpListenerContext context, RowData data)
         {
             return Result.Josn<DateTime>(DateTime.Now);
@@ -257,7 +198,7 @@ namespace WPF_Http_Server
 
         async public Task<Result> Get_xml(HttpListenerContext context, RowData data)
         {
-            await Task.Delay(1000);
+            await Task.Delay(10000);
             return Result.Josn<DateTime>(DateTime.Now);
         }
         ConcurrentBag<MultiPatStream> m_MultiParts = new ConcurrentBag<MultiPatStream>();
@@ -273,24 +214,7 @@ namespace WPF_Http_Server
                 this.PropertyChanged(this, new PropertyChangedEventArgs(name));
             }
         }
-    }
-
-    public class HogeController
-    {
-        public string HugaAction(int x, int y)
-        {
-            return (x + y).ToString();
-        }
-
-        public double TakoAction(string s, float f)
-        {
-            return double.Parse(s) * f;
-        }
-    }
-    
-
-    
-
+    } 
 }
 namespace QQTest
 {
@@ -300,4 +224,6 @@ namespace QQTest
         public string Name { set; get; }
 
     }
+
+    
 }
