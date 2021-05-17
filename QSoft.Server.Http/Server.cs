@@ -481,25 +481,30 @@ namespace QSoft.Server.Http.Extention
     {
         public static string ReadString(this HttpListenerRequest src)
         {
-            int read_len = 0;
-            byte[] read_buf = new byte[8192];
+            //int read_len = 0;
+            //byte[] read_buf = new byte[8192];
             string dst = "";
-            using (MemoryStream mm = new MemoryStream())
+            if(src.HasEntityBody == true && src.ContentLength64>0)
             {
-                while (true)
-                {
-                    read_len = src.InputStream.Read(read_buf, 0, read_buf.Length);
-                    if (read_len > 0)
-                    {
-                        mm.Write(read_buf, 0, read_len);
-                    }
-                    if (mm.Length == src.ContentLength64)
-                    {
-                        dst = src.ContentEncoding.GetString(mm.ToArray());
-                        break;
-                    }
-                }
+                System.IO.StreamReader reader = new System.IO.StreamReader(src.InputStream, src.ContentEncoding);
+                dst = reader.ReadToEnd();
             }
+            //using (MemoryStream mm = new MemoryStream())
+            //{
+            //    while (true)
+            //    {
+            //        read_len = src.InputStream.Read(read_buf, 0, read_buf.Length);
+            //        if (read_len > 0)
+            //        {
+            //            mm.Write(read_buf, 0, read_len);
+            //        }
+            //        if (mm.Length == src.ContentLength64)
+            //        {
+            //            dst = src.ContentEncoding.GetString(mm.ToArray());
+            //            break;
+            //        }
+            //    }
+            //}
             return dst;
         }
     }

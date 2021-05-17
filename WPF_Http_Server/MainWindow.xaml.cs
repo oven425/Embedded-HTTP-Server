@@ -53,8 +53,12 @@ namespace WPF_Http_Server
             string json_str = js.Serialize(rd);
             System.Diagnostics.Trace.WriteLine(json_str);
 
-            
+            MemoryStream mm = new MemoryStream();
+            mm.Dispose();
+            if(mm.Length is ObjectDisposedException)
+            {
 
+            }
             Server server = new Server();
             try
             {
