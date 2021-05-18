@@ -23,6 +23,7 @@ using System.Linq.Expressions;
 using QQTest;
 using System.Web.Script.Serialization;
 using System.ComponentModel;
+using System.Reflection;
 
 namespace WPF_Http_Server
 {
@@ -36,9 +37,91 @@ namespace WPF_Http_Server
             InitializeComponent();
         }
 
+        private static void CreateInstallCert(int expDate, string password, string issuedBy)
+        {
+            // Create/install certificate
+            using (var powerShell = System.Management.Automation.PowerShell.Create())
+            {
+                var notAfter = DateTime.Now.AddYears(expDate).ToLongDateString();
+                var assemPath = Assembly.GetCallingAssembly().Location;
+                var fileInfo = new FileInfo(assemPath);
+                var saveDir = System.IO.Path.Combine(fileInfo.Directory.FullName, "CertDir");
+                if (!Directory.Exists(saveDir))
+                {
+                    Directory.CreateDirectory(saveDir);
+                }
+
+                // This adds certificate to Personal and Intermediate Certification Authority
+                var rootAuthorityName = "My-RootAuthority";
+                var rootFriendlyName = "My Root Authority";
+                var rootAuthorityScript =
+                    $"$rootAuthority = New-SelfSignedCertificate" +
+                    $" -DnsName '{rootAuthorityName}'" +
+                    $" -NotAfter '{notAfter}'" +
+                    $" -CertStoreLocation cert:\\LocalMachine\\My" +
+                    $" -FriendlyName '{rootFriendlyName}'" +
+                    $" -KeyUsage DigitalSignature,CertSign";
+                powerShell.AddScript(rootAuthorityScript);
+
+                // Export CRT file
+                var rootAuthorityCrtPath = System.IO.Path.Combine(saveDir, "MyRootAuthority.crt");
+                var exportAuthorityCrtScript =
+                    $"$rootAuthorityPath = 'cert:\\localMachine\\my\\' + $rootAuthority.thumbprint;" +
+                    $"Export-Certificate" +
+                    $" -Cert $rootAuthorityPath" +
+                    $" -FilePath {rootAuthorityCrtPath}";
+                powerShell.AddScript(exportAuthorityCrtScript);
+
+                // Export PFX file
+                var rootAuthorityPfxPath = System.IO.Path.Combine(saveDir, "MyRootAuthority.pfx");
+                var exportAuthorityPfxScript =
+                    $"$pwd = ConvertTo-SecureString -String '{password}' -Force -AsPlainText;" +
+                    $"Export-PfxCertificate" +
+                    $" -Cert $rootAuthorityPath" +
+                    $" -FilePath '{rootAuthorityPfxPath}'" +
+                    $" -Password $pwd";
+                powerShell.AddScript(exportAuthorityPfxScript);
+
+                // Create the self-signed certificate, signed using the above certificate
+                var gatewayAuthorityName = "My-Service";
+                var gatewayFriendlyName = "My Service";
+                var gatewayAuthorityScript =
+                    $"$rootcert = ( Get-ChildItem -Path $rootAuthorityPath );" +
+                    $"$gatewayCert = New-SelfSignedCertificate" +
+                    $" -DnsName '{gatewayAuthorityName}'" +
+                    $" -NotAfter '{notAfter}'" +
+                    $" -certstorelocation cert:\\localmachine\\my" +
+                    $" -Signer $rootcert" +
+                    $" -FriendlyName '{gatewayFriendlyName}'" +
+                    $" -KeyUsage KeyEncipherment,DigitalSignature";
+                powerShell.AddScript(gatewayAuthorityScript);
+
+                // Export new certificate public key as a CRT file
+                var myGatewayCrtPath = System.IO.Path.Combine(saveDir, "MyGatewayAuthority.crt");
+                var exportCrtScript =
+                    $"$gatewayCertPath = 'cert:\\localMachine\\my\\' + $gatewayCert.thumbprint;" +
+                    $"Export-Certificate" +
+                    $" -Cert $gatewayCertPath" +
+                    $" -FilePath {myGatewayCrtPath}";
+                powerShell.AddScript(exportCrtScript);
+
+                // Export the new certificate as a PFX file
+                var myGatewayPfxPath = System.IO.Path.Combine(saveDir, "MyGatewayAuthority.pfx");
+                var exportPfxScript =
+                    $"Export-PfxCertificate" +
+                    $" -Cert $gatewayCertPath" +
+                    $" -FilePath {myGatewayPfxPath}" +
+                    $" -Password $pwd"; // Use the previous password
+                powerShell.AddScript(exportPfxScript);
+
+                powerShell.Invoke();
+            }
+        }
+
         MainUI m_MainUI;
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            //CreateInstallCert(100, "AA", "");
             DirectoryInfo dir = new DirectoryInfo("../../webdata/");
             string pp = dir.FullName.Replace(dir.Parent.FullName, "").Trim('\\');
             if (this.m_MainUI == null)
@@ -53,22 +136,22 @@ namespace WPF_Http_Server
             string json_str = js.Serialize(rd);
             System.Diagnostics.Trace.WriteLine(json_str);
 
-            MemoryStream mm = new MemoryStream();
-            mm.Dispose();
-            if(mm.Length is ObjectDisposedException)
-            {
+            //MemoryStream mm = new MemoryStream();
+            //mm.Dispose();
+            //if(mm.Length is ObjectDisposedException)
+            //{
 
-            }
+            //}
             Server server = new Server();
             try
             {
                 server.Get<RowData>("/get/json", async (context, data) =>
                 {
                     await Task.Delay(1);
-                    return Result.Josn(DateTime.Now);
+                    return Result.Json(DateTime.Now);
                 });
 
-                server.Get<RowData>("/get/json", (context, data) => Get_Json(context, data));
+                //server.Get<RowData>("/get/json", (context, data) => Get_Json(context, data));
                 server.Get<RowData>("/get/xml", (context, data) => Get_xml(context, data));
 
                 server.Get("/get/jpg", (context, query) =>
@@ -197,13 +280,13 @@ namespace WPF_Http_Server
         /// <returns></returns>
         public Result Get_Json(HttpListenerContext context, RowData data)
         {
-            return Result.Josn(DateTime.Now);
+            return Result.Json(DateTime.Now);
         }
 
         async public Task<Result> Get_xml(HttpListenerContext context, RowData data)
         {
-            await Task.Delay(10000);
-            return Result.Josn(DateTime.Now);
+            await Task.Delay(1);
+            return Result.Json(DateTime.Now);
         }
         ConcurrentBag<MultiPatStream> m_MultiParts = new ConcurrentBag<MultiPatStream>();
     }

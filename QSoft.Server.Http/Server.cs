@@ -18,15 +18,35 @@ using QSoft.Server.Http.Extention;
 
 namespace QSoft.Server.Http
 {
+    //cd C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x64
+
+    //makecert -n "CN=vMargeCA" -r -sv vMargeCA.pvk vMargeCA.cer
+
+    //makecert -sk vMargeSignedByCA -iv vMargeCA.pvk -n "CN=vMargeSignedByCA" -ic vMargeCA.cer vMargeSignedByCA.cer -sr localmachine -ss My
+
+    //netsh http add sslcert ipport=0.0.0.0:8443 certhash=e56befc8decaf48998357e25f9d0a8a3f32fd0cb appid={D87014A7-0FF2-4CFC-A3FB-4975F5E2843E}
+
+
+    //netsh http delete sslcert 0.0.0.0:8443
     public class Server
     {
+        public void Stop()
+        {
+            this.m_Listener.Stop();
+            this.m_Listener.Close();
+        }
         HttpListener m_Listener = new HttpListener();
         public DirectoryInfo Statics { protected set; get; } = null;
         public void Start(string ip, int port, DirectoryInfo staticsfolder =null)
         {
             this.Statics = staticsfolder;
             string hostname = Dns.GetHostName();
-            this.m_Listener.Prefixes.Add($"http://{ip}:{port}/");
+            String[] prefixes = { "http://*:8089/", "https://*:8443/" };
+            foreach (var oo in prefixes)
+            {
+                this.m_Listener.Prefixes.Add(oo);
+            }
+            //this.m_Listener.Prefixes.Add($"http://{ip}:{port}/");
             this.m_Listener.Start();
             int UserCount = 0;
             int maxount = 5;
@@ -34,51 +54,52 @@ namespace QSoft.Server.Http
             {
                 while (true)
                 {
-                    this.m_Listener.GetContextAsync().ContinueWith(async (contextTask) =>
+                    var context = this.m_Listener.GetContext();
+                    if (Interlocked.CompareExchange(ref UserCount, maxount, maxount) >= maxount)
                     {
-                        bool compelete = false;
-                        var context = await contextTask.ConfigureAwait(false);
-                        
-                        if (Interlocked.CompareExchange(ref UserCount, maxount, maxount) >= maxount)
-                        {
-                            HttpFailResult.TooManyRequests().Invoke(context.Response);
-                            return;
-                        }
+                        HttpFailResult.TooManyRequests().Invoke(context.Response);
+                    }
+                    else
+                    {
                         Interlocked.Increment(ref UserCount);
-                        //System.Diagnostics.Trace.WriteLine($"usercount:{UserCount}");
-                        try
+                        Task.Run(async() =>
                         {
-                            if (context.Request.HttpMethod.ToUpperInvariant() == "GET")
+                            bool compelete = false;
+
+                            System.Diagnostics.Trace.WriteLine($"usercount:{UserCount}");
+                            try
                             {
-                                compelete = await Process_Get(context);
+                                if (context.Request.HttpMethod.ToUpperInvariant() == "GET")
+                                {
+                                    compelete = await Process_Get(context);
+                                }
+                                else if (context.Request.HttpMethod.ToUpperInvariant() == "POST" && this.m_Posts.ContainsKey(context.Request.Url.LocalPath) == true)
+                                {
+                                    compelete = await Process_Post(context);
+                                }
+
                             }
-                            else if (context.Request.HttpMethod.ToUpperInvariant() == "POST" && this.m_Posts.ContainsKey(context.Request.Url.LocalPath) == true)
+                            catch (Exception ee)
                             {
-                                compelete = await Process_Post(context);
+                                System.Diagnostics.Trace.WriteLine(ee.Message);
+                                System.Diagnostics.Trace.WriteLine(ee.StackTrace);
+                                if (compelete == false)
+                                {
+                                    HttpFailResult.BadRequest($"{ee.Message}\r\n{ee.StackTrace}").Invoke(context.Response);
+                                }
                             }
-                            
-                        }
-                        catch (Exception ee)
-                        {
-                            System.Diagnostics.Trace.WriteLine(ee.Message);
-                            System.Diagnostics.Trace.WriteLine(ee.StackTrace);
-                            if (compelete == false)
+                            finally
                             {
-                                HttpFailResult.BadRequest($"{ee.Message}\r\n{ee.StackTrace}").Invoke(context.Response);
+                                if (compelete == false)
+                                {
+                                    HttpFailResult.BadRequest().Invoke(context.Response);
+                                }
                             }
-                        }
-                        finally
-                        {
-                            if (compelete == false)
-                            {
-                                HttpFailResult.BadRequest().Invoke(context.Response);
-                            }
-                        }
-                        Interlocked.Decrement(ref UserCount);
-                    });
+                            Interlocked.Decrement(ref UserCount);
+                        });
+                    }
                 }
             });
-
         }
 
         async Task<bool> Process_Get(HttpListenerContext context)
@@ -271,7 +292,7 @@ namespace QSoft.Server.Http
         protected bool IsHanlded { set; get; }
 
         public static Result Hanlded { get; } = new Result() { IsHanlded = true };
-        public static JsonReuslt Josn(object data) { return new JsonReuslt(data); }
+        public static JsonReuslt Json(object data) { return new JsonReuslt(data); }
         public static XmlReuslt Xml(object data) { return new XmlReuslt(data); }
         public static StreamResult Stream(Stream data, string contenttype="", bool auto_close=true) { return new StreamResult(data, contenttype, auto_close); }
         public static StringResult String(string data, string contenttype = "text/plain") { return new StringResult(data, contenttype); }
@@ -481,30 +502,12 @@ namespace QSoft.Server.Http.Extention
     {
         public static string ReadString(this HttpListenerRequest src)
         {
-            //int read_len = 0;
-            //byte[] read_buf = new byte[8192];
             string dst = "";
             if(src.HasEntityBody == true && src.ContentLength64>0)
             {
                 System.IO.StreamReader reader = new System.IO.StreamReader(src.InputStream, src.ContentEncoding);
                 dst = reader.ReadToEnd();
             }
-            //using (MemoryStream mm = new MemoryStream())
-            //{
-            //    while (true)
-            //    {
-            //        read_len = src.InputStream.Read(read_buf, 0, read_buf.Length);
-            //        if (read_len > 0)
-            //        {
-            //            mm.Write(read_buf, 0, read_len);
-            //        }
-            //        if (mm.Length == src.ContentLength64)
-            //        {
-            //            dst = src.ContentEncoding.GetString(mm.ToArray());
-            //            break;
-            //        }
-            //    }
-            //}
             return dst;
         }
     }
