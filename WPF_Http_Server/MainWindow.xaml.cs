@@ -161,6 +161,7 @@ namespace WPF_Http_Server
 
                 server.Get("/events.html", (context, data) =>
                 {
+                    data.Get<int>("");
                     return Result.Stream(File.OpenRead($"{server.Statics.FullName}events.html"));
                 });
 

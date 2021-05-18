@@ -41,12 +41,12 @@ namespace QSoft.Server.Http
         {
             this.Statics = staticsfolder;
             string hostname = Dns.GetHostName();
-            String[] prefixes = { "http://*:8089/", "https://*:8443/" };
-            foreach (var oo in prefixes)
-            {
-                this.m_Listener.Prefixes.Add(oo);
-            }
-            //this.m_Listener.Prefixes.Add($"http://{ip}:{port}/");
+            //String[] prefixes = { "http://*:8089/", "https://*:8443/" };
+            //foreach (var oo in prefixes)
+            //{
+            //    this.m_Listener.Prefixes.Add(oo);
+            //}
+            this.m_Listener.Prefixes.Add($"http://{ip}:{port}/");
             this.m_Listener.Start();
             int UserCount = 0;
             int maxount = 5;
@@ -178,7 +178,7 @@ namespace QSoft.Server.Http
                         var pp = pps.FirstOrDefault(x => x.Name == oo.Name);
                         if (pp != null)
                         {
-                            pp.SetValue(obj, pp.Convert(Encoding.UTF8.GetString(oo.Data)));
+                            pp.SetValue(obj, pp.PropertyType.Convert(Encoding.UTF8.GetString(oo.Data)));
                         }
                     }
                 }
@@ -208,7 +208,14 @@ namespace QSoft.Server.Http
             {
                 if (data.AllKeys.Any(x => x == pp.Name) == true)
                 {
-                    pp.SetValue(obj, pp.Convert(data[pp.Name]));
+                    try
+                    {
+                        pp.SetValue(obj, pp.PropertyType.Convert(data[pp.Name]));
+                    }
+                    catch(Exception ee)
+                    {
+                        throw new Exception($"{pp.Name} feild format fail");
+                    }
                 }
             }
             return obj;
@@ -559,60 +566,55 @@ namespace QSoft.Server.Http.Extention
         }
     }
 
-    public static class PropertyInfoEx
+    public static class NameValueCollectionEx
     {
-        public static object Convert(this PropertyInfo src, string data)
+        public static T Get<T>(this NameValueCollection src, string data)
+        {
+            var vv = src[data];
+            return (T)typeof(T).Convert(data);
+        }
+    }
+
+    public static class TypeEx
+    {
+        public static object Convert(this Type src, string data)
         {
             object dst = null;
-            switch (Type.GetTypeCode(src.PropertyType))
+            switch (Type.GetTypeCode(src))
             {
                 case TypeCode.Decimal:
                     {
-                        Decimal a = 0;
-                        Decimal.TryParse(data, out a);
-                        dst = a;
+                        dst = Decimal.Parse(data);
                     }
                     break;
                 case TypeCode.Boolean:
                     {
-                        bool a = false;
-                        bool.TryParse(data, out a);
-                        dst = a;
+                        dst = bool.Parse(data);
                     }
                     break;
                 case TypeCode.Byte:
                     {
-                        Byte a = 0;
-                        Byte.TryParse(data, out a);
-                        dst = a;
+                        dst = Byte.Parse(data);
                     }
                     break;
                 case TypeCode.Char:
                     {
-                        Char a = Char.MinValue;
-                        Char.TryParse(data, out a);
-                        dst = a;
+                        dst = Char.Parse(data);
                     }
                     break;
                 case TypeCode.SByte:
                     {
-                        sbyte a = 0;
-                        sbyte.TryParse(data, out a);
-                        dst = a;
+                        dst = sbyte.Parse(data);
                     }
                     break;
                 case TypeCode.Single:
                     {
-                        float a = 0;
-                        float.TryParse(data, out a);
-                        dst = a;
+                        dst = float.Parse(data);
                     }
                     break;
                 case TypeCode.Double:
                     {
-                        double a = 0;
-                        double.TryParse(data, out a);
-                        dst = a;
+                        dst = double.Parse(data);
                     }
                     break;
                 case TypeCode.String:
@@ -622,57 +624,44 @@ namespace QSoft.Server.Http.Extention
                     break;
                 case TypeCode.Int16:
                     {
-                        Int16 a = 0;
-                        Int16.TryParse(data, out a);
-                        dst = a;
+                        dst = Int16.Parse(data);
                     }
                     break;
                 case TypeCode.Int32:
                     {
-                        Int32 a = 0;
-                        Int32.TryParse(data, out a);
-                        dst = a;
+                        dst = Int32.Parse(data);
                     }
                     break;
                 case TypeCode.Int64:
                     {
-                        Int64 a = 0;
-                        Int64.TryParse(data, out a);
-                        dst = a;
+                        dst = Int64.Parse(data);
                     }
                     break;
                 case TypeCode.UInt16:
                     {
-                        UInt16 a = 0;
-                        UInt16.TryParse(data, out a);
-                        dst = a;
+                        dst = UInt16.Parse(data);
                     }
                     break;
                 case TypeCode.UInt32:
                     {
-                        UInt32 a = 0;
-                        UInt32.TryParse(data, out a);
-                        dst = a;
+                        dst = UInt32.Parse(data);
                     }
                     break;
                 case TypeCode.UInt64:
                     {
-                        UInt64 a = 0;
-                        UInt64.TryParse(data, out a);
-                        dst = a;
+                        dst = UInt64.Parse(data);
                     }
                     break;
                 case TypeCode.DateTime:
                     {
-                        DateTime a = DateTime.MinValue;
-                        DateTime.TryParse(data, out a);
-                        dst = a;
+                        dst = DateTime.Parse(data);
                     }
                     break;
             }
             return dst;
         }
     }
+
     public class HttpMultipartFormParser
     {
         private string boundary;
