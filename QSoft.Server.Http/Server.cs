@@ -14,7 +14,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Script.Serialization;
-using QSoft.Server.Http.Extention;
+using QSoft.Server.Http.Extension;
 
 namespace QSoft.Server.Http
 {
@@ -77,7 +77,6 @@ namespace QSoft.Server.Http
                                 {
                                     compelete = await Process_Post(context);
                                 }
-
                             }
                             catch (Exception ee)
                             {
@@ -503,7 +502,7 @@ namespace QSoft.Server.Http
     }
 } 
 
-namespace QSoft.Server.Http.Extention
+namespace QSoft.Server.Http.Extension
 {
     static public class HttpListenerRequestEx
     {
