@@ -18,12 +18,13 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using QSoft.Server.Http;
-using QSoft.Server.Http.Extention;
+using QSoft.Server.Http.Extension;
 using System.Linq.Expressions;
 using QQTest;
 using System.Web.Script.Serialization;
 using System.ComponentModel;
 using System.Reflection;
+using QSoft.Server.Http1;
 
 namespace WPF_Http_Server
 {
@@ -35,6 +36,27 @@ namespace WPF_Http_Server
         public MainWindow()
         {
             InitializeComponent();
+        }
+
+        [HttpMethodSetting()]
+        public object Add(int x, int y)
+        {
+            return 1;
+        }
+        [HttpMethodSetting()]
+        public object Add(int x)
+        {
+            return 1;
+        }
+        [HttpMethodSetting()]
+        public object Add(string x, string y)
+        {
+            return 1;
+        }
+        [HttpMethodSetting()]
+        public object Add(string x)
+        {
+            return 1;
         }
 
         private static void CreateInstallCert(int expDate, string password, string issuedBy)
@@ -121,6 +143,10 @@ namespace WPF_Http_Server
         MainUI m_MainUI;
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            Server1 server1 = new Server1();
+            server1.Add(this);
+            server1.Strat("127.0.0.1", 3456);
+            return;
             //CreateInstallCert(100, "AA", "");
             DirectoryInfo dir = new DirectoryInfo("../../webdata/");
             string pp = dir.FullName.Replace(dir.Parent.FullName, "").Trim('\\');
@@ -161,7 +187,6 @@ namespace WPF_Http_Server
 
                 server.Get("/events.html", (context, data) =>
                 {
-                    data.Get<int>("");
                     return Result.Stream(File.OpenRead($"{server.Statics.FullName}events.html"));
                 });
 
