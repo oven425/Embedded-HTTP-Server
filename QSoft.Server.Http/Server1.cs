@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using QSoft.Server.Http1.Extension;
 
 namespace QSoft.Server.Http1
 {
@@ -52,7 +53,7 @@ namespace QSoft.Server.Http1
                     else
                     {
                         Interlocked.Increment(ref UserCount);
-                        Task.Run(async () =>
+                        Task.Run(() =>
                         {
                             bool compelete = false;
 
@@ -60,13 +61,61 @@ namespace QSoft.Server.Http1
                             try
                             {
                                 var acs = this.m_Actions.Where(x => x.Setting.Method == context.Request.HttpMethod && x.Setting.Path == context.Request.Url.LocalPath);
-                                if (context.Request.HttpMethod.ToUpperInvariant() == "GET")
-                                {
-                                    var pas = acs.First().Method.GetParameters();
-                                    var ppps = pas.Select(x => new { x.Name, x.ParameterType });
-                                    foreach(var oo in ppps)
-                                    {
+                                acs = acs.Where(x=>x.Method.GetParameters().Length == context.Request.QueryString.Count).OrderBy(x => x.Method.GetParameters().Count(y => y.ParameterType == typeof(string)));
+                                
+                                Dictionary<string, string> query = new Dictionary<string, string>();
 
+                                foreach(var oo in context.Request.QueryString.AllKeys)
+                                {
+                                    query[oo] = context.Request.QueryString[oo];
+                                }
+                                
+                                foreach (var ac in acs)
+                                {
+                                    object[] args = new object[query.Count];
+                                    var pars = ac.Method.GetParameters();
+                                    for(int i=0; i<pars.Length; i++)
+                                    {
+                                        if(query.ContainsKey(pars[i].Name) == true)
+                                        {
+                                            object arg = null;
+                                            if(pars[i].ParameterType.TryParse(query[pars[i].Name], out arg)==true)
+                                            {
+                                                args[i] = arg;
+                                            }
+                                            else
+                                            {
+                                                break;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            break;
+                                        }
+                                    }
+                                    if(args.All(x=>x!=null) == true)
+                                    {
+                                        try
+                                        {
+                                            ac.Method.Invoke(ac.Target, args);
+                                        }
+                                        catch(TargetInvocationException ee)
+                                        {
+                                            System.Diagnostics.Trace.WriteLine(ee.Message);
+                                            System.Diagnostics.Trace.WriteLine(ee.StackTrace);
+                                            if(ee.InnerException != null)
+                                            {
+                                                System.Diagnostics.Trace.WriteLine(ee.InnerException.Message);
+                                                System.Diagnostics.Trace.WriteLine(ee.InnerException.StackTrace);
+                                            }
+                                        }
+                                        catch(Exception ee)
+                                        {
+                                            System.Diagnostics.Trace.WriteLine(ee.Message);
+                                            System.Diagnostics.Trace.WriteLine(ee.StackTrace);
+                                        }
+                                        
+                                        break;
                                     }
                                 }
                                 
@@ -107,4 +156,124 @@ namespace QSoft.Server.Http1
     }
 
 
+}
+
+namespace QSoft.Server.Http1.Extension
+{
+    public static class TypeEx
+    {
+        public static bool TryParse(this Type src, string data, out object dst)
+        {
+            dst = null;
+            bool result = true;
+            switch(Type.GetTypeCode(src))
+            {
+                case TypeCode.Boolean:
+                    {
+                        bool hr;
+                        result = bool.TryParse(data, out hr);
+                        dst = hr;
+                    }
+                    break;
+                case TypeCode.Char:
+                    {
+                        Char hr;
+                        result = Char.TryParse(data, out hr);
+                        dst = hr;
+                    }
+                    break;
+                case TypeCode.SByte:
+                    {
+                        sbyte hr;
+                        result = sbyte.TryParse(data, out hr);
+                        dst = hr;
+                    }
+                    break;
+                case TypeCode.Byte:
+                    {
+                        byte hr;
+                        result = byte.TryParse(data, out hr);
+                        dst = hr;
+                    }
+                    break;
+                case TypeCode.Int16:
+                    {
+                        Int16 hr;
+                        result = Int16.TryParse(data, out hr);
+                        dst = hr;
+                    }
+                    break;
+                case TypeCode.UInt16:
+                    {
+                        UInt16 hr;
+                        result = UInt16.TryParse(data, out hr);
+                        dst = hr;
+                    }
+                    break;
+                case TypeCode.Int32:
+                    {
+                        Int32 hr;
+                        result = Int32.TryParse(data, out hr);
+                        dst = hr;
+                    }
+                    break;
+                case TypeCode.UInt32:
+                    {
+                        UInt32 hr;
+                        result = UInt32.TryParse(data, out hr);
+                        dst = hr;
+                    }
+                    break;
+                case TypeCode.Int64:
+                    {
+                        Int64 hr;
+                        result = Int64.TryParse(data, out hr);
+                        dst = hr;
+                    }
+                    break;
+                case TypeCode.UInt64:
+                    {
+                        UInt64 hr;
+                        result = UInt64.TryParse(data, out hr);
+                        dst = hr;
+                    }
+                    break;
+                case TypeCode.Double:
+                    {
+                        Double hr;
+                        result = Double.TryParse(data, out hr);
+                        dst = hr;
+                    }
+                    break;
+                case TypeCode.Decimal:
+                    {
+                        Decimal hr;
+                        result = Decimal.TryParse(data, out hr);
+                        dst = hr;
+                    }
+                    break;
+                case TypeCode.DateTime:
+                    {
+                        DateTime hr;
+                        result = DateTime.TryParse(data, out hr);
+                        dst = hr;
+                    }
+                    break;
+                case TypeCode.Single:
+                    {
+                        Single hr;
+                        result = Single.TryParse(data, out hr);
+                        dst = hr;
+                    }
+                    break;
+                default:
+                    {
+                        result = false;
+                    }
+                    break;
+            }
+
+            return result;
+        }
+    }
 }

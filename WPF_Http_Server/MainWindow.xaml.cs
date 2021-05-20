@@ -59,6 +59,12 @@ namespace WPF_Http_Server
             return 1;
         }
 
+        [HttpMethodSetting()]
+        public object Add()
+        {
+            return 1;
+        }
+
         private static void CreateInstallCert(int expDate, string password, string issuedBy)
         {
             // Create/install certificate
