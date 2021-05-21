@@ -38,120 +38,74 @@ namespace WPF_Http_Server
             InitializeComponent();
         }
 
-        [HttpMethodSetting()]
-        public object Add(int x, int y)
+        //[HttpMethodSetting()]
+        //public object Add(int x, int y)
+        //{
+        //    return new { x = x, y = y, name = "object Add(int x, int y)" };
+        //}
+        //[HttpMethodSetting()]
+        //public object Add(int x)
+        //{
+        //    return new { x = x, name = "object Add(int x)" };
+        //}
+
+        //[HttpMethodSetting()]
+        //public object Add(int x, int y, HttpListenerContext context)
+        //{
+        //    return new { x=x, y=y,name= "object Add(int x, int y)" };
+        //}
+        [HttpMethodSetting(Method ="GET")]
+        public object Add(RRs x, HttpListenerContext context)
         {
-            return 1;
+            return new { x = x, name = "object Add(RRs x, HttpListenerContext context)" };
         }
-        [HttpMethodSetting()]
-        public object Add(int x)
+        [HttpMethodSetting(Method = "POST", Path ="/Add")]
+        public object Add1(RRs x, HttpListenerContext context)
         {
-            return 1;
+            return new { x = x, name = "object Add(RRs x, HttpListenerContext context)" };
         }
-        [HttpMethodSetting()]
-        public object Add(string x, string y)
+        //[HttpMethodSetting()]
+        //public object Add(HttpListenerContext context)
+        //{
+        //    return new { name = "object Add(HttpListenerContext context))" };
+        //}
+        //[HttpMethodSetting()]
+        //public object Add(Data data)
+        //{
+        //    return new { name = "object Add(HttpListenerContext context))" };
+        //}
+        //[HttpMethodSetting()]
+        //public object Add(Data data, HttpListenerContext context)
+        //{
+        //    return new { name = "object Add(Data data, HttpListenerContext context)" };
+        //}
+
+        public enum RRs
         {
-            return 1;
+            Left,
+            Top,
+            Right,
+            Bottom
         }
-        [HttpMethodSetting()]
-        public object Add(string x)
+        public class Data
         {
-            return 1;
-        }
-
-        [HttpMethodSetting()]
-        public object Add()
-        {
-            return 1;
-        }
-
-        private static void CreateInstallCert(int expDate, string password, string issuedBy)
-        {
-            // Create/install certificate
-            using (var powerShell = System.Management.Automation.PowerShell.Create())
-            {
-                var notAfter = DateTime.Now.AddYears(expDate).ToLongDateString();
-                var assemPath = Assembly.GetCallingAssembly().Location;
-                var fileInfo = new FileInfo(assemPath);
-                var saveDir = System.IO.Path.Combine(fileInfo.Directory.FullName, "CertDir");
-                if (!Directory.Exists(saveDir))
-                {
-                    Directory.CreateDirectory(saveDir);
-                }
-
-                // This adds certificate to Personal and Intermediate Certification Authority
-                var rootAuthorityName = "My-RootAuthority";
-                var rootFriendlyName = "My Root Authority";
-                var rootAuthorityScript =
-                    $"$rootAuthority = New-SelfSignedCertificate" +
-                    $" -DnsName '{rootAuthorityName}'" +
-                    $" -NotAfter '{notAfter}'" +
-                    $" -CertStoreLocation cert:\\LocalMachine\\My" +
-                    $" -FriendlyName '{rootFriendlyName}'" +
-                    $" -KeyUsage DigitalSignature,CertSign";
-                powerShell.AddScript(rootAuthorityScript);
-
-                // Export CRT file
-                var rootAuthorityCrtPath = System.IO.Path.Combine(saveDir, "MyRootAuthority.crt");
-                var exportAuthorityCrtScript =
-                    $"$rootAuthorityPath = 'cert:\\localMachine\\my\\' + $rootAuthority.thumbprint;" +
-                    $"Export-Certificate" +
-                    $" -Cert $rootAuthorityPath" +
-                    $" -FilePath {rootAuthorityCrtPath}";
-                powerShell.AddScript(exportAuthorityCrtScript);
-
-                // Export PFX file
-                var rootAuthorityPfxPath = System.IO.Path.Combine(saveDir, "MyRootAuthority.pfx");
-                var exportAuthorityPfxScript =
-                    $"$pwd = ConvertTo-SecureString -String '{password}' -Force -AsPlainText;" +
-                    $"Export-PfxCertificate" +
-                    $" -Cert $rootAuthorityPath" +
-                    $" -FilePath '{rootAuthorityPfxPath}'" +
-                    $" -Password $pwd";
-                powerShell.AddScript(exportAuthorityPfxScript);
-
-                // Create the self-signed certificate, signed using the above certificate
-                var gatewayAuthorityName = "My-Service";
-                var gatewayFriendlyName = "My Service";
-                var gatewayAuthorityScript =
-                    $"$rootcert = ( Get-ChildItem -Path $rootAuthorityPath );" +
-                    $"$gatewayCert = New-SelfSignedCertificate" +
-                    $" -DnsName '{gatewayAuthorityName}'" +
-                    $" -NotAfter '{notAfter}'" +
-                    $" -certstorelocation cert:\\localmachine\\my" +
-                    $" -Signer $rootcert" +
-                    $" -FriendlyName '{gatewayFriendlyName}'" +
-                    $" -KeyUsage KeyEncipherment,DigitalSignature";
-                powerShell.AddScript(gatewayAuthorityScript);
-
-                // Export new certificate public key as a CRT file
-                var myGatewayCrtPath = System.IO.Path.Combine(saveDir, "MyGatewayAuthority.crt");
-                var exportCrtScript =
-                    $"$gatewayCertPath = 'cert:\\localMachine\\my\\' + $gatewayCert.thumbprint;" +
-                    $"Export-Certificate" +
-                    $" -Cert $gatewayCertPath" +
-                    $" -FilePath {myGatewayCrtPath}";
-                powerShell.AddScript(exportCrtScript);
-
-                // Export the new certificate as a PFX file
-                var myGatewayPfxPath = System.IO.Path.Combine(saveDir, "MyGatewayAuthority.pfx");
-                var exportPfxScript =
-                    $"Export-PfxCertificate" +
-                    $" -Cert $gatewayCertPath" +
-                    $" -FilePath {myGatewayPfxPath}" +
-                    $" -Password $pwd"; // Use the previous password
-                powerShell.AddScript(exportPfxScript);
-
-                powerShell.Invoke();
-            }
+            public int x { set; get; }
+            public int y { set; get; }
+            public int z { set; get; }
         }
 
         MainUI m_MainUI;
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            JavaScriptSerializer js = new JavaScriptSerializer();
+            int x = 10;
+            string aaa = js.Serialize(x);
+            List<string> names1 = new List<string>() { "A", "B" };
+            List<string> names2 = new List<string>() { "A", "B", "C" };
+            var excp = names1.Except(names2);
             Server1 server1 = new Server1();
             server1.Add(this);
-            server1.Strat("127.0.0.1", 3456);
+            server1.Strat("127.0.0.1", 3456, new DirectoryInfo("../../webdata/"));
             return;
             //CreateInstallCert(100, "AA", "");
             DirectoryInfo dir = new DirectoryInfo("../../webdata/");
@@ -164,7 +118,7 @@ namespace WPF_Http_Server
             rd.Index = 1;
             rd.Name = "BBen";
 
-            JavaScriptSerializer js = new JavaScriptSerializer();
+            
             string json_str = js.Serialize(rd);
             System.Diagnostics.Trace.WriteLine(json_str);
 

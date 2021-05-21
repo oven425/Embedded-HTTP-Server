@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
+using System.Web.Script.Serialization;
 using QSoft.Server.Http1.Extension;
 
 namespace QSoft.Server.Http1
@@ -14,6 +18,8 @@ namespace QSoft.Server.Http1
     {
         public void Add(object obj)
         {
+            //Dictionary<string, Action> actions = new Dictionary<string, Action>();
+            Dictionary<string, Dictionary<string, Action>> actions = new Dictionary<string, Dictionary<string, Action>>();
             var methods = obj.GetType().GetMethods(System.Reflection.BindingFlags.Instance| System.Reflection.BindingFlags.Public| BindingFlags.InvokeMethod);
             foreach(var oo in methods)
             {
@@ -28,16 +34,27 @@ namespace QSoft.Server.Http1
                     {
                         ac.Setting.Path = $"/{oo.Name}";
                     }
-                    this.m_Actions.Add(ac);
+                    if(actions.ContainsKey(ac.Setting.Method) == false)
+                    {
+                        actions.Add(ac.Setting.Method, new Dictionary<string, Action>());
+                    }
+                    actions[ac.Setting.Method][ac.Setting.Path] = ac;
+                    foreach (var pp in ac.Method.GetParameters())
+                    {
+                        ac.Params[pp.Name] = pp.ParameterType;
+                    }
+                    ac.ContextCount = ac.Params.Values.Count(x => x == typeof(HttpListenerContext));
                 }
             }
+            this.m_Actions.AddRange(actions.Values.SelectMany(x=>x.Values));
         }
 
         List<Action> m_Actions = new List<Action>();
-
+        public DirectoryInfo Statics { private set; get; }
         HttpListener m_Listener = new HttpListener();
-        public void Strat(string ip, int port)
+        public void Strat(string ip, int port, DirectoryInfo statics, ReturnTypes return_default = ReturnTypes.Xml)
         {
+            this.Statics = statics;
             this.m_Listener.Prefixes.Add($"http://{ip}:{port}/");
             this.m_Listener.Start();
             int UserCount = 0;
@@ -60,65 +77,21 @@ namespace QSoft.Server.Http1
                             System.Diagnostics.Trace.WriteLine($"usercount:{UserCount}");
                             try
                             {
-                                var acs = this.m_Actions.Where(x => x.Setting.Method == context.Request.HttpMethod && x.Setting.Path == context.Request.Url.LocalPath);
-                                acs = acs.Where(x=>x.Method.GetParameters().Length == context.Request.QueryString.Count).OrderBy(x => x.Method.GetParameters().Count(y => y.ParameterType == typeof(string)));
-                                
-                                Dictionary<string, string> query = new Dictionary<string, string>();
-
-                                foreach(var oo in context.Request.QueryString.AllKeys)
+                                switch(context.Request.HttpMethod)
                                 {
-                                    query[oo] = context.Request.QueryString[oo];
-                                }
-                                
-                                foreach (var ac in acs)
-                                {
-                                    object[] args = new object[query.Count];
-                                    var pars = ac.Method.GetParameters();
-                                    for(int i=0; i<pars.Length; i++)
-                                    {
-                                        if(query.ContainsKey(pars[i].Name) == true)
+                                    case "GET":
                                         {
-                                            object arg = null;
-                                            if(pars[i].ParameterType.TryParse(query[pars[i].Name], out arg)==true)
-                                            {
-                                                args[i] = arg;
-                                            }
-                                            else
-                                            {
-                                                break;
-                                            }
+                                            this.Process_Get(context);
                                         }
-                                        else
-                                        {
-                                            break;
-                                        }
-                                    }
-                                    if(args.All(x=>x!=null) == true)
-                                    {
-                                        try
-                                        {
-                                            ac.Method.Invoke(ac.Target, args);
-                                        }
-                                        catch(TargetInvocationException ee)
-                                        {
-                                            System.Diagnostics.Trace.WriteLine(ee.Message);
-                                            System.Diagnostics.Trace.WriteLine(ee.StackTrace);
-                                            if(ee.InnerException != null)
-                                            {
-                                                System.Diagnostics.Trace.WriteLine(ee.InnerException.Message);
-                                                System.Diagnostics.Trace.WriteLine(ee.InnerException.StackTrace);
-                                            }
-                                        }
-                                        catch(Exception ee)
-                                        {
-                                            System.Diagnostics.Trace.WriteLine(ee.Message);
-                                            System.Diagnostics.Trace.WriteLine(ee.StackTrace);
-                                        }
-                                        
                                         break;
-                                    }
+                                    case "POST":
+                                        {
+                                            this.Process_Post(context);
+                                        }
+                                        break;
                                 }
                                 
+
                             }
                             catch (Exception ee)
                             {
@@ -138,6 +111,180 @@ namespace QSoft.Server.Http1
             });
         }
 
+        void Process_Get(HttpListenerContext context)
+        {
+            var action = this.m_Actions.FirstOrDefault(x => x.Setting.Path == context.Request.Url.LocalPath && x.Setting.Method.Equals(context.Request.HttpMethod, StringComparison.OrdinalIgnoreCase));
+            if (action == null)
+            {
+                if (File.Exists(this.Statics.FullName + context.Request.Url.LocalPath) == true)
+                {
+                    context.Response.Write(File.OpenRead(this.Statics.FullName + context.Request.Url.LocalPath));
+                }
+            }
+            else
+            {
+                Dictionary<string, string> query = context.Request.QueryString.ToDictionary();
+
+                var pars = action.Method.GetParameters();
+                object[] args = new object[pars.Length];
+                for (int i = 0; i < pars.Length; i++)
+                {
+                    if (pars[i].ParameterType == typeof(HttpListenerContext))
+                    {
+                        args[i] = context;
+                    }
+                    else if (Type.GetTypeCode(pars[i].ParameterType) == TypeCode.Object)
+                    {
+                        args[i] = context.Request.QueryString.Deserialize(pars[i].ParameterType);
+                    }
+                    else if (query.ContainsKey(pars[i].Name) == true)
+                    {
+                        object arg = null;
+                        if (pars[i].ParameterType.TryParse(query[pars[i].Name], out arg) == true)
+                        {
+                            args[i] = arg;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                if (args.All(x => x != null) == true)
+                {
+                    try
+                    {
+                        object hr = action.Method.Invoke(action.Target, args);
+                        context.Response.ContentType = "application/json";
+                        JavaScriptSerializer js = new JavaScriptSerializer();
+                        var json = js.Serialize(hr);
+                        context.Response.Write(json);
+                    }
+                    catch (TargetInvocationException ee)
+                    {
+                        System.Diagnostics.Trace.WriteLine(ee.Message);
+                        System.Diagnostics.Trace.WriteLine(ee.StackTrace);
+                        if (ee.InnerException != null)
+                        {
+                            System.Diagnostics.Trace.WriteLine(ee.InnerException.Message);
+                            System.Diagnostics.Trace.WriteLine(ee.InnerException.StackTrace);
+                        }
+                    }
+                    catch (Exception ee)
+                    {
+                        System.Diagnostics.Trace.WriteLine(ee.Message);
+                        System.Diagnostics.Trace.WriteLine(ee.StackTrace);
+                    }
+
+                }
+            }
+
+        }
+
+        void Process_Post(HttpListenerContext context)
+        {
+            bool compelete = false;
+            var action = this.m_Actions.FirstOrDefault(x => x.Setting.Path == context.Request.Url.LocalPath && x.Setting.Method.Equals(context.Request.HttpMethod, StringComparison.OrdinalIgnoreCase));
+            var pars = action.Method.GetParameters();
+            object[] args = new object[pars.Length];
+            if (context.Request.ContentLength64 > 0)
+            {
+                if (context.Request.ContentType == "application/xml" | context.Request.ContentType == "application/json")
+                {
+                    for (int i = 0; i < pars.Length; i++)
+                    {
+                        if (pars[i].ParameterType == typeof(HttpListenerContext))
+                        {
+                            args[i] = context;
+                        }
+                        else
+                        {
+                            if(context.Request.ContentType == "application/xml")
+                            {
+                                System.Xml.Serialization.XmlSerializer xml = new System.Xml.Serialization.XmlSerializer(pars[i].ParameterType);
+                                args[i] = xml.Deserialize(context.Request.InputStream);
+                            }
+                            else if(context.Request.ContentType == "application/json")
+                            {
+                                string data_str = context.Request.ReadString();
+                                JavaScriptSerializer js = new JavaScriptSerializer();
+                                args[i] = js.Deserialize(data_str, pars[i].ParameterType);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    if (context.Request.ContentType == "application/x-www-form-urlencoded")
+                    {
+                        string data_str = context.Request.ReadString();
+                        Dictionary<string, string> query = HttpUtility.ParseQueryString(data_str).ToDictionary();
+
+                        for (int i = 0; i < pars.Length; i++)
+                        {
+                            if (pars[i].ParameterType == typeof(HttpListenerContext))
+                            {
+                                args[i] = context;
+                            }
+                            else if (Type.GetTypeCode(pars[i].ParameterType) == TypeCode.Object)
+                            {
+                                args[i] = context.Request.QueryString.Deserialize(pars[i].ParameterType);
+                            }
+                            else if (query.ContainsKey(pars[i].Name) == true)
+                            {
+                                object arg = null;
+                                if (pars[i].ParameterType.TryParse(query[pars[i].Name], out arg) == true)
+                                {
+                                    args[i] = arg;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (args.All(x => x != null) == true)
+                {
+                    try
+                    {
+                        object hr = action.Method.Invoke(action.Target, args);
+                        context.Response.ContentType = "application/json";
+                        JavaScriptSerializer js = new JavaScriptSerializer();
+                        var json = js.Serialize(hr);
+                        context.Response.Write(json);
+                    }
+                    catch (TargetInvocationException ee)
+                    {
+                        System.Diagnostics.Trace.WriteLine(ee.Message);
+                        System.Diagnostics.Trace.WriteLine(ee.StackTrace);
+                        if (ee.InnerException != null)
+                        {
+                            System.Diagnostics.Trace.WriteLine(ee.InnerException.Message);
+                            System.Diagnostics.Trace.WriteLine(ee.InnerException.StackTrace);
+                        }
+                    }
+                    catch (Exception ee)
+                    {
+                        System.Diagnostics.Trace.WriteLine(ee.Message);
+                        System.Diagnostics.Trace.WriteLine(ee.StackTrace);
+                    }
+
+                }
+            }
+        }
+
+
     }
 
     public class Action
@@ -145,14 +292,24 @@ namespace QSoft.Server.Http1
         public HttpMethodSetting Setting { set; get; }
         public MethodInfo Method { set; get; }
         public object Target { set; get; }
+        public int ContextCount { set; get; }
+        public Dictionary<string, Type> Params { set; get; } = new Dictionary<string, Type>();
     }
 
-    
+    public enum ReturnTypes
+    {
+        Default,
+        Xml,
+        Json,
+        Custom
+    }
 
     public class HttpMethodSetting:Attribute
     {
         public string Method { set; get; } = "GET";
         public string Path { set; get; }
+
+        
     }
 
 
@@ -160,6 +317,126 @@ namespace QSoft.Server.Http1
 
 namespace QSoft.Server.Http1.Extension
 {
+    public static class NameValueCollectionEx
+    {
+        public static object Deserialize(this NameValueCollection src, Type type)
+        {
+            object obj = null;
+            var pps = type.GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(x => x.CanWrite == true);
+            var excp = pps.Select(x => x.Name).Except(src.AllKeys);
+            if (excp.Count() == pps.Count())
+            {
+                
+            }
+            else
+            {
+                obj = Activator.CreateInstance(type);
+                foreach (var pp in pps)
+                {
+                    if (src.AllKeys.Any(x => x == pp.Name) == true)
+                    {
+                        object dst;
+                        if (pp.PropertyType.TryParse(src[pp.Name], out dst) == true)
+                        {
+                            pp.SetValue(obj, dst);
+                        }
+                    }
+                }
+            }
+            return obj;
+        }
+
+        public static Dictionary<string,string> ToDictionary(this NameValueCollection src)
+        {
+            Dictionary<string, string> query = new Dictionary<string, string>();
+            foreach (var oo in src.AllKeys)
+            {
+                query[oo] = src[oo];
+            }
+            return query;
+        }
+    }
+    static public class HttpListenerRequestEx
+    {
+        public static string ReadString(this HttpListenerRequest src)
+        {
+            string dst = "";
+            if (src.HasEntityBody == true && src.ContentLength64 > 0)
+            {
+                System.IO.StreamReader reader = new System.IO.StreamReader(src.InputStream, src.ContentEncoding);
+                dst = reader.ReadToEnd();
+            }
+            return dst;
+        }
+    }
+    static public class HttpListenerResponseEx
+    {
+        public static void Write(this HttpListenerResponse src, string data, string content_type)
+        {
+            if (string.IsNullOrWhiteSpace(content_type) == false)
+            {
+
+            }
+            byte[] writebuf = Encoding.UTF8.GetBytes(data);
+            src.OutputStream.Write(writebuf, 0, writebuf.Length);
+        }
+
+        public static void Write(this HttpListenerResponse src, byte[] data)
+        {
+            src.ContentLength64 = data.Length;
+            src.OutputStream.Write(data, 0, data.Length);
+        }
+
+        public static void Write(this HttpListenerResponse src, string data, bool autolength = true)
+        {
+            byte[] writebuf = Encoding.UTF8.GetBytes(data);
+            if (autolength == true)
+            {
+                src.ContentLength64 = writebuf.Length;
+            }
+            src.OutputStream.Write(writebuf, 0, writebuf.Length);
+        }
+
+        public static void Write(this HttpListenerResponse src, FileStream data, bool autolength = true)
+        {
+            byte[] read_buf = new byte[8192];
+            if (autolength == true)
+            {
+                src.ContentLength64 = data.Length - data.Position;
+                src.ContentType = MimeMapping.GetMimeMapping(data.Name);
+            }
+            
+            while (true)
+            {
+                int read_len = data.Read(read_buf, 0, read_buf.Length);
+                src.OutputStream.Write(read_buf, 0, read_len);
+                if (read_len != read_buf.Length)
+                {
+                    return;
+                }
+            }
+        }
+
+        public static void Write(this HttpListenerResponse src, Stream data, bool autolength = true)
+        {
+            byte[] read_buf = new byte[8192];
+            if (autolength == true)
+            {
+                src.ContentLength64 = data.Length - data.Position;
+            }
+
+            while (true)
+            {
+                int read_len = data.Read(read_buf, 0, read_buf.Length);
+                src.OutputStream.Write(read_buf, 0, read_len);
+                if (read_len != read_buf.Length)
+                {
+                    return;
+                }
+            }
+        }
+    }
+
     public static class TypeEx
     {
         public static bool TryParse(this Type src, string data, out object dst)
