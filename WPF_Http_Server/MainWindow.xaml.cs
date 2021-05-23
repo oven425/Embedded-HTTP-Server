@@ -54,16 +54,44 @@ namespace WPF_Http_Server
         //{
         //    return new { x=x, y=y,name= "object Add(int x, int y)" };
         //}
-        [HttpMethodSetting(Method ="GET")]
-        public object Add(RRs x, HttpListenerContext context)
+        [HttpMethodSetting(Method = "GET")]
+        public object Setting(bool enable, int powerlevel, HttpListenerContext context)
         {
-            return new { x = x, name = "object Add(RRs x, HttpListenerContext context)" };
+            return new
+            {
+                enable = enable,
+                powerlevel= powerlevel,
+                name = "object Setting(bool enable, int powerlevel, HttpListenerContext context)"
+            };
         }
-        [HttpMethodSetting(Method = "POST", Path ="/Add")]
-        public object Add1(RRs x, HttpListenerContext context)
+        [HttpMethodSetting(Method = "GET")]
+        public object Setting(bool enable, HttpListenerContext context)
         {
-            return new { x = x, name = "object Add(RRs x, HttpListenerContext context)" };
+            return new
+            {
+                enable = enable,
+                name = "object Setting(bool enable, HttpListenerContext context)"
+            };
         }
+        [HttpMethodSetting(Method = "GET")]
+        public object Setting(int powerlevel, HttpListenerContext context)
+        {
+            return new
+            {
+                powerlevel = powerlevel,
+                name = "object Setting(int powerlevel, HttpListenerContext context)"
+            };
+        }
+        //[HttpMethodSetting(Method ="GET")]
+        //public object Add(RRs x, HttpListenerContext context)
+        //{
+        //    return new { x = x, name = "object Add(RRs x, HttpListenerContext context)" };
+        //}
+        //[HttpMethodSetting(Method = "POST", Path ="/Add")]
+        //public object Add1(RRs x, HttpListenerContext context)
+        //{
+        //    return new { x = x, name = "object Add(RRs x, HttpListenerContext context)" };
+        //}
         //[HttpMethodSetting()]
         //public object Add(HttpListenerContext context)
         //{
