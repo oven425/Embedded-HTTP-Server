@@ -25,6 +25,7 @@ using System.Web.Script.Serialization;
 using System.ComponentModel;
 using System.Reflection;
 using QSoft.Server.Http1;
+using System.Dynamic;
 
 namespace WPF_Http_Server
 {
@@ -38,102 +39,70 @@ namespace WPF_Http_Server
             InitializeComponent();
         }
 
-        //[HttpMethodSetting()]
-        //public object Add(int x, int y)
-        //{
-        //    return new { x = x, y = y, name = "object Add(int x, int y)" };
-        //}
-        //[HttpMethodSetting()]
-        //public object Add(int x)
-        //{
-        //    return new { x = x, name = "object Add(int x)" };
-        //}
+        [HttpMethodSetting(Method = "POST")]
+        async public Task<object> Setting(string ip, int port, HttpListenerContext context)
+        {
+            
+            await Task.Delay(1000);
+            return new
+            {
+                ip = ip,
+                port = port,
+                time = DateTime.Now,
+                name = "object Setting(string ip, int port, HttpListenerContext context)"
+            };
+        }
+        [HttpMethodSetting(Method = "POST")]
+        public object Setting(string ip, HttpListenerContext context)
+        {
+            return new
+            {
+                ip = ip,
+                time = DateTime.Now,
+                name = "object Setting(string ip, HttpListenerContext context)"
+            };
+        }
 
-        //[HttpMethodSetting()]
-        //public object Add(int x, int y, HttpListenerContext context)
-        //{
-        //    return new { x=x, y=y,name= "object Add(int x, int y)" };
-        //}
-        [HttpMethodSetting(Method = "GET")]
-        public object Setting(bool enable, int powerlevel, HttpListenerContext context)
+        [HttpMethodSetting(Method = "POST")]
+        public object Setting(int port, HttpListenerContext context)
         {
             return new
             {
-                enable = enable,
-                powerlevel= powerlevel,
-                name = "object Setting(bool enable, int powerlevel, HttpListenerContext context)"
+                port = port,
+                time = DateTime.Now,
+                name = "object Setting(int port, HttpListenerContext context)"
             };
         }
-        [HttpMethodSetting(Method = "GET")]
-        public object Setting(bool enable, HttpListenerContext context)
-        {
-            return new
-            {
-                enable = enable,
-                name = "object Setting(bool enable, HttpListenerContext context)"
-            };
-        }
-        [HttpMethodSetting(Method = "GET")]
-        public object Setting(int powerlevel, HttpListenerContext context)
-        {
-            return new
-            {
-                powerlevel = powerlevel,
-                name = "object Setting(int powerlevel, HttpListenerContext context)"
-            };
-        }
-        //[HttpMethodSetting(Method ="GET")]
-        //public object Add(RRs x, HttpListenerContext context)
-        //{
-        //    return new { x = x, name = "object Add(RRs x, HttpListenerContext context)" };
-        //}
-        //[HttpMethodSetting(Method = "POST", Path ="/Add")]
-        //public object Add1(RRs x, HttpListenerContext context)
-        //{
-        //    return new { x = x, name = "object Add(RRs x, HttpListenerContext context)" };
-        //}
-        //[HttpMethodSetting()]
-        //public object Add(HttpListenerContext context)
-        //{
-        //    return new { name = "object Add(HttpListenerContext context))" };
-        //}
-        //[HttpMethodSetting()]
-        //public object Add(Data data)
-        //{
-        //    return new { name = "object Add(HttpListenerContext context))" };
-        //}
-        //[HttpMethodSetting()]
-        //public object Add(Data data, HttpListenerContext context)
-        //{
-        //    return new { name = "object Add(Data data, HttpListenerContext context)" };
-        //}
 
-        public enum RRs
+        [HttpMethodSetting(Method = "POST")]
+        public object Setting(Address port)
         {
-            Left,
-            Top,
-            Right,
-            Bottom
-        }
-        public class Data
-        {
-            public int x { set; get; }
-            public int y { set; get; }
-            public int z { set; get; }
+            return new
+            {
+                port = port,
+                time = DateTime.Now,
+                name = "object Setting(Address port)"
+            };
         }
 
         MainUI m_MainUI;
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            Address add = new Address() { IP = "789.456.123.1", Port=999999 };
+            System.Xml.Serialization.XmlSerializer xml = new System.Xml.Serialization.XmlSerializer(add.GetType());
+            using (MemoryStream mm = new MemoryStream())
+            {
+                xml.Serialize(mm, add);
+                System.Diagnostics.Trace.WriteLine(Encoding.UTF8.GetString(mm.ToArray()));
+            }
             JavaScriptSerializer js = new JavaScriptSerializer();
             int x = 10;
-            string aaa = js.Serialize(x);
+            string aaa = js.Serialize(add);
             List<string> names1 = new List<string>() { "A", "B" };
             List<string> names2 = new List<string>() { "A", "B", "C" };
             var excp = names1.Except(names2);
             Server1 server1 = new Server1();
-            server1.Add(this);
-            server1.Strat("127.0.0.1", 3456, new DirectoryInfo("../../webdata/"));
+            server1.Strat("127.0.0.1", 3456, new List<object>() { this }, new DirectoryInfo("../../webdata/"));
             return;
             //CreateInstallCert(100, "AA", "");
             DirectoryInfo dir = new DirectoryInfo("../../webdata/");
@@ -159,121 +128,121 @@ namespace WPF_Http_Server
             Server server = new Server();
             try
             {
-                server.Get<RowData>("/get/json", async (context, data) =>
-                {
-                    await Task.Delay(1);
-                    return Result.Json(DateTime.Now);
-                });
+                //server.Get<RowData>("/get/json", async (context, data) =>
+                //{
+                //    await Task.Delay(1);
+                //    return Result.Json(DateTime.Now);
+                //});
 
-                //server.Get<RowData>("/get/json", (context, data) => Get_Json(context, data));
-                server.Get<RowData>("/get/xml", (context, data) => Get_xml(context, data));
+                ////server.Get<RowData>("/get/json", (context, data) => Get_Json(context, data));
+                //server.Get<RowData>("/get/xml", (context, data) => Get_xml(context, data));
 
-                server.Get("/get/jpg", (context, query) =>
-                {
-                    return Result.Stream(File.OpenRead("../../1.jpg"));
-                });
+                //server.Get("/get/jpg", (context, query) =>
+                //{
+                //    return Result.Stream(File.OpenRead("../../1.jpg"));
+                //});
 
-                server.Get("/events.html", (context, data) =>
-                {
-                    return Result.Stream(File.OpenRead($"{server.Statics.FullName}events.html"));
-                });
+                //server.Get("/events.html", (context, data) =>
+                //{
+                //    return Result.Stream(File.OpenRead($"{server.Statics.FullName}events.html"));
+                //});
 
-                server.Get<RowData>("/sse/test", (context, data) =>
-                {
-                    //context.Response.ContentType = "text/event-stream";
-                    //context.Response.Headers["Connection"] = "keep-alive";
-                    //context.Response.Headers["Cache-Control"] = "no-cache";
-                    //m_Events.Add( context.Response);
+                //server.Get<RowData>("/sse/test", (context, data) =>
+                //{
+                //    //context.Response.ContentType = "text/event-stream";
+                //    //context.Response.Headers["Connection"] = "keep-alive";
+                //    //context.Response.Headers["Cache-Control"] = "no-cache";
+                //    //m_Events.Add( context.Response);
 
-                    //Task.Run(async () =>
-                    //{
-                    //    while (true)
-                    //    {
-                    //        for (int i = 0; i < m_Events.Count; i++)
-                    //        {
-                    //            string msg = $"id: 123\ndata: {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")}\n\n";
+                //    //Task.Run(async () =>
+                //    //{
+                //    //    while (true)
+                //    //    {
+                //    //        for (int i = 0; i < m_Events.Count; i++)
+                //    //        {
+                //    //            string msg = $"id: 123\ndata: {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")}\n\n";
 
-                    //            m_Events.ElementAt(i).Write(msg, false);
-                    //        }
-                    //        await Task.Delay(1000);
-                    //    }
-                    //});
-                    this.m_Events.Add(new ServerSentEvent(context.Response, DateTime.Now.ToString("HHmmssfff")));
-                    Task.Run(async () =>
-                    {
-                        while (true)
-                        {
-                            for (int i = 0; i < m_Events.Count; i++)
-                            {
-                                string msg = $"id: 123\ndata: {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")}\n\n";
+                //    //            m_Events.ElementAt(i).Write(msg, false);
+                //    //        }
+                //    //        await Task.Delay(1000);
+                //    //    }
+                //    //});
+                //    this.m_Events.Add(new ServerSentEvent(context.Response, DateTime.Now.ToString("HHmmssfff")));
+                //    Task.Run(async () =>
+                //    {
+                //        while (true)
+                //        {
+                //            for (int i = 0; i < m_Events.Count; i++)
+                //            {
+                //                string msg = $"id: 123\ndata: {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")}\n\n";
 
-                                this.m_Events.ElementAt(i).WriteMessage(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
-                            }
-                            await Task.Delay(1000);
-                        }
-                    });
-                    return Result.Hanlded;
-                });
-                server.Get<RowData>("/get/mjpg", (context, data) =>
-                {
-                    this.m_MultiParts.Add(new MultiPatStream(context.Response));
-                    while (true)
-                    {
-                        foreach(var oo in this.m_MultiParts)
-                        {
-                            for (int i = 1; i <= 3; i++)
-                            {
-                                try
-                                {
-                                    FileStream fs = File.OpenRead($"../../{i}.jpg");
-                                    oo.Write(fs, "image/jpeg");
-                                    //context.Response.Write("--myboundary\r\n", false);
-                                    //context.Response.Write("Content-Type:image/jpeg\r\n", false);
-                                    //context.Response.Write($"Content-Length:{fs.Length}\r\n\r\n", false);
-                                    ////data.Response.OutputStream.Write(jpg, 0, jpg.Length);
-                                    //context.Response.Write(fs, false);
-                                    //fs.Close();
-                                    //fs.Dispose();
-                                    //context.Response.Write("\r\n", false);
-                                }
-                                catch (Exception ee)
-                                {
-                                    System.Diagnostics.Trace.WriteLine(ee.Message);
-                                }
+                //                this.m_Events.ElementAt(i).WriteMessage(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+                //            }
+                //            await Task.Delay(1000);
+                //        }
+                //    });
+                //    return Result.Hanlded;
+                //});
+                //server.Get<RowData>("/get/mjpg", (context, data) =>
+                //{
+                //    this.m_MultiParts.Add(new MultiPatStream(context.Response));
+                //    while (true)
+                //    {
+                //        foreach(var oo in this.m_MultiParts)
+                //        {
+                //            for (int i = 1; i <= 3; i++)
+                //            {
+                //                try
+                //                {
+                //                    FileStream fs = File.OpenRead($"../../{i}.jpg");
+                //                    oo.Write(fs, "image/jpeg");
+                //                    //context.Response.Write("--myboundary\r\n", false);
+                //                    //context.Response.Write("Content-Type:image/jpeg\r\n", false);
+                //                    //context.Response.Write($"Content-Length:{fs.Length}\r\n\r\n", false);
+                //                    ////data.Response.OutputStream.Write(jpg, 0, jpg.Length);
+                //                    //context.Response.Write(fs, false);
+                //                    //fs.Close();
+                //                    //fs.Dispose();
+                //                    //context.Response.Write("\r\n", false);
+                //                }
+                //                catch (Exception ee)
+                //                {
+                //                    System.Diagnostics.Trace.WriteLine(ee.Message);
+                //                }
                                 
-                                System.Threading.Thread.Sleep(1000);
-                            }
-                        }
+                //                System.Threading.Thread.Sleep(1000);
+                //            }
+                //        }
                         
-                    }
-                    //context.Response.ContentType = "multipart/x-mixed-replace;boundary=--myboundary";
-                    //while (true)
-                    //{
-                    //    for (int i = 1; i <= 3; i++)
-                    //    {
-                    //        FileStream fs = File.OpenRead($"../../{i}.jpg");
-                    //        context.Response.Write("--myboundary\r\n",false);
-                    //        context.Response.Write("Content-Type:image/jpeg\r\n", false);
-                    //        context.Response.Write($"Content-Length:{fs.Length}\r\n\r\n", false);
-                    //        //data.Response.OutputStream.Write(jpg, 0, jpg.Length);
-                    //        context.Response.Write(fs, false);
-                    //        fs.Close();
-                    //        fs.Dispose();
-                    //        context.Response.Write("\r\n", false);
-                    //        System.Threading.Thread.Sleep(1000);
-                    //    }
-                    //}
+                //    }
+                //    //context.Response.ContentType = "multipart/x-mixed-replace;boundary=--myboundary";
+                //    //while (true)
+                //    //{
+                //    //    for (int i = 1; i <= 3; i++)
+                //    //    {
+                //    //        FileStream fs = File.OpenRead($"../../{i}.jpg");
+                //    //        context.Response.Write("--myboundary\r\n",false);
+                //    //        context.Response.Write("Content-Type:image/jpeg\r\n", false);
+                //    //        context.Response.Write($"Content-Length:{fs.Length}\r\n\r\n", false);
+                //    //        //data.Response.OutputStream.Write(jpg, 0, jpg.Length);
+                //    //        context.Response.Write(fs, false);
+                //    //        fs.Close();
+                //    //        fs.Dispose();
+                //    //        context.Response.Write("\r\n", false);
+                //    //        System.Threading.Thread.Sleep(1000);
+                //    //    }
+                //    //}
 
-                    return Result.Hanlded;
-                });
+                //    return Result.Hanlded;
+                //});
 
-                server.Post<RowData>("/post/t", (http, data) =>
-                {
-                    //System.Diagnostics.Trace.WriteLine(data);
-                    return Result.String($"Index:{data.Index} Name:{data.Name}");
-                });
+                //server.Post<RowData>("/post/t", (http, data) =>
+                //{
+                //    //System.Diagnostics.Trace.WriteLine(data);
+                //    return Result.String($"Index:{data.Index} Name:{data.Name}");
+                //});
 
-                server.Start("127.0.0.1", 3456, new DirectoryInfo("../../webdata/"));
+                //server.Start("127.0.0.1", 3456, new DirectoryInfo("../../webdata/"));
             }
             catch(Exception ee)
             {
@@ -286,22 +255,22 @@ namespace WPF_Http_Server
         {
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="context"></param>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        public Result Get_Json(HttpListenerContext context, RowData data)
-        {
-            return Result.Json(DateTime.Now);
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="context"></param>
+        ///// <param name="data"></param>
+        ///// <returns></returns>
+        //public Result Get_Json(HttpListenerContext context, RowData data)
+        //{
+        //    return Result.Json(DateTime.Now);
+        //}
 
-        async public Task<Result> Get_xml(HttpListenerContext context, RowData data)
-        {
-            await Task.Delay(1);
-            return Result.Json(DateTime.Now);
-        }
+        //async public Task<Result> Get_xml(HttpListenerContext context, RowData data)
+        //{
+        //    await Task.Delay(1);
+        //    return Result.Json(DateTime.Now);
+        //}
         ConcurrentBag<MultiPatStream> m_MultiParts = new ConcurrentBag<MultiPatStream>();
     }
 
@@ -326,5 +295,10 @@ namespace QQTest
 
     }
 
+    public class Address
+    {
+        public string IP { set; get; }
+        public int Port { set; get; }
+    }
     
 }
