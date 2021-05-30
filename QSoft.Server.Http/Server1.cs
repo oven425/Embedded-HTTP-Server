@@ -120,9 +120,13 @@ namespace QSoft.Server.Http1
             var actions = this.m_Actions.Where(x => x.Setting.Path == context.Request.Url.LocalPath && x.Setting.Method.Equals(context.Request.HttpMethod, StringComparison.OrdinalIgnoreCase));
             if (actions.Count() == 0)
             {
-                if (File.Exists(this.Statics.FullName + context.Request.Url.LocalPath) == true)
+                if (this.Statics != null&& File.Exists(this.Statics.FullName + context.Request.Url.LocalPath) == true)
                 {
                     context.Response.Write(File.OpenRead(this.Statics.FullName + context.Request.Url.LocalPath));
+                }
+                else
+                {
+                    context.Response.NotFind();
                 }
             }
             else
@@ -153,7 +157,8 @@ namespace QSoft.Server.Http1
                         }
                     }
                 }
-                var ac1 = actions.OrderBy(x => x.Args.Count(y => y == null));
+                //var ac1 = actions.OrderBy(x => x.Args.Count(y => y == null));
+                var ac1 = actions.Where(x => x.Args.All(y => y != null)).OrderByDescending(x => x.Args.Length);
                 this.Send_Resp(context, ac1.FirstOrDefault());
             }
         }
@@ -162,8 +167,9 @@ namespace QSoft.Server.Http1
         {
             if(ac== null)
             {
-                context.Response.StatusCode = 400;
-                context.Response.OutputStream.Close();
+                context.Response.BadRequest();
+                //context.Response.StatusCode = 400;
+                //context.Response.OutputStream.Close();
             }
             try
             {
@@ -217,6 +223,11 @@ namespace QSoft.Server.Http1
         void Process_Post(HttpListenerContext context)
         {
             var actions = this.m_Actions.Where(x => x.Setting.Path == context.Request.Url.LocalPath && x.Setting.Method.Equals(context.Request.HttpMethod, StringComparison.OrdinalIgnoreCase));
+            if(actions.Count() == 0)
+            {
+                context.Response.NotFind();
+                return;
+            }
             if (context.Request.ContentLength64 > 0)
             {
                 if (context.Request.ContentType == "application/xml")
@@ -269,6 +280,7 @@ namespace QSoft.Server.Http1
                 else if (context.Request.ContentType == "application/x-www-form-urlencoded")
                 {
                     string data_str = context.Request.ReadString();
+                    data_str = HttpUtility.UrlDecode(data_str);
                     Dictionary<string, string> query = HttpUtility.ParseQueryString(data_str).ToDictionary();
                     foreach (var action in actions)
                     {
@@ -299,7 +311,7 @@ namespace QSoft.Server.Http1
                 }
                 
             }
-            var ac1 = actions.OrderBy(x => x.Args.Count(y => y == null));
+            var ac1 = actions.Where(x => x.Args.All(y => y != null)).OrderByDescending(x => x.Args.Length);
             this.Send_Resp(context, ac1.FirstOrDefault());
         }
     }
@@ -330,6 +342,84 @@ namespace QSoft.Server.Http1
         public bool Ignore { set; get; }
 
     }
+
+    public class ServerSentEvent
+    {
+        HttpListenerResponse m_Resp;
+        public string ID { set; get; }
+
+        public ServerSentEvent(HttpListenerResponse resp, string id)
+        {
+            this.ID = id;
+            this.m_Resp = resp;
+            this.m_Resp.ContentType = "text/event-stream";
+            this.m_Resp.Headers["Connection"] = "keep-alive";
+            this.m_Resp.Headers["Cache-Control"] = "no-cache";
+        }
+
+        public void WriteMessage(string data)
+        {
+
+            try
+            {
+                if (this.m_Resp.OutputStream != null)
+                {
+                    string msg = $"id:{this.ID}\ndata:{data}\n\n";
+                    this.m_Resp.Write(msg, false);
+                }
+            }
+            catch (ObjectDisposedException ee)
+            {
+
+            }
+        }
+        public bool IsClose
+        {
+            get
+            {
+                return this.m_Resp == null || this.m_Resp.OutputStream == null;
+            }
+        }
+    }
+
+    public class MultiPatStream
+    {
+        public MultiPatStream(HttpListenerResponse resp, string bondary = "--myboundary")
+        {
+            this.m_Resp = resp;
+            this.Bondary = bondary;
+            this.m_Resp.ContentType = $"multipart/x-mixed-replace;boundary={this.Bondary}";
+
+        }
+        HttpListenerResponse m_Resp;
+        public string Bondary { set; get; } = "--myboundary";
+        public void Write(Stream data, string content_type)
+        {
+            byte[] buf = new byte[8192];
+            long length = data.Length - data.Position;
+            this.m_Resp.Write($"{Bondary}\r\n", false);
+            this.m_Resp.Write($"Content-Type:{content_type}\r\n", false);
+            this.m_Resp.Write($"Content-Length:{length}\r\n\r\n", false);
+
+            this.m_Resp.Write(data, false);
+            this.m_Resp.Write("\r\n", false);
+        }
+
+        public void Write(FileStream data, string content_type = "")
+        {
+            byte[] buf = new byte[8192];
+
+            long length = data.Length - data.Position;
+
+            this.m_Resp.Write($"{Bondary}\r\n", false);
+            this.m_Resp.Write($"Content-Type:{MimeMapping.GetMimeMapping(data.Name)}\r\n", false);
+            this.m_Resp.Write($"Content-Length:{length}\r\n\r\n", false);
+
+            this.m_Resp.Write(data, false);
+            this.m_Resp.Write("\r\n", false);
+        }
+    }
+
 }
 
 namespace QSoft.Server.Http1.Extension
@@ -380,8 +470,17 @@ namespace QSoft.Server.Http1.Extension
             string dst = "";
             if (src.HasEntityBody == true && src.ContentLength64 > 0)
             {
+                //using (MemoryStream mm = new MemoryStream())
+                //{
+                //    src.InputStream.CopyTo(mm);
+                //    byte[] bb = mm.ToArray();
+                //    dst = HttpUtility.UrlDecode(bb, src.ContentEncoding);
+                //    var fixedResult = Uri.EscapeUriString(dst);
+                //}
+
                 System.IO.StreamReader reader = new System.IO.StreamReader(src.InputStream, src.ContentEncoding);
                 dst = reader.ReadToEnd();
+                dst = Uri.UnescapeDataString(dst);
             }
             return dst;
         }
@@ -391,6 +490,11 @@ namespace QSoft.Server.Http1.Extension
         public static void BadRequest(this HttpListenerResponse src)
         {
             src.StatusCode = 400;
+            src.OutputStream.Close();
+        }
+        public static void NotFind(this HttpListenerResponse src)
+        {
+            src.StatusCode = 404;
             src.OutputStream.Close();
         }
         public static void ToManyRequest(this HttpListenerResponse src)
@@ -443,7 +547,7 @@ namespace QSoft.Server.Http1.Extension
             src.OutputStream.Write(writebuf, 0, writebuf.Length);
         }
 
-        public static void Write(this HttpListenerResponse src, FileStream data, bool autolength = true)
+        public static void Write(this HttpListenerResponse src, FileStream data, bool autolength = true, bool completeandclose=true)
         {
             byte[] read_buf = new byte[8192];
             if (autolength == true)
@@ -458,6 +562,11 @@ namespace QSoft.Server.Http1.Extension
                 src.OutputStream.Write(read_buf, 0, read_len);
                 if (read_len != read_buf.Length)
                 {
+                    if(completeandclose == true)
+                    {
+                        data.Close();
+                        data.Dispose();
+                    }
                     return;
                 }
             }
