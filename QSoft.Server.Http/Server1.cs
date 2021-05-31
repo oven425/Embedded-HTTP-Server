@@ -347,7 +347,7 @@ namespace QSoft.Server.Http1
     {
         HttpListenerResponse m_Resp;
         public string ID { set; get; }
-
+        JavaScriptSerializer m_Json = null;
         public ServerSentEvent(HttpListenerResponse resp, string id)
         {
             this.ID = id;
@@ -365,6 +365,27 @@ namespace QSoft.Server.Http1
                 if (this.m_Resp.OutputStream != null)
                 {
                     string msg = $"id:{this.ID}\ndata:{data}\n\n";
+                    this.m_Resp.Write(msg, false);
+                }
+            }
+            catch (ObjectDisposedException ee)
+            {
+
+            }
+        }
+
+        public void WriteJson(object data)
+        {
+            if(this.m_Json == null)
+            {
+                this.m_Json = new JavaScriptSerializer();
+            }
+            string json_str = this.m_Json.Serialize(data);
+            try
+            {
+                if (this.m_Resp.OutputStream != null)
+                {
+                    string msg = $"id:{this.ID}\ndata:{json_str}\n\n";
                     this.m_Resp.Write(msg, false);
                 }
             }
