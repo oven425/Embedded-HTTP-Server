@@ -357,6 +357,22 @@ namespace QSoft.Server.Http1
             this.m_Resp.Headers["Cache-Control"] = "no-cache";
         }
 
+        public void Close()
+        {
+            try
+            {
+                if (this.IsClose == false)
+                {
+                    this.m_Resp.OutputStream.Close();
+                }
+            }
+            catch(Exception ee)
+            {
+                System.Diagnostics.Trace.WriteLine(ee.Message);
+                System.Diagnostics.Trace.WriteLine(ee.StackTrace);
+            }
+        }
+
         public void WriteMessage(string data)
         {
 
@@ -376,10 +392,15 @@ namespace QSoft.Server.Http1
 
         public void WriteJson(object data)
         {
-            if(this.m_Json == null)
+            if(this.IsClose==true)
+            {
+                return;
+            }
+            if (this.m_Json == null)
             {
                 this.m_Json = new JavaScriptSerializer();
             }
+            //this.m_Json = new JavaScriptSerializer();
             string json_str = this.m_Json.Serialize(data);
             try
             {
@@ -391,15 +412,50 @@ namespace QSoft.Server.Http1
             }
             catch (ObjectDisposedException ee)
             {
+                this.IsClose = true;
+                Console.WriteLine(ee.Message);
+                Console.WriteLine(ee.StackTrace);
+            }
+            catch(Exception ee)
+            {
+                Console.WriteLine(ee.Message);
+                Console.WriteLine(ee.StackTrace);
+            }
+        }
 
+        async public Task WriteJsonAsync(object data)
+        {
+            if (this.m_Json == null)
+            {
+                this.m_Json = new JavaScriptSerializer();
+            }
+            //this.m_Json = new JavaScriptSerializer();
+            string json_str = this.m_Json.Serialize(data);
+            try
+            {
+                if (this.m_Resp.OutputStream != null)
+                {
+                    string msg = $"id:{this.ID}\ndata:{json_str}\n\n";
+                    await this.m_Resp.WriteAsync(msg, false);
+                }
+            }
+            catch (ObjectDisposedException ee)
+            {
+                this.IsClose = true;
+                Console.WriteLine(ee.Message);
+                Console.WriteLine(ee.StackTrace);
+            }
+            catch(Exception ee)
+            {
+                this.IsClose = true;
+                Console.WriteLine(ee.Message);
+                Console.WriteLine(ee.StackTrace);
             }
         }
         public bool IsClose
         {
-            get
-            {
-                return this.m_Resp == null || this.m_Resp.OutputStream == null;
-            }
+            private set;
+            get;
         }
     }
 
@@ -566,6 +622,16 @@ namespace QSoft.Server.Http1.Extension
                 src.ContentLength64 = writebuf.Length;
             }
             src.OutputStream.Write(writebuf, 0, writebuf.Length);
+        }
+
+        async public static Task WriteAsync(this HttpListenerResponse src, string data, bool autolength = true)
+        {
+            byte[] writebuf = Encoding.UTF8.GetBytes(data);
+            if (autolength == true)
+            {
+                src.ContentLength64 = writebuf.Length;
+            }
+            await src.OutputStream.WriteAsync(writebuf, 0, writebuf.Length);
         }
 
         public static void Write(this HttpListenerResponse src, FileStream data, bool autolength = true, bool completeandclose=true)
