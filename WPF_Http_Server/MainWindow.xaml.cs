@@ -249,7 +249,7 @@ namespace WPF_Http_Server
                 System.Diagnostics.Trace.WriteLine(ee.Message);
             }
         }
-        ConcurrentBag<ServerSentEvent> m_Events = new ConcurrentBag<ServerSentEvent>();
+        ConcurrentBag<QSoft.Server.Http1.ServerSentEvent> m_Events = new ConcurrentBag<QSoft.Server.Http1.ServerSentEvent>();
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
@@ -271,7 +271,7 @@ namespace WPF_Http_Server
         //    await Task.Delay(1);
         //    return Result.Json(DateTime.Now);
         //}
-        ConcurrentBag<MultiPatStream> m_MultiParts = new ConcurrentBag<MultiPatStream>();
+        ConcurrentBag<QSoft.Server.Http1.MultiPatStream> m_MultiParts = new ConcurrentBag<QSoft.Server.Http1.MultiPatStream>();
     }
 
     public class MainUI : INotifyPropertyChanged
