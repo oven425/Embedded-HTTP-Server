@@ -74,7 +74,7 @@ namespace QSoft.Server.Http1
                     else
                     {
                         Interlocked.Increment(ref UserCount);
-                        Task.Run(() =>
+                        Task.Run(async() =>
                         {
                             bool compelete = false;
 
@@ -85,12 +85,12 @@ namespace QSoft.Server.Http1
                                 {
                                     case "GET":
                                         {
-                                            this.Process_Get(context);
+                                            await this.Process_Get(context);
                                         }
                                         break;
                                     case "POST":
                                         {
-                                            this.Process_Post(context);
+                                            await this.Process_Post(context);
                                         }
                                         break;
                                 }
@@ -115,14 +115,14 @@ namespace QSoft.Server.Http1
             });
         }
 
-        void Process_Get(HttpListenerContext context)
+        async Task Process_Get(HttpListenerContext context)
         {
             var actions = this.m_Actions.Where(x => x.Setting.Path == context.Request.Url.LocalPath && x.Setting.Method.Equals(context.Request.HttpMethod, StringComparison.OrdinalIgnoreCase));
             if (actions.Count() == 0)
             {
                 if (this.Statics != null&& File.Exists(this.Statics.FullName + context.Request.Url.LocalPath) == true)
                 {
-                    context.Response.Write(File.OpenRead(this.Statics.FullName + context.Request.Url.LocalPath));
+                    await context.Response.WriteAsync(File.OpenRead(this.Statics.FullName + context.Request.Url.LocalPath));
                 }
                 else
                 {
@@ -159,17 +159,16 @@ namespace QSoft.Server.Http1
                 }
                 //var ac1 = actions.OrderBy(x => x.Args.Count(y => y == null));
                 var ac1 = actions.Where(x => x.Args.All(y => y != null)).OrderByDescending(x => x.Args.Length);
-                this.Send_Resp(context, ac1.FirstOrDefault());
+                await this.Send_Resp(context, ac1.FirstOrDefault());
             }
         }
 
-        void Send_Resp(HttpListenerContext context, Action ac)
+        async Task Send_Resp(HttpListenerContext context, Action ac)
         {
             if(ac== null)
             {
                 context.Response.BadRequest();
-                //context.Response.StatusCode = 400;
-                //context.Response.OutputStream.Close();
+                return;
             }
             try
             {
@@ -177,7 +176,7 @@ namespace QSoft.Server.Http1
                 if (ac.Method.ReturnType.IsGenericType == true && ac.Method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
                 {
                     Task<object> taskhr = (Task<object>)ac.Method.Invoke(ac.Target, ac.Args);
-                    hr = taskhr.Result;
+                    hr = await taskhr;
                 }
                 else
                 {
@@ -220,7 +219,7 @@ namespace QSoft.Server.Http1
             }
         }
 
-        void Process_Post(HttpListenerContext context)
+        async Task Process_Post(HttpListenerContext context)
         {
             var actions = this.m_Actions.Where(x => x.Setting.Path == context.Request.Url.LocalPath && x.Setting.Method.Equals(context.Request.HttpMethod, StringComparison.OrdinalIgnoreCase));
             if(actions.Count() == 0)
@@ -312,7 +311,7 @@ namespace QSoft.Server.Http1
                 
             }
             var ac1 = actions.Where(x => x.Args.All(y => y != null)).OrderByDescending(x => x.Args.Length);
-            this.Send_Resp(context, ac1.FirstOrDefault());
+            await this.Send_Resp(context, ac1.FirstOrDefault());
         }
     }
 
@@ -598,6 +597,15 @@ namespace QSoft.Server.Http1.Extension
             JavaScriptSerializer json = new JavaScriptSerializer();
             src.Write(json.Serialize(data));
         }
+
+        async public static Task WriteJsonAsync(this HttpListenerResponse src, object data)
+        {
+            if (data == null) return;
+            src.ContentType = "application/json";
+            JavaScriptSerializer json = new JavaScriptSerializer();
+            await src.WriteAsync(json.Serialize(data));
+        }
+
         public static void Write(this HttpListenerResponse src, string data, string content_type)
         {
             if (string.IsNullOrWhiteSpace(content_type) == false)
@@ -612,6 +620,12 @@ namespace QSoft.Server.Http1.Extension
         {
             src.ContentLength64 = data.Length;
             src.OutputStream.Write(data, 0, data.Length);
+        }
+
+        async public static Task WriteAsync(this HttpListenerResponse src, byte[] data)
+        {
+            src.ContentLength64 = data.Length;
+           await  src.OutputStream.WriteAsync(data, 0, data.Length);
         }
 
         public static void Write(this HttpListenerResponse src, string data, bool autolength = true)
@@ -650,6 +664,31 @@ namespace QSoft.Server.Http1.Extension
                 if (read_len != read_buf.Length)
                 {
                     if(completeandclose == true)
+                    {
+                        data.Close();
+                        data.Dispose();
+                    }
+                    return;
+                }
+            }
+        }
+
+        async public static Task WriteAsync(this HttpListenerResponse src, FileStream data, bool autolength = true, bool completeandclose = true)
+        {
+            byte[] read_buf = new byte[8192];
+            if (autolength == true)
+            {
+                src.ContentLength64 = data.Length - data.Position;
+                src.ContentType = MimeMapping.GetMimeMapping(data.Name);
+            }
+
+            while (true)
+            {
+                int read_len = await data.ReadAsync(read_buf, 0, read_buf.Length);
+                await src.OutputStream.WriteAsync(read_buf, 0, read_len);
+                if (read_len != read_buf.Length)
+                {
+                    if (completeandclose == true)
                     {
                         data.Close();
                         data.Dispose();
