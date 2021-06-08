@@ -58,69 +58,81 @@ namespace QSoft.Server.Http1
             this.m_Listener.Prefixes.Add($"http://{ip}:{port}/");
             this.m_Listener.Start();
             int UserCount = 0;
-            int maxount = 5;
+            int maxount = 10;
             foreach(var action in actions)
             {
                 this.Add(action);
             }
-            Task.Run(async() =>
+
+
+            //Task.Run(() =>
+            Task.Factory.StartNew(()=>
             {
                 while (true)
                 {
-                    var context = await this.m_Listener.GetContextAsync();
+                    var context = this.m_Listener.GetContext();
+                    Console.WriteLine($"{context.Request.HttpMethod} {context.Request.Url.LocalPath}");
+
                     if (Interlocked.CompareExchange(ref UserCount, maxount, maxount) >= maxount)
                     {
+                        context.Response.ToManyRequest();
                     }
                     else
                     {
                         Interlocked.Increment(ref UserCount);
-                        var task = Task.Run(async () =>
+                        try
                         {
-                            System.Diagnostics.Trace.WriteLine($"usercount:{UserCount}");
-                            try
+                            Task.Run(() =>
                             {
-                                switch (context.Request.HttpMethod)
+                                System.Diagnostics.Trace.WriteLine($"usercount:{UserCount} {DateTime.Now.ToString("HH:mm:ss")}");
+                                try
                                 {
-                                    case "GET":
-                                        {
-                                            await this.Process_Get(context);
-                                        }
-                                        break;
-                                    case "POST":
-                                        {
-                                            await this.Process_Post(context);
-                                        }
-                                        break;
+                                    switch (context.Request.HttpMethod)
+                                    {
+                                        case "GET":
+                                            {
+                                                this.Process_Get(context);
+                                            }
+                                            break;
+                                        case "POST":
+                                            {
+                                                this.Process_Post(context);
+                                            }
+                                            break;
+                                    }
+
+
+                                }
+                                catch (Exception ee)
+                                {
+                                    Console.WriteLine(ee.Message);
+                                    Console.WriteLine(ee.StackTrace);
+                                }
+                                finally
+                                {
+                                    Interlocked.Decrement(ref UserCount);
                                 }
 
-
-                            }
-                            catch (Exception ee)
-                            {
-                                System.Diagnostics.Trace.WriteLine(ee.Message);
-                                System.Diagnostics.Trace.WriteLine(ee.StackTrace);
-
-                            }
-                            finally
-                            {
-                                Interlocked.Decrement(ref UserCount);
-                            }
-
-                        });
-                        task.ConfigureAwait(false).GetAwaiter();
+                            });
+                        }
+                        catch(Exception ee)
+                        {
+                            Console.WriteLine(ee.Message);
+                            Console.WriteLine(ee.StackTrace);
+                        }
                     }
                 }
             });
         }
 
-        async Task Process_Get(HttpListenerContext context)
+        void Process_Get(HttpListenerContext context)
         {
             var actions = this.m_Actions.Where(x => x.Setting.Path == context.Request.Url.LocalPath && x.Setting.Method.Equals(context.Request.HttpMethod, StringComparison.OrdinalIgnoreCase));
             if (actions.Count() == 0)
             {
                 if (this.Statics != null&& File.Exists(this.Statics.FullName + context.Request.Url.LocalPath) == true)
                 {
-                    await context.Response.WriteAsync(File.OpenRead(this.Statics.FullName + context.Request.Url.LocalPath));
+                    context.Response.Write(File.OpenRead(this.Statics.FullName + context.Request.Url.LocalPath));
                 }
                 else
                 {
@@ -157,11 +169,11 @@ namespace QSoft.Server.Http1
                 }
                 //var ac1 = actions.OrderBy(x => x.Args.Count(y => y == null));
                 var ac1 = actions.Where(x => x.Args.All(y => y != null)).OrderByDescending(x => x.Args.Length);
-                await this.Send_Resp(context, ac1.FirstOrDefault());
+                this.Send_Resp(context, ac1.FirstOrDefault());
             }
         }
 
-        async Task Send_Resp(HttpListenerContext context, Action ac)
+        void Send_Resp(HttpListenerContext context, Action ac)
         {
             if(ac== null)
             {
@@ -174,7 +186,7 @@ namespace QSoft.Server.Http1
                 if (ac.Method.ReturnType.IsGenericType == true && ac.Method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
                 {
                     Task<object> taskhr = (Task<object>)ac.Method.Invoke(ac.Target, ac.Args);
-                    hr = await taskhr;
+                    hr = taskhr.Result;
                 }
                 else
                 {
@@ -189,12 +201,12 @@ namespace QSoft.Server.Http1
                     {
                         case ReturnTypes.Json:
                             {
-                                await context.Response.WriteJsonAsync(hr);
+                                context.Response.WriteJson(hr);
                             }
                             break;
                         case ReturnTypes.Xml:
                             {
-                                await context.Response.WriteXmlAsync(hr);
+                                context.Response.WriteXml(hr);
                             }
                             break;
                     }
@@ -217,7 +229,7 @@ namespace QSoft.Server.Http1
             }
         }
 
-        async Task Process_Post(HttpListenerContext context)
+        void Process_Post(HttpListenerContext context)
         {
             var actions = this.m_Actions.Where(x => x.Setting.Path == context.Request.Url.LocalPath && x.Setting.Method.Equals(context.Request.HttpMethod, StringComparison.OrdinalIgnoreCase));
             if(actions.Count() == 0)
@@ -335,7 +347,7 @@ namespace QSoft.Server.Http1
                 }
             }
             var ac1 = actions.Where(x => x.Args.All(y => y != null)).OrderByDescending(x => x.Args.Length);
-            await this.Send_Resp(context, ac1.FirstOrDefault());
+            this.Send_Resp(context, ac1.FirstOrDefault());
         }
     }
 
@@ -370,7 +382,8 @@ namespace QSoft.Server.Http1
     {
         HttpListenerResponse m_Resp;
         public string ID { set; get; }
-        JavaScriptSerializer m_Json = null;
+        JavaScriptSerializer m_Json = new JavaScriptSerializer();
+        bool m_IsClosed = false;
         public ServerSentEvent(HttpListenerResponse resp, string id)
         {
             this.ID = id;
@@ -391,14 +404,14 @@ namespace QSoft.Server.Http1
             }
             catch(Exception ee)
             {
-                System.Diagnostics.Trace.WriteLine(ee.Message);
-                System.Diagnostics.Trace.WriteLine(ee.StackTrace);
+                this.m_IsClosed = true;
+                Console.WriteLine(ee.Message);
+                Console.WriteLine(ee.StackTrace);
             }
         }
 
         public void WriteMessage(string data)
         {
-
             try
             {
                 if (this.m_Resp.OutputStream != null)
@@ -409,7 +422,15 @@ namespace QSoft.Server.Http1
             }
             catch (ObjectDisposedException ee)
             {
-
+                this.m_IsClosed = true;
+                Console.WriteLine(ee.Message);
+                Console.WriteLine(ee.StackTrace);
+            }
+            catch(Exception ee)
+            {
+                this.m_IsClosed = true;
+                Console.WriteLine(ee.Message);
+                Console.WriteLine(ee.StackTrace);
             }
         }
 
@@ -419,11 +440,7 @@ namespace QSoft.Server.Http1
             {
                 return;
             }
-            if (this.m_Json == null)
-            {
-                this.m_Json = new JavaScriptSerializer();
-            }
-            //this.m_Json = new JavaScriptSerializer();
+
             string json_str = this.m_Json.Serialize(data);
             try
             {
@@ -435,17 +452,18 @@ namespace QSoft.Server.Http1
             }
             catch (ObjectDisposedException ee)
             {
-                this.IsClose = true;
+                this.m_IsClosed = true;
                 Console.WriteLine(ee.Message);
                 Console.WriteLine(ee.StackTrace);
             }
             catch(Exception ee)
             {
+                this.m_IsClosed = true;
                 Console.WriteLine(ee.Message);
                 Console.WriteLine(ee.StackTrace);
             }
         }
-
+        [Obsolete("There is a problem with the function, it is recommended not to use it")]
         async public Task WriteJsonAsync(object data)
         {
             if (this.m_Json == null)
@@ -453,32 +471,49 @@ namespace QSoft.Server.Http1
                 this.m_Json = new JavaScriptSerializer();
             }
             //this.m_Json = new JavaScriptSerializer();
+            if(this.IsClose == true)
+            {
+                return;
+            }
             string json_str = this.m_Json.Serialize(data);
             try
             {
-                if (this.m_Resp.OutputStream != null)
-                {
-                    string msg = $"id:{this.ID}\ndata:{json_str}\n\n";
-                    await this.m_Resp.WriteAsync(msg, false);
-                }
+                string msg = $"id:{this.ID}\ndata:{json_str}\n\n";
+                await this.m_Resp.WriteAsync(msg, false);
             }
             catch (ObjectDisposedException ee)
             {
-                this.IsClose = true;
+                this.m_IsClosed = true;
                 Console.WriteLine(ee.Message);
                 Console.WriteLine(ee.StackTrace);
             }
             catch(Exception ee)
             {
-                this.IsClose = true;
+                this.m_IsClosed = true;
                 Console.WriteLine(ee.Message);
                 Console.WriteLine(ee.StackTrace);
             }
         }
         public bool IsClose
         {
-            private set;
-            get;
+            get
+            {
+                if(this.m_IsClosed == false)
+                {
+                    try
+                    {
+                        var len = this.m_Resp.OutputStream!=null;
+                        //Console.WriteLine($"this.m_Resp.OutputStream:{this.m_Resp.OutputStream}");
+                    }
+                    catch(Exception ee)
+                    {
+                        this.m_IsClosed = true;
+                        Console.WriteLine(ee.Message);
+                        Console.WriteLine(ee.StackTrace);
+                    }
+                }
+                return this.m_IsClosed;
+            }
         }
     }
 
@@ -614,6 +649,7 @@ namespace QSoft.Server.Http1.Extension
                 src.Write(mm);
             }
         }
+        [Obsolete("There is a problem with the function, it is recommended not to use it")]
         async public static Task WriteXmlAsync(this HttpListenerResponse src, object data)
         {
             if (data == null) return;
@@ -633,7 +669,7 @@ namespace QSoft.Server.Http1.Extension
             JavaScriptSerializer json = new JavaScriptSerializer();
             src.Write(json.Serialize(data));
         }
-
+        [Obsolete("There is a problem with the function, it is recommended not to use it")]
         async public static Task WriteJsonAsync(this HttpListenerResponse src, object data)
         {
             if (data == null) return;
@@ -657,7 +693,7 @@ namespace QSoft.Server.Http1.Extension
             src.ContentLength64 = data.Length;
             src.OutputStream.Write(data, 0, data.Length);
         }
-
+        [Obsolete("There is a problem with the function, it is recommended not to use it")]
         async public static Task WriteAsync(this HttpListenerResponse src, byte[] data)
         {
             src.ContentLength64 = data.Length;
@@ -673,7 +709,7 @@ namespace QSoft.Server.Http1.Extension
             }
             src.OutputStream.Write(writebuf, 0, writebuf.Length);
         }
-
+        [Obsolete("There is a problem with the function, it is recommended not to use it")]
         async public static Task WriteAsync(this HttpListenerResponse src, string data, bool autolength = true)
         {
             byte[] writebuf = Encoding.UTF8.GetBytes(data);
@@ -708,7 +744,7 @@ namespace QSoft.Server.Http1.Extension
                 }
             }
         }
-
+        [Obsolete("There is a problem with the function, it is recommended not to use it")]
         async public static Task WriteAsync(this HttpListenerResponse src, FileStream data, bool autolength = true, bool completeandclose = true)
         {
             byte[] read_buf = new byte[8192];
@@ -757,7 +793,7 @@ namespace QSoft.Server.Http1.Extension
                 }
             }
         }
-
+        [Obsolete("There is a problem with the function, it is recommended not to use it")]
         async public static Task WriteAsync(this HttpListenerResponse src, Stream data, bool autolength = true, bool autoclose = true)
         {
             byte[] read_buf = new byte[8192];
