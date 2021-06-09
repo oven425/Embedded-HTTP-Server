@@ -360,6 +360,12 @@ namespace QSoft.Server.Http1
         public Dictionary<string, Type> Params { set; get; } = new Dictionary<string, Type>();
         public object[] Args { set; get; }
     }
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
+    public class HttpRouter:Attribute
+    {
+        public string Path { set; get; } = "/";
+        public bool UseClassName { set; get; }
+    }
 
     public enum ReturnTypes
     {
@@ -369,6 +375,7 @@ namespace QSoft.Server.Http1
         Custom
     }
 
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple =false)]
     public class HttpMethodSetting:Attribute
     {
         public string Method { set; get; } = "GET";
